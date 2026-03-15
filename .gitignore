@@ -1,0 +1,22 @@
+# Build outputs
+bin/
+obj/
+artifacts/
+
+# NuGet
+*.nupkg
+*.snupkg
+
+# Test results
+TestResults/
+
+# Verify snapshots received files
+*.received.txt
+
+# Worktrees
+.worktrees/
+
+# IDE
+.vs/
+.vscode/
+*.user
