@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ZeroAlloc.ValueObjects.Generator/ZeroAlloc.ValueObjects.Generator.csproj" />
+    <Project Path="src/ZeroAlloc.ValueObjects/ZeroAlloc.ValueObjects.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ZeroAlloc.ValueObjects.Tests/ZeroAlloc.ValueObjects.Tests.csproj" />
+  </Folder>
+</Solution>
