@@ -101,7 +101,7 @@ internal static class SourceWriter
             return;
         }
 
-        var parts = string.Join(", ", model.Properties.Select(p => $"{p.Name} = {{{p.Name}}}"));
-        sb.AppendLine($"    public override string ToString() => $\"{model.TypeName} {{ {parts} }}\";");
+        var parts = string.Join(", ", model.Properties.Select(p => p.Name + " = {" + p.Name + "}"));
+        sb.AppendLine("    public override string ToString() => $\"" + model.TypeName + " {{ " + parts + " }}\";");
     }
 }

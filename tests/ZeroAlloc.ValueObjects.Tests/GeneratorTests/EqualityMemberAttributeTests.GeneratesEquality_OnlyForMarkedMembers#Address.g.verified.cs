@@ -19,5 +19,5 @@ sealed partial class Address : System.IEquatable<Address>
     public static bool operator ==(Address left, Address right) => left.Equals(right);
     public static bool operator !=(Address left, Address right) => !left.Equals(right);
 
-    public override string ToString() => $"Address { Street = {Street}, City = {City} }";
+    public override string ToString() => $"Address {{ Street = {Street}, City = {City} }}";
 }

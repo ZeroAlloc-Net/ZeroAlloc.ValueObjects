@@ -18,5 +18,5 @@ sealed partial class Product : System.IEquatable<Product>
     public static bool operator ==(Product left, Product right) => left.Equals(right);
     public static bool operator !=(Product left, Product right) => !left.Equals(right);
 
-    public override string ToString() => $"Product { Name = {Name} }";
+    public override string ToString() => $"Product {{ Name = {Name} }}";
 }

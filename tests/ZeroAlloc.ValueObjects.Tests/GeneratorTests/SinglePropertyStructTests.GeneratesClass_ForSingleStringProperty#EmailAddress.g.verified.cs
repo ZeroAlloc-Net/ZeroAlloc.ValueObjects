@@ -18,5 +18,5 @@ sealed partial class EmailAddress : System.IEquatable<EmailAddress>
     public static bool operator ==(EmailAddress left, EmailAddress right) => left.Equals(right);
     public static bool operator !=(EmailAddress left, EmailAddress right) => !left.Equals(right);
 
-    public override string ToString() => $"EmailAddress { Value = {Value} }";
+    public override string ToString() => $"EmailAddress {{ Value = {Value} }}";
 }

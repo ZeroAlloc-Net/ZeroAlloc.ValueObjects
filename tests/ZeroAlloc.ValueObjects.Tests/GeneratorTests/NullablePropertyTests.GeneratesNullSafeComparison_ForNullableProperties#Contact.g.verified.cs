@@ -19,5 +19,5 @@ sealed partial class Contact : System.IEquatable<Contact>
     public static bool operator ==(Contact left, Contact right) => left.Equals(right);
     public static bool operator !=(Contact left, Contact right) => !left.Equals(right);
 
-    public override string ToString() => $"Contact { Name = {Name}, Email = {Email} }";
+    public override string ToString() => $"Contact {{ Name = {Name}, Email = {Email} }}";
 }

@@ -19,5 +19,5 @@ sealed partial class Money : System.IEquatable<Money>
     public static bool operator ==(Money left, Money right) => left.Equals(right);
     public static bool operator !=(Money left, Money right) => !left.Equals(right);
 
-    public override string ToString() => $"Money { Amount = {Amount}, Currency = {Currency} }";
+    public override string ToString() => $"Money {{ Amount = {Amount}, Currency = {Currency} }}";
 }
