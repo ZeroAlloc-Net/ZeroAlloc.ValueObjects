@@ -16,15 +16,10 @@
   </ItemGroup>
 
   <!-- Bundle generator DLL into the analyzers folder of the NuGet package -->
-  <Target Name="IncludeGeneratorInPackage" BeforeTargets="_GetPackageFiles"
-          DependsOnTargets="ResolveProjectReferences">
-    <MSBuild Projects="..\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj"
-             Targets="GetTargetPath"
-             Properties="Configuration=$(Configuration)">
-      <Output TaskParameter="TargetOutputs" ItemName="_GeneratorDll" />
-    </MSBuild>
+  <!-- Use a direct path to avoid invoking MSBuild on the generator, which triggers Build in .NET 10+ and breaks the no-build pack step -->
+  <Target Name="IncludeGeneratorInPackage" BeforeTargets="_GetPackageFiles">
     <ItemGroup>
-      <None Include="@(_GeneratorDll)"
+      <None Include="$(MSBuildThisFileDirectory)..\ZeroAlloc.ValueObjects.Generator\bin\$(Configuration)\netstandard2.0\ZeroAlloc.ValueObjects.Generator.dll"
             Pack="true"
             PackagePath="analyzers/dotnet/cs"
             Visible="false" />
