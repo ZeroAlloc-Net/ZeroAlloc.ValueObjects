@@ -41,8 +41,27 @@ internal static class ValueObjectParser
                 p.NullableAnnotation == NullableAnnotation.Annotated))
             .ToList();
 
-        bool forceClass = ctx.Attributes.FirstOrDefault()
-            ?.NamedArguments.FirstOrDefault(a => a.Key == "ForceClass").Value.Value is true;
+        // Check ForceClass via syntax (NamedArguments may be unpopulated in incomplete compilations)
+        bool forceClass = false;
+        if (ctx.TargetNode is TypeDeclarationSyntax typeSyntax)
+        {
+            foreach (var attrList in typeSyntax.AttributeLists)
+            {
+                foreach (var a in attrList.Attributes)
+                {
+                    if (a.ArgumentList == null) continue;
+                    foreach (var arg in a.ArgumentList.Arguments)
+                    {
+                        if (arg.NameEquals?.Name.Identifier.Text == "ForceClass" &&
+                            arg.Expression.ToString() == "true")
+                        {
+                            forceClass = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         // Only emit as struct when the user declared a struct; never auto-promote a class to struct.
         bool isStruct = !forceClass && typeSymbol.TypeKind == TypeKind.Struct;

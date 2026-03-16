@@ -66,4 +66,25 @@ public class MoneyTests
         Assert.Contains("10", money.ToString());
         Assert.Contains("USD", money.ToString());
     }
+
+    [Fact]
+    public void ObjectEquals_ReturnsFalse_ForNull()
+    {
+        var money = new Money(10m, "USD");
+        Assert.False(money.Equals((object?)null));
+    }
+
+    [Fact]
+    public void ObjectEquals_ReturnsFalse_ForDifferentType()
+    {
+        var money = new Money(10m, "USD");
+        Assert.False(money.Equals("10 USD"));
+    }
+
+    [Fact]
+    public void OperatorNotEquals_Works()
+    {
+        Assert.True(new Money(10m, "USD") != new Money(20m, "USD"));
+        Assert.False(new Money(10m, "USD") != new Money(10m, "USD"));
+    }
 }

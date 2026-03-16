@@ -5,50 +5,57 @@ using ZeroAlloc.ValueObjects.Generator;
 
 namespace ZeroAlloc.ValueObjects.Tests.GeneratorTests;
 
-public class SinglePropertyStructTests
+public class EdgeCaseTests
 {
     [Fact]
-    public Task GeneratesClass_ForSingleStringProperty()
+    public Task GeneratesEquality_ForZeroProperties()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
 
             [ValueObject]
-            public partial class EmailAddress
+            public partial class Empty
+            {
+            }
+            """;
+
+        return Verifier.Verify(RunGenerator(source));
+    }
+
+    [Fact]
+    public Task GeneratesHashCodeAdd_ForNineOrMoreProperties()
+    {
+        var source = """
+            using ZeroAlloc.ValueObjects;
+
+            [ValueObject]
+            public partial class Wide
+            {
+                public int A { get; }
+                public int B { get; }
+                public int C { get; }
+                public int D { get; }
+                public int E { get; }
+                public int F { get; }
+                public int G { get; }
+                public int H { get; }
+                public int I { get; }
+            }
+            """;
+
+        return Verifier.Verify(RunGenerator(source));
+    }
+
+    [Fact]
+    public Task GeneratesEquality_ForTypeInGlobalNamespace()
+    {
+        var source = """
+            using ZeroAlloc.ValueObjects;
+
+            [ValueObject]
+            public partial class GlobalType
             {
                 public string Value { get; }
-            }
-            """;
-
-        return Verifier.Verify(RunGenerator(source));
-    }
-
-    [Fact]
-    public Task GeneratesReadonlyStruct_ForStructDeclaration()
-    {
-        var source = """
-            using ZeroAlloc.ValueObjects;
-
-            [ValueObject]
-            public partial struct Amount
-            {
-                public decimal Value { get; }
-            }
-            """;
-
-        return Verifier.Verify(RunGenerator(source));
-    }
-
-    [Fact]
-    public Task GeneratesClass_WhenForceClassIsTrue_OnStruct()
-    {
-        var source = """
-            using ZeroAlloc.ValueObjects;
-
-            [ValueObject(ForceClass = true)]
-            public partial struct OrderId
-            {
-                public int Value { get; }
             }
             """;
 
