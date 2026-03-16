@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.0...v1.1.1) (2026-03-16)
+
+
+### Bug Fixes
+
+* resolve NETSDK1085 on .NET 10 SDK during dotnet pack --no-build ([37f615c](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/37f615ca73828e9965357367b4dc1b75a64417c4))
+* resolve NETSDK1085 on .NET 10 SDK during dotnet pack --no-build ([2ec5888](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/2ec58885f1fbe181804200ea19e4edc9101897d8))
+
 ## [1.1.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.0.0...v1.1.0) (2026-03-16)
 
 
