@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.1...v1.1.2) (2026-03-16)
+
+
+### Documentation
+
+* add comprehensive user documentation with real-world examples ([e30e967](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/e30e96722fa397d3b636a55445ad09539840d1c4))
+* comprehensive user documentation with real-world examples ([d4ac7c6](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/d4ac7c6769b8cb92ed2275ac0cfbf68211c0a014))
+
 ## [1.1.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.0...v1.1.1) (2026-03-16)
 
 
