@@ -1,3 +1,7 @@
+---
+slug: /
+---
+
 # ZeroAlloc.ValueObjects — Documentation
 
 Zero-allocation, source-generated value object equality for existing .NET domain types.
