@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.2...v1.1.3) (2026-03-16)
+
+
+### Documentation
+
+* add slug: / to index.md for Docusaurus routeBasePath ([e1a400a](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/e1a400a1401085e38df7ad630ff7e7f758cffb84))
+* make index.md the root page ([616a110](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/616a110c1700d347d0643bee34298e4129979714))
+
 ## [1.1.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.1...v1.1.2) (2026-03-16)
 
 
