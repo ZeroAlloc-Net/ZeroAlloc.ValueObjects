@@ -23,13 +23,22 @@ public record RecordMoney(decimal Amount, string Currency);
 // C# record struct — value-type record, stack allocated
 public record struct RecordStructMoney(decimal Amount, string Currency);
 
-// ZeroAlloc source-generated — direct comparison, no allocation
+// ZeroAlloc source-generated class — direct comparison, no allocation
 [ZeroAlloc.ValueObjects.ValueObject]
 public partial class ZaMoney
 {
     public decimal Amount { get; }
     public string Currency { get; }
     public ZaMoney(decimal amount, string currency) => (Amount, Currency) = (amount, currency);
+}
+
+// ZeroAlloc source-generated struct — value type, direct comparison, no allocation
+[ZeroAlloc.ValueObjects.ValueObject]
+public readonly partial struct ZaMoneyStruct
+{
+    public decimal Amount { get; }
+    public string Currency { get; }
+    public ZaMoneyStruct(decimal amount, string currency) => (Amount, Currency) = (amount, currency);
 }
 
 [MemoryDiagnoser]
@@ -43,6 +52,8 @@ public class ValueObjectBenchmarks
     private readonly RecordStructMoney _recStructB = new(10m, "USD");
     private readonly ZaMoney _zaA = new(10m, "USD");
     private readonly ZaMoney _zaB = new(10m, "USD");
+    private readonly ZaMoneyStruct _zaStructA = new(10m, "USD");
+    private readonly ZaMoneyStruct _zaStructB = new(10m, "USD");
 
     [Benchmark(Baseline = true)]
     public bool CFE_Equals() => _cfeA.Equals(_cfeB);
@@ -57,6 +68,9 @@ public class ValueObjectBenchmarks
     public bool ZeroAlloc_Equals() => _zaA.Equals(_zaB);
 
     [Benchmark]
+    public bool ZeroAllocStruct_Equals() => _zaStructA.Equals(_zaStructB);
+
+    [Benchmark]
     public int CFE_GetHashCode() => _cfeA.GetHashCode();
 
     [Benchmark]
@@ -67,4 +81,7 @@ public class ValueObjectBenchmarks
 
     [Benchmark]
     public int ZeroAlloc_GetHashCode() => _zaA.GetHashCode();
+
+    [Benchmark]
+    public int ZeroAllocStruct_GetHashCode() => _zaStructA.GetHashCode();
 }

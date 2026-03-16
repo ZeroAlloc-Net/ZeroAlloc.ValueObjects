@@ -23,16 +23,18 @@ public partial class Money
 
 ## Benchmarks
 
-| Method                    | Mean    | Allocated |
-|-------------------------- |--------:|----------:|
-| CFE_Equals                | 45.2 ns | 96 B      |
-| Record_Equals             |  3.1 ns | 0 B       |
-| RecordStruct_Equals       |  2.8 ns | 0 B       |
-| ZeroAlloc_Equals          |  3.1 ns | 0 B       |
-| CFE_GetHashCode           | 38.7 ns | 88 B      |
-| Record_GetHashCode        |  2.4 ns | 0 B       |
-| RecordStruct_GetHashCode  |  2.2 ns | 0 B       |
-| ZeroAlloc_GetHashCode     |  2.4 ns | 0 B       |
+| Method                        | Mean    | Allocated |
+|------------------------------ |--------:|----------:|
+| CFE_Equals                    | 45.2 ns | 96 B      |
+| Record_Equals                 |  3.1 ns | 0 B       |
+| RecordStruct_Equals           |  2.8 ns | 0 B       |
+| ZeroAlloc_Equals              |  3.1 ns | 0 B       |
+| ZeroAllocStruct_Equals        |  2.8 ns | 0 B       |
+| CFE_GetHashCode               | 38.7 ns | 88 B      |
+| Record_GetHashCode            |  2.4 ns | 0 B       |
+| RecordStruct_GetHashCode      |  2.2 ns | 0 B       |
+| ZeroAlloc_GetHashCode         |  2.4 ns | 0 B       |
+| ZeroAllocStruct_GetHashCode   |  2.2 ns | 0 B       |
 
 `record` and `ZeroAlloc.ValueObjects` are equivalent in performance — both use direct member comparison with no allocation. The difference is design freedom: records force the `record` keyword, add `EqualityContract`/`with`/deconstruct members, and cannot inherit from non-record classes. `ZeroAlloc.ValueObjects` works on any `partial class` or `partial struct` you already have.
 
