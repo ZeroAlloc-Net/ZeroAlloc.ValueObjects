@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/ZeroAlloc.ValueObjects.Benchmarks/ZeroAlloc.ValueObjects.Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/ZeroAlloc.ValueObjects.Generator/ZeroAlloc.ValueObjects.Generator.csproj" />
     <Project Path="src/ZeroAlloc.ValueObjects/ZeroAlloc.ValueObjects.csproj" />
