@@ -7,7 +7,8 @@ sealed partial class Product : System.IEquatable<Product>
     public override bool Equals(object? obj) =>
         obj is Product other && Equals(other);
 
-    public bool Equals(Product other) =>
+    public bool Equals(Product? other) =>
+        other is not null &&
         Name == other.Name;
 
     public override int GetHashCode()
@@ -15,8 +16,8 @@ sealed partial class Product : System.IEquatable<Product>
         return System.HashCode.Combine(Name);
     }
 
-    public static bool operator ==(Product left, Product right) => left.Equals(right);
-    public static bool operator !=(Product left, Product right) => !left.Equals(right);
+    public static bool operator ==(Product? left, Product? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(Product? left, Product? right) => !(left == right);
 
     public override string ToString() => $"Product {{ Name = {Name} }}";
 }

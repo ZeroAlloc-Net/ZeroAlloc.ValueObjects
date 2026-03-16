@@ -7,7 +7,8 @@ sealed partial class Wide : System.IEquatable<Wide>
     public override bool Equals(object? obj) =>
         obj is Wide other && Equals(other);
 
-    public bool Equals(Wide other) =>
+    public bool Equals(Wide? other) =>
+        other is not null &&
         A == other.A &&
         B == other.B &&
         C == other.C &&
@@ -33,8 +34,8 @@ sealed partial class Wide : System.IEquatable<Wide>
         return hc.ToHashCode();
     }
 
-    public static bool operator ==(Wide left, Wide right) => left.Equals(right);
-    public static bool operator !=(Wide left, Wide right) => !left.Equals(right);
+    public static bool operator ==(Wide? left, Wide? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(Wide? left, Wide? right) => !(left == right);
 
     public override string ToString() => $"Wide {{ A = {A}, B = {B}, C = {C}, D = {D}, E = {E}, F = {F}, G = {G}, H = {H}, I = {I} }}";
 }

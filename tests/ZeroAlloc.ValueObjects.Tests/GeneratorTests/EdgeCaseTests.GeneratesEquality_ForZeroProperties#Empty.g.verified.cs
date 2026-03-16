@@ -7,15 +7,16 @@ sealed partial class Empty : System.IEquatable<Empty>
     public override bool Equals(object? obj) =>
         obj is Empty other && Equals(other);
 
-    public bool Equals(Empty other) => true;
+    public bool Equals(Empty? other) =>
+        other is not null;
 
     public override int GetHashCode()
     {
         return 0;
     }
 
-    public static bool operator ==(Empty left, Empty right) => left.Equals(right);
-    public static bool operator !=(Empty left, Empty right) => !left.Equals(right);
+    public static bool operator ==(Empty? left, Empty? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(Empty? left, Empty? right) => !(left == right);
 
     public override string ToString() => "Empty { }";
 }

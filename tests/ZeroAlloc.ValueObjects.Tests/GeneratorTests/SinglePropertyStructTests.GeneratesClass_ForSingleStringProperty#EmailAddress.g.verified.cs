@@ -7,7 +7,8 @@ sealed partial class EmailAddress : System.IEquatable<EmailAddress>
     public override bool Equals(object? obj) =>
         obj is EmailAddress other && Equals(other);
 
-    public bool Equals(EmailAddress other) =>
+    public bool Equals(EmailAddress? other) =>
+        other is not null &&
         Value == other.Value;
 
     public override int GetHashCode()
@@ -15,8 +16,8 @@ sealed partial class EmailAddress : System.IEquatable<EmailAddress>
         return System.HashCode.Combine(Value);
     }
 
-    public static bool operator ==(EmailAddress left, EmailAddress right) => left.Equals(right);
-    public static bool operator !=(EmailAddress left, EmailAddress right) => !left.Equals(right);
+    public static bool operator ==(EmailAddress? left, EmailAddress? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(EmailAddress? left, EmailAddress? right) => !(left == right);
 
     public override string ToString() => $"EmailAddress {{ Value = {Value} }}";
 }

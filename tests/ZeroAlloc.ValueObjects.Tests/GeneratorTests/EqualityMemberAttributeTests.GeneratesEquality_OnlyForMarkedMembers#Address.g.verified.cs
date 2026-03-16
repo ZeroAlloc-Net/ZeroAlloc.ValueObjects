@@ -7,7 +7,8 @@ sealed partial class Address : System.IEquatable<Address>
     public override bool Equals(object? obj) =>
         obj is Address other && Equals(other);
 
-    public bool Equals(Address other) =>
+    public bool Equals(Address? other) =>
+        other is not null &&
         Street == other.Street &&
         City == other.City;
 
@@ -16,8 +17,8 @@ sealed partial class Address : System.IEquatable<Address>
         return System.HashCode.Combine(Street, City);
     }
 
-    public static bool operator ==(Address left, Address right) => left.Equals(right);
-    public static bool operator !=(Address left, Address right) => !left.Equals(right);
+    public static bool operator ==(Address? left, Address? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(Address? left, Address? right) => !(left == right);
 
     public override string ToString() => $"Address {{ Street = {Street}, City = {City} }}";
 }

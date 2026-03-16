@@ -7,7 +7,8 @@ sealed partial class GlobalType : System.IEquatable<GlobalType>
     public override bool Equals(object? obj) =>
         obj is GlobalType other && Equals(other);
 
-    public bool Equals(GlobalType other) =>
+    public bool Equals(GlobalType? other) =>
+        other is not null &&
         Value == other.Value;
 
     public override int GetHashCode()
@@ -15,8 +16,8 @@ sealed partial class GlobalType : System.IEquatable<GlobalType>
         return System.HashCode.Combine(Value);
     }
 
-    public static bool operator ==(GlobalType left, GlobalType right) => left.Equals(right);
-    public static bool operator !=(GlobalType left, GlobalType right) => !left.Equals(right);
+    public static bool operator ==(GlobalType? left, GlobalType? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(GlobalType? left, GlobalType? right) => !(left == right);
 
     public override string ToString() => $"GlobalType {{ Value = {Value} }}";
 }

@@ -42,19 +42,29 @@ internal static class SourceWriter
 
     private static void WriteIEquatable(StringBuilder sb, ValueObjectModel model)
     {
-        sb.Append($"    public bool Equals({model.TypeName} other) =>");
+        // Structs can't be null; classes use T? to satisfy IEquatable<T> contract in nullable context
+        string paramType = model.IsStruct ? model.TypeName : $"{model.TypeName}?";
 
         if (model.Properties.Count == 0)
         {
-            sb.AppendLine(" true;");
+            sb.AppendLine($"    public bool Equals({paramType} other) =>");
+            sb.AppendLine(model.IsStruct ? "        true;" : "        other is not null;");
         }
         else
         {
+            sb.AppendLine($"    public bool Equals({paramType} other) =>");
+
             var comparisons = model.Properties.Select(p =>
                 p.IsNullable
                     ? $"(other.{p.Name} is null ? {p.Name} is null : {p.Name} == other.{p.Name})"
                     : $"{p.Name} == other.{p.Name}");
-            sb.AppendLine();
+
+            // For classes, guard against null before accessing members
+            if (!model.IsStruct)
+            {
+                sb.AppendLine("        other is not null &&");
+            }
+
             sb.AppendLine("        " + string.Join(" &&\n        ", comparisons) + ";");
         }
         sb.AppendLine();
@@ -88,8 +98,18 @@ internal static class SourceWriter
 
     private static void WriteOperators(StringBuilder sb, ValueObjectModel model)
     {
-        sb.AppendLine($"    public static bool operator ==({model.TypeName} left, {model.TypeName} right) => left.Equals(right);");
-        sb.AppendLine($"    public static bool operator !=({model.TypeName} left, {model.TypeName} right) => !left.Equals(right);");
+        if (model.IsStruct)
+        {
+            // Structs can't be null — simple delegation is safe
+            sb.AppendLine($"    public static bool operator ==({model.TypeName} left, {model.TypeName} right) => left.Equals(right);");
+            sb.AppendLine($"    public static bool operator !=({model.TypeName} left, {model.TypeName} right) => !left.Equals(right);");
+        }
+        else
+        {
+            // Classes: left may be null — use null-safe pattern
+            sb.AppendLine($"    public static bool operator ==({model.TypeName}? left, {model.TypeName}? right) => left is null ? right is null : left.Equals(right);");
+            sb.AppendLine($"    public static bool operator !=({model.TypeName}? left, {model.TypeName}? right) => !(left == right);");
+        }
         sb.AppendLine();
     }
 

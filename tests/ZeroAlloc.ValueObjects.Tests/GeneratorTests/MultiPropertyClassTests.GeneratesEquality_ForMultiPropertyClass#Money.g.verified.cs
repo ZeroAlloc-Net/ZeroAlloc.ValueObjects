@@ -7,7 +7,8 @@ sealed partial class Money : System.IEquatable<Money>
     public override bool Equals(object? obj) =>
         obj is Money other && Equals(other);
 
-    public bool Equals(Money other) =>
+    public bool Equals(Money? other) =>
+        other is not null &&
         Amount == other.Amount &&
         Currency == other.Currency;
 
@@ -16,8 +17,8 @@ sealed partial class Money : System.IEquatable<Money>
         return System.HashCode.Combine(Amount, Currency);
     }
 
-    public static bool operator ==(Money left, Money right) => left.Equals(right);
-    public static bool operator !=(Money left, Money right) => !left.Equals(right);
+    public static bool operator ==(Money? left, Money? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(Money? left, Money? right) => !(left == right);
 
     public override string ToString() => $"Money {{ Amount = {Amount}, Currency = {Currency} }}";
 }

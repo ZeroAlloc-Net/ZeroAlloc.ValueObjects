@@ -1,45 +1,6 @@
 using BenchmarkDotNet.Attributes;
-using CSharpFunctionalExtensions;
-using ZeroAlloc.ValueObjects;
 
 namespace ZeroAlloc.ValueObjects.Benchmarks;
-
-// CFE baseline — boxing + iterator allocation per call
-public class CfeMoney : ValueObject
-{
-    public decimal Amount { get; }
-    public string Currency { get; }
-    public CfeMoney(decimal amount, string currency) => (Amount, Currency) = (amount, currency);
-    protected override IEnumerable<IComparable> GetEqualityComponents()
-    {
-        yield return Amount;
-        yield return Currency;
-    }
-}
-
-// C# record — compiler-generated direct comparison, no allocation
-public record RecordMoney(decimal Amount, string Currency);
-
-// C# record struct — value-type record, stack allocated
-public record struct RecordStructMoney(decimal Amount, string Currency);
-
-// ZeroAlloc source-generated class — direct comparison, no allocation
-[ZeroAlloc.ValueObjects.ValueObject]
-public partial class ZaMoney
-{
-    public decimal Amount { get; }
-    public string Currency { get; }
-    public ZaMoney(decimal amount, string currency) => (Amount, Currency) = (amount, currency);
-}
-
-// ZeroAlloc source-generated struct — value type, direct comparison, no allocation
-[ZeroAlloc.ValueObjects.ValueObject]
-public readonly partial struct ZaMoneyStruct
-{
-    public decimal Amount { get; }
-    public string Currency { get; }
-    public ZaMoneyStruct(decimal amount, string currency) => (Amount, Currency) = (amount, currency);
-}
 
 [MemoryDiagnoser]
 public class ValueObjectBenchmarks

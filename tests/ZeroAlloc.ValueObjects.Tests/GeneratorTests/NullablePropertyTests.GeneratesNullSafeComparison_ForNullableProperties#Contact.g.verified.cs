@@ -7,7 +7,8 @@ sealed partial class Contact : System.IEquatable<Contact>
     public override bool Equals(object? obj) =>
         obj is Contact other && Equals(other);
 
-    public bool Equals(Contact other) =>
+    public bool Equals(Contact? other) =>
+        other is not null &&
         Name == other.Name &&
         (other.Email is null ? Email is null : Email == other.Email);
 
@@ -16,8 +17,8 @@ sealed partial class Contact : System.IEquatable<Contact>
         return System.HashCode.Combine(Name, Email);
     }
 
-    public static bool operator ==(Contact left, Contact right) => left.Equals(right);
-    public static bool operator !=(Contact left, Contact right) => !left.Equals(right);
+    public static bool operator ==(Contact? left, Contact? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(Contact? left, Contact? right) => !(left == right);
 
     public override string ToString() => $"Contact {{ Name = {Name}, Email = {Email} }}";
 }

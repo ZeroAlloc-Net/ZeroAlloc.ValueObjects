@@ -1,14 +1,4 @@
-using ZeroAlloc.ValueObjects;
-
 namespace ZeroAlloc.ValueObjects.Tests.FunctionalTests;
-
-[ValueObject]
-public partial class Money
-{
-    public decimal Amount { get; }
-    public string Currency { get; }
-    public Money(decimal amount, string currency) => (Amount, Currency) = (amount, currency);
-}
 
 public class MoneyTests
 {
@@ -63,8 +53,8 @@ public class MoneyTests
     public void ToString_ContainsPropertyValues()
     {
         var money = new Money(10m, "USD");
-        Assert.Contains("10", money.ToString());
-        Assert.Contains("USD", money.ToString());
+        Assert.Contains("10", money.ToString(), StringComparison.Ordinal);
+        Assert.Contains("USD", money.ToString(), StringComparison.Ordinal);
     }
 
     [Fact]

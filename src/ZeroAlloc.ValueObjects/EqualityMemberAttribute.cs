@@ -2,5 +2,5 @@ using System;
 
 namespace ZeroAlloc.ValueObjects;
 
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+[AttributeUsage(AttributeTargets.Property)]
 public sealed class EqualityMemberAttribute : Attribute { }

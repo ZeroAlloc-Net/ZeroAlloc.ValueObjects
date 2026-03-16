@@ -7,7 +7,8 @@ sealed partial class OrderId : System.IEquatable<OrderId>
     public override bool Equals(object? obj) =>
         obj is OrderId other && Equals(other);
 
-    public bool Equals(OrderId other) =>
+    public bool Equals(OrderId? other) =>
+        other is not null &&
         Value == other.Value;
 
     public override int GetHashCode()
@@ -15,8 +16,8 @@ sealed partial class OrderId : System.IEquatable<OrderId>
         return System.HashCode.Combine(Value);
     }
 
-    public static bool operator ==(OrderId left, OrderId right) => left.Equals(right);
-    public static bool operator !=(OrderId left, OrderId right) => !left.Equals(right);
+    public static bool operator ==(OrderId? left, OrderId? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(OrderId? left, OrderId? right) => !(left == right);
 
     public override string ToString() => $"OrderId {{ Value = {Value} }}";
 }

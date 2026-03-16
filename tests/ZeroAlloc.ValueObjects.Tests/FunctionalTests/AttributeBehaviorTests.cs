@@ -1,25 +1,4 @@
-using ZeroAlloc.ValueObjects;
-
 namespace ZeroAlloc.ValueObjects.Tests.FunctionalTests;
-
-[ValueObject]
-public partial class Address
-{
-    [EqualityMember] public string Street { get; }
-    [EqualityMember] public string City { get; }
-    public string Notes { get; }
-    public Address(string street, string city, string notes) =>
-        (Street, City, Notes) = (street, city, notes);
-}
-
-[ValueObject]
-public partial class Product
-{
-    public string Name { get; }
-    [IgnoreEqualityMember] public string InternalCode { get; }
-    public Product(string name, string internalCode) =>
-        (Name, InternalCode) = (name, internalCode);
-}
 
 public class AttributeBehaviorTests
 {
