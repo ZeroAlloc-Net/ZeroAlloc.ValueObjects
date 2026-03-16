@@ -4,7 +4,25 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- NuGet package metadata (shared across all packable projects) -->
+    <Authors>Marcel Roozekrans</Authors>
+    <Company>Marcel Roozekrans</Company>
+    <Copyright>Copyright (c) Marcel Roozekrans</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/MarcelRoozekrans/ZeroAlloc.ValueObjects</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MarcelRoozekrans/ZeroAlloc.ValueObjects</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>valueobject;ddd;sourcegenerator;zeroalloc;performance</PackageTags>
   </PropertyGroup>
+
+  <!-- Include README and icon in every packable project -->
+  <ItemGroup Condition="'$(IsPackable)' != 'false'">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)assets\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Meziantou.Analyzer" Version="3.0.23" PrivateAssets="all">

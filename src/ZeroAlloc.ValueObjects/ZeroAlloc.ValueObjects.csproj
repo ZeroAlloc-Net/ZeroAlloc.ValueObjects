@@ -1,27 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
     <PackageId>ZeroAlloc.ValueObjects</PackageId>
-    <Version>1.0.0</Version>
-    <Authors>Marcel Roozekrans</Authors>
     <Description>Zero-allocation source-generated ValueObject equality for hot paths. Eliminates boxing and iterator allocations from CSharpFunctionalExtensions.ValueObject.GetEqualityComponents().</Description>
-    <PackageTags>valueobject;ddd;sourcegenerator;zeroalloc;performance</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/MarcelRoozekrans/ZeroAlloc.ValueObjects</RepositoryUrl>
+    <!-- Version is injected by CI via -p:Version=; fallback for local builds -->
+    <Version>0.0.0-local</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false"
                       PrivateAssets="all" />
   </ItemGroup>
+
   <!-- Bundle generator DLL into the analyzers folder of the NuGet package -->
   <Target Name="IncludeGeneratorInPackage" BeforeTargets="_GetPackageFiles"
           DependsOnTargets="ResolveProjectReferences">
