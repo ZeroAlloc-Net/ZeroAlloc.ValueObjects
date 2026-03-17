@@ -1,3 +1,11 @@
+---
+id: why
+title: Why This Library Exists
+slug: /docs/why
+description: The allocation problem with CSharpFunctionalExtensions.ValueObject and how ZeroAlloc solves it.
+sidebar_position: 2
+---
+
 # Why This Library Exists
 
 ## The allocation problem with `CSharpFunctionalExtensions.ValueObject`

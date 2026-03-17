@@ -1,3 +1,11 @@
+---
+id: generated-output
+title: Generated Output
+slug: /docs/generated-output
+description: Exact code the source generator emits for Equals, GetHashCode, and ToString.
+sidebar_position: 7
+---
+
 # What Gets Generated
 
 For every `[ValueObject]` type, the generator emits a partial declaration alongside yours in a `.g.cs` file.

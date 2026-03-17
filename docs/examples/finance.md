@@ -1,3 +1,11 @@
+---
+id: examples-finance
+title: Finance Examples
+slug: /docs/examples/finance
+description: IBAN, Currency, and Amount value objects for financial domains.
+sidebar_position: 17
+---
+
 # Finance Domain Examples
 
 ## `Iban` — validated, normalized value

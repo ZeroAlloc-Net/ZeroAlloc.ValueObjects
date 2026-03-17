@@ -1,3 +1,11 @@
+---
+id: migration
+title: Migration Guide
+slug: /docs/migration
+description: Step-by-step guide for migrating from CSharpFunctionalExtensions.ValueObject or from manual equality implementations.
+sidebar_position: 11
+---
+
 # Migration Guide
 
 ## From `CSharpFunctionalExtensions.ValueObject`

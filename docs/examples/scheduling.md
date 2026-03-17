@@ -1,3 +1,11 @@
+---
+id: examples-scheduling
+title: Scheduling Examples
+slug: /docs/examples/scheduling
+description: DateRange, TimeSlot, and RecurrencePattern value objects for scheduling domains.
+sidebar_position: 20
+---
+
 # Scheduling Domain Examples
 
 ## `DateRange` — bounded temporal interval

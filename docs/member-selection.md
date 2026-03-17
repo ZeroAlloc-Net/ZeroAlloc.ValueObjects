@@ -1,3 +1,11 @@
+---
+id: member-selection
+title: Member Selection
+slug: /docs/member-selection
+description: How the generator decides which properties participate in equality — default, opt-in, and opt-out modes.
+sidebar_position: 6
+---
+
 # Member Selection Rules
 
 The generator inspects all **public instance properties with a getter** on the type.
