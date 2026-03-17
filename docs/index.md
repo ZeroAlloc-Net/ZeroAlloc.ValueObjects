@@ -1,5 +1,9 @@
 ---
+id: index
+title: ZeroAlloc.ValueObjects
 slug: /
+description: Zero-allocation source-generated value object equality for .NET — no boxing, no iterator allocations.
+sidebar_position: 1
 ---
 
 # ZeroAlloc.ValueObjects — Documentation

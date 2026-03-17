@@ -1,3 +1,11 @@
+---
+id: attributes
+title: Attribute Reference
+slug: /docs/attributes
+description: Complete reference for [ValueObject], [EqualityMember], and [IgnoreEqualityMember].
+sidebar_position: 5
+---
+
 # Attribute Reference
 
 ## `[ValueObject]`

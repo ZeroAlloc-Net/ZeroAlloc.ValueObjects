@@ -1,3 +1,11 @@
+---
+id: design
+title: Design Decisions
+slug: /docs/design
+description: Intentional omissions (no with, no Deconstruct, no IComparable) and the reasoning behind them.
+sidebar_position: 13
+---
+
 # Design Decisions & Limitations
 
 ## What the generator does NOT produce

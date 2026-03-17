@@ -1,3 +1,11 @@
+---
+id: patterns
+title: Usage Patterns
+slug: /docs/patterns
+description: Dictionary keys, HashSets, LINQ, EF Core, and other common value object scenarios.
+sidebar_position: 10
+---
+
 # Usage Patterns
 
 ## Dictionary Keys

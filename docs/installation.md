@@ -1,3 +1,11 @@
+---
+id: installation
+title: Installation
+slug: /docs/installation
+description: NuGet setup and .NET version requirements for ZeroAlloc.ValueObjects.
+sidebar_position: 4
+---
+
 # Installation
 
 ## NuGet

@@ -1,3 +1,11 @@
+---
+id: performance
+title: Performance
+slug: /docs/performance
+description: Benchmark results comparing ZeroAlloc.ValueObjects against record, record struct, and CSharpFunctionalExtensions.
+sidebar_position: 12
+---
+
 # Performance
 
 ## Benchmark results

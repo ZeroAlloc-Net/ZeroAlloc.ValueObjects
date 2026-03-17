@@ -1,3 +1,11 @@
+---
+id: struct-vs-class
+title: Struct vs. Class
+slug: /docs/struct-vs-class
+description: When to use a struct value object and when to use a class — trade-offs and decision guide.
+sidebar_position: 9
+---
+
 # Struct vs. Class
 
 ## Decision guide

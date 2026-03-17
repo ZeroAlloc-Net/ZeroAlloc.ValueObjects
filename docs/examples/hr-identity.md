@@ -1,3 +1,11 @@
+---
+id: examples-hr-identity
+title: HR & Identity Examples
+slug: /docs/examples/hr-identity
+description: EmailAddress, EmployeeId, and Department value objects for HR and identity domains.
+sidebar_position: 19
+---
+
 # HR / Identity Domain Examples
 
 ## `EmailAddress` — single-property, normalized

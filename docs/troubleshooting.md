@@ -1,3 +1,11 @@
+---
+id: troubleshooting
+title: Troubleshooting
+slug: /docs/troubleshooting
+description: Solutions for common errors including "type must be partial" and EF Core integration issues.
+sidebar_position: 14
+---
+
 # Troubleshooting
 
 ## "Type must be partial"

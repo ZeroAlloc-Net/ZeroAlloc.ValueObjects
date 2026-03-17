@@ -1,3 +1,11 @@
+---
+id: examples-ecommerce
+title: E-Commerce Examples
+slug: /docs/examples/ecommerce
+description: ProductId, OrderId, and Money value objects for e-commerce domains.
+sidebar_position: 16
+---
+
 # E-Commerce Domain Examples
 
 ## `ProductId` — strongly typed identifier (struct)

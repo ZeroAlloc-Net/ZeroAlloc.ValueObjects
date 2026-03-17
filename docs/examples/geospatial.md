@@ -1,3 +1,11 @@
+---
+id: examples-geospatial
+title: Geospatial Examples
+slug: /docs/examples/geospatial
+description: Coordinates, BoundingBox, and GeoHash value objects for geospatial domains.
+sidebar_position: 18
+---
+
 # Geospatial Domain Examples
 
 ## `Coordinates` — latitude/longitude pair (struct)

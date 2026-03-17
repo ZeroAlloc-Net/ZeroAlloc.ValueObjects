@@ -1,16 +1,69 @@
 # ZeroAlloc.ValueObjects
 
+[![NuGet](https://img.shields.io/nuget/v/ZeroAlloc.ValueObjects.svg)](https://www.nuget.org/packages/ZeroAlloc.ValueObjects) [![Build](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Zero-allocation source-generated ValueObject equality for your existing domain types.
 
-Same performance as `record` — without forcing the `record` keyword on your domain model.
+Same performance as `record` — without forcing the `record` keyword on your domain model. Add `[ValueObject]` to any `partial class` or `partial struct` and the generator emits `Equals`, `GetHashCode`, `==`, `!=`, and `ToString` with no heap allocations.
 
-## The problem
+## Install
 
-`CSharpFunctionalExtensions.ValueObject` uses `IEnumerable<object> GetEqualityComponents()` for equality. Every `Equals()` or `GetHashCode()` call allocates an iterator state machine and boxes every value-type property. In hot paths — dictionary keys, HashSets, LINQ grouping — this creates significant GC pressure.
+```bash
+dotnet add package ZeroAlloc.ValueObjects
+```
+
+## Quick start
+
+```csharp
+// Annotate any existing partial class — no keyword changes, no base class
+[ValueObject]
+public partial class Money
+{
+    public decimal Amount { get; }
+    public string Currency { get; }
+    public Money(decimal amount, string currency) => (Amount, Currency) = (amount, currency);
+}
+
+// Use standard equality — zero allocations
+var a = new Money(10m, "USD");
+var b = new Money(10m, "USD");
+
+bool equal = a == b;            // true
+bool same  = a.Equals(b);       // true  — IEquatable<Money> fast path
+int  hash  = a.GetHashCode();   // same as b.GetHashCode() — safe as dict key
+string s   = a.ToString();      // "Money { Amount = 10, Currency = USD }"
+```
+
+## Performance
+
+`ZeroAlloc.ValueObjects` matches `record` and `record struct` performance exactly. The only allocating variant is `CSharpFunctionalExtensions.ValueObject`.
+
+| Method                          | Mean    | Allocated |
+|---------------------------------|--------:|----------:|
+| CFE_Equals                      | 45.2 ns | 96 B      |
+| Record_Equals                   |  3.1 ns | 0 B       |
+| RecordStruct_Equals             |  2.8 ns | 0 B       |
+| **ZeroAlloc_Equals**            |  3.1 ns | **0 B**   |
+| **ZeroAllocStruct_Equals**      |  2.8 ns | **0 B**   |
+| CFE_GetHashCode                 | 38.7 ns | 88 B      |
+| Record_GetHashCode              |  2.4 ns | 0 B       |
+| RecordStruct_GetHashCode        |  2.2 ns | 0 B       |
+| **ZeroAlloc_GetHashCode**       |  2.4 ns | **0 B**   |
+| **ZeroAllocStruct_GetHashCode** |  2.2 ns | **0 B**   |
+
+Full methodology and more scenarios: [docs/performance.md](docs/performance.md)
+
+## Features
+
+- Zero allocations — no iterator state machine, no boxing
+- Works on existing `partial class` and `partial struct` — no refactoring required
+- Can inherit from non-record base classes
+- Fine-grained member control with `[EqualityMember]` (opt-in) and `[IgnoreEqualityMember]` (opt-out)
+- No extra generated members — no `with`, no `Deconstruct`, no `EqualityContract`
+- Null-safe comparison for nullable reference type properties
+- `HashCode.Combine` for ≤8 properties, incremental `HashCode.Add` for 9+
 
 ## Why not just use `record`?
-
-`record` gives you zero-allocation equality, but comes with trade-offs:
 
 | | `record` | `ZeroAlloc.ValueObjects` |
 |---|---|---|
@@ -21,97 +74,30 @@ Same performance as `record` — without forcing the `record` keyword on your do
 | No extra generated members | ✗ — adds `EqualityContract`, `with`, deconstruct | ✓ |
 | Struct support | `record struct` | `partial struct` |
 
-If your domain model uses regular classes, adding `[ValueObject]` to an existing `partial class` is all you need — no refactoring, no change in type hierarchy.
+## Documentation
 
-## Install
-
-```
-dotnet add package ZeroAlloc.ValueObjects
-```
-
-## Usage
-
-```csharp
-// Works on your existing partial class — no keyword changes
-[ValueObject]
-public partial class Money
-{
-    public decimal Amount { get; }
-    public string Currency { get; }
-}
-
-// Or as a struct
-[ValueObject]
-public partial struct CustomerId
-{
-    public Guid Value { get; }
-}
-
-// Generated: Equals, GetHashCode (HashCode.Combine), ==, !=, ToString — zero alloc
-```
-
-## Benchmarks
-
-`ZeroAlloc.ValueObjects` matches `record` and `record struct` performance exactly. The only allocating variant is `CSharpFunctionalExtensions.ValueObject`.
-
-| Method                        | Mean    | Allocated |
-|------------------------------ |--------:|----------:|
-| CFE_Equals                    | 45.2 ns | 96 B      |
-| Record_Equals                 |  3.1 ns | 0 B       |
-| RecordStruct_Equals           |  2.8 ns | 0 B       |
-| **ZeroAlloc_Equals**          |  3.1 ns | **0 B**   |
-| **ZeroAllocStruct_Equals**    |  2.8 ns | **0 B**   |
-| CFE_GetHashCode               | 38.7 ns | 88 B      |
-| Record_GetHashCode            |  2.4 ns | 0 B       |
-| RecordStruct_GetHashCode      |  2.2 ns | 0 B       |
-| **ZeroAlloc_GetHashCode**     |  2.4 ns | **0 B**   |
-| **ZeroAllocStruct_GetHashCode** | 2.2 ns | **0 B**  |
-
-Run your own benchmarks:
-
-```
-dotnet run -c Release --project benchmarks/ZeroAlloc.ValueObjects.Benchmarks
-```
-
-## Attributes
-
-| Attribute | Target | Purpose |
-|-----------|--------|---------|
-| `[ValueObject]` | `partial class` or `partial struct` | Triggers generation |
-| `[ValueObject(ForceClass = true)]` | `partial struct` | Force class emission even on a struct declaration |
-| `[EqualityMember]` | Property | Opt-in mode: only marked props participate in equality |
-| `[IgnoreEqualityMember]` | Property | Opt-out mode: exclude this prop from equality |
-
-### Default member selection
-
-All `public` properties with a getter participate by default. If any property is marked `[EqualityMember]`, the mode switches to opt-in and only marked properties are included.
-
-```csharp
-[ValueObject]
-public partial class Address
-{
-    [EqualityMember] public string Street { get; }
-    [EqualityMember] public string City { get; }
-    public string Notes { get; }  // excluded — not marked
-}
-
-[ValueObject]
-public partial class Product
-{
-    public string Name { get; }
-    [IgnoreEqualityMember] public string InternalCode { get; }  // excluded
-}
-```
-
-## Generated output
-
-For each `[ValueObject]` type the generator emits:
-
-- `bool Equals(object? obj)` — direct type check, no boxing
-- `bool Equals(T other)` — `IEquatable<T>` fast path
-- `int GetHashCode()` — `HashCode.Combine(...)` for ≤8 props, incremental `HashCode.Add()` for 9+
-- `operator ==` / `operator !=`
-- `string ToString()` — `"Money { Amount = 10, Currency = USD }"`
+| Page | Description |
+|------|-------------|
+| [Why this library?](docs/why.md) | The problem with CFE, why not just use `record` |
+| [Installation](docs/installation.md) | NuGet install, .NET version requirements |
+| [Getting Started](docs/getting-started.md) | Step-by-step quickstart with core concepts |
+| [Attribute Reference](docs/attributes.md) | `[ValueObject]`, `[EqualityMember]`, `[IgnoreEqualityMember]` |
+| [Member Selection](docs/member-selection.md) | How properties are chosen for equality |
+| [Generated Output](docs/generated-output.md) | Exact code the generator emits |
+| [Struct vs. Class](docs/struct-vs-class.md) | When to use each, `ForceClass` |
+| [Nullable Properties](docs/nullable-properties.md) | Null-safe comparison generation |
+| [Usage Patterns](docs/patterns.md) | Dictionary keys, HashSets, LINQ, EF Core, pattern matching |
+| [Migration Guide](docs/migration.md) | From CFE `ValueObject`, from manual equality |
+| [Performance](docs/performance.md) | Benchmark results and how to run them |
+| [Design Decisions](docs/design.md) | Trade-offs, intentional omissions |
+| [Troubleshooting](docs/troubleshooting.md) | Common errors and fixes |
+| [Testing](docs/testing.md) | Writing unit tests for value object equality |
+| **Examples** | |
+| [E-Commerce](docs/examples/ecommerce.md) | `ProductId`, `Money`, `ShippingAddress`, `Discount` |
+| [Finance](docs/examples/finance.md) | `Iban`, `CurrencyPair`, `AccountNumber` |
+| [HR / Identity](docs/examples/hr-identity.md) | `EmailAddress`, `EmployeeId`, `FullName` |
+| [Geospatial](docs/examples/geospatial.md) | `Coordinates`, `GeoRegion` |
+| [Scheduling](docs/examples/scheduling.md) | `DateRange`, `TimeSlot` |
 
 ## License
 

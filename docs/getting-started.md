@@ -1,3 +1,11 @@
+---
+id: getting-started
+title: Getting Started
+slug: /docs/getting-started
+description: Install, annotate a class, and get zero-allocation equality in three steps.
+sidebar_position: 3
+---
+
 # Getting Started
 
 ## How the generator pipeline works

@@ -1,3 +1,11 @@
+---
+id: nullable-properties
+title: Nullable Properties
+slug: /docs/nullable-properties
+description: Null-safe equality comparison for nullable reference type members.
+sidebar_position: 8
+---
+
 # Nullable Properties
 
 Properties declared with a nullable reference type (`string?`, `MyClass?`) receive null-safe comparison in the generated `Equals` method.
