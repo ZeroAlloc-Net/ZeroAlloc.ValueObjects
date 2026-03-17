@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.3...v1.1.4) (2026-03-17)
+
+
+### Documentation
+
+* add testing.md to index TOC and fix migration description ([466796d](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/466796d1f6dcf95783b6a8dbbb5e764edb7103cc))
+* uniformize documentation structure and frontmatter ([c3243db](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/c3243db0484d3b4e6584bb25efb40eff4bd783bd))
+* uniformize documentation structure and frontmatter ([745de6d](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/745de6ddd0854b8aa118ecc6d1c9945c2ca50905))
+
 ## [1.1.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.2...v1.1.3) (2026-03-16)
 
 
