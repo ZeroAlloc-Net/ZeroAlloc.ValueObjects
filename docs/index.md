@@ -31,6 +31,7 @@ Same performance as `record` — without forcing the `record` keyword on your do
 | [Performance](performance.md) | Benchmark results and how to run them |
 | [Design & Limitations](design.md) | Trade-offs, things not generated |
 | [Troubleshooting](troubleshooting.md) | Common errors and fixes |
+| [Testing](testing.md) | Testing value objects — equality, hash codes, serialization |
 | **Examples** | |
 | [E-Commerce](examples/ecommerce.md) | `ProductId`, `Money`, `ShippingAddress`, `Discount` |
 | [Finance](examples/finance.md) | `Iban`, `CurrencyPair`, `AccountNumber` |
