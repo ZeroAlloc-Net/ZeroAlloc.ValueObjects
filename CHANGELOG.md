@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.4...v1.1.5) (2026-03-19)
+
+
+### Bug Fixes
+
+* update PackageProjectUrl to docs site ([aa659da](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/aa659da4a3839d0e00c8dedae810366605f1001b))
+* update PackageProjectUrl to docs site ([afd205a](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/afd205a9904a2cecd20490698697074d944d8490))
+
 ## [1.1.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.3...v1.1.4) (2026-03-17)
 
 
