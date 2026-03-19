@@ -10,7 +10,7 @@
     <Company>Marcel Roozekrans</Company>
     <Copyright>Copyright (c) Marcel Roozekrans</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects</PackageProjectUrl>
+    <PackageProjectUrl>https://valueobjects.zeroalloc.net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
