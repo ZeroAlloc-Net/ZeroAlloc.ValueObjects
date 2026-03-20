@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.5...v1.1.6) (2026-03-19)
+
+
+### Bug Fixes
+
+* update PackageProjectUrl and trigger CI on release-please branches ([2cdb135](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/2cdb135b2cbe9411e561fb01135d14f8586391fb))
+
 ## [1.1.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.4...v1.1.5) (2026-03-19)
 
 
