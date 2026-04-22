@@ -74,6 +74,94 @@ Full methodology and more scenarios: [docs/performance.md](docs/performance.md)
 | No extra generated members | ✗ — adds `EqualityContract`, `with`, deconstruct | ✓ |
 | Struct support | `record struct` | `partial struct` |
 
+## Typed identifiers
+
+`[TypedId]` is the companion attribute for strongly-typed IDs — `OrderId`, `UserId`, `MessageId`. It solves the same problem as the ValueObject attribute, but tailored for single-value identifiers with built-in generation strategies.
+
+### Basic usage
+
+```csharp
+using ZeroAlloc.ValueObjects;
+
+[TypedId(Strategy = IdStrategy.Ulid)]
+public readonly partial record struct OrderId;
+
+// Usage
+OrderId id = OrderId.New();          // monotonic ULID
+string s = id.ToString();            // "01ARZ3NDEKTSV4RRFFQ69G5FAV" — 26-char base32
+OrderId parsed = OrderId.Parse(s);   // round-trip
+```
+
+### Strategies
+
+| Strategy | Backing | Format | Use case |
+|---|---|---|---|
+| `Ulid` (default) | `Guid` | 26-char Crockford base32 | General-purpose, sortable, URL-safe |
+| `Uuid7` | `Guid` | 36-char hyphenated UUID | Time-ordered with standard UUID interop |
+| `Snowflake` | `long` | Decimal string | Distributed systems needing 64-bit IDs |
+| `Sequential` | `long` | Decimal string | Test stability only — not for production |
+
+### Assembly-level default
+
+```csharp
+[assembly: TypedIdDefault(Strategy = IdStrategy.Ulid)]
+
+[TypedId]                                       // resolves to Ulid from the assembly default
+public readonly partial record struct ProductId;
+
+[TypedId(Strategy = IdStrategy.Snowflake)]      // per-struct override
+public readonly partial record struct MessageId;
+```
+
+### Snowflake worker ID configuration
+
+Snowflake IDs encode a 10-bit worker ID so multiple processes can mint IDs concurrently without collision. Configure at startup:
+
+```csharp
+builder.Services.AddSnowflakeWorkerId(workerId: 5);
+builder.Services.AddSnowflakeWorkerId(envVar: "POD_ORDINAL", fallback: 0);
+builder.Services.AddSnowflakeWorkerId(sp => sp.GetRequiredService<IMachineIdProvider>().Id);
+```
+
+If no provider is registered, `Snowflake.New()` falls back to `ZA_SNOWFLAKE_WORKER_ID` env var, then throws `TypedIdException`.
+
+### EF Core
+
+Install `ZeroAlloc.ValueObjects.EfCore` and register the convention:
+
+```csharp
+protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+{
+    builder.AddTypedIdConventions();
+}
+```
+
+All `[TypedId]` structs in the DbContext's assembly are auto-mapped: Guid-backed → `uniqueidentifier`/`uuid`, long-backed → `bigint`. Per-property `HasConversion` still overrides.
+
+### Minimal API binding
+
+No setup needed — the generator emits `IParsable<T>` + `ISpanParsable<T>`, so `app.MapGet("/orders/{id}", (OrderId id) => …)` just works.
+
+### JSON
+
+Each TypedId carries `[JsonConverter]` pointing at a nested converter that reads/writes a string. Fully AOT-safe. No `JsonSerializerContext` wiring required for basic use; if you're source-generating `JsonSerializerContext`, include the TypedId types there too.
+
+### Compile-time diagnostics
+
+| ID | Severity | Meaning |
+|---|---|---|
+| `ZATI001` | Error | Incompatible strategy/backing (e.g. Snowflake + Guid) |
+| `ZATI002` | Error | Type is not `readonly partial record struct` |
+| `ZATI003` | Error | Struct body declares fields — generator owns `Value` |
+| `ZATI005` | Warning | Struct declared partial across multiple files |
+
+### Production checklist
+
+- **Sequential is not for production**. The counter resets on process restart. Use it only in tests where deterministic IDs matter.
+- **Snowflake worker IDs must be unique across all producing processes**. `AddSnowflakeWorkerId` cannot detect duplicates. Coordinate via orchestrator ordinals (Kubernetes pod index, Nomad alloc index) or a central registry. Duplicate worker IDs silently produce colliding IDs.
+- **Clock skew matters**. Snowflake generation handles small rollbacks by pinning to the last observed millisecond, but severe skew (>5s) throws `TypedIdException`. Run NTP-synced or accept the brief unavailability.
+- **Process restart loses Sequential state but not Snowflake or ULID/UUID7 ordering**. ULID/UUID7 are globally safe to restart; Snowflake is safe if worker ID is stable across restarts.
+
 ## Documentation
 
 | Page | Description |

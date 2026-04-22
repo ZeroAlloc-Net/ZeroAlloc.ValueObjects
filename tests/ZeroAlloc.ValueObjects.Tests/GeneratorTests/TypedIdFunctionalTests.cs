@@ -1,0 +1,202 @@
+using System;
+using System.Linq;
+using ZeroAlloc.ValueObjects;
+
+namespace ZeroAlloc.ValueObjects.Tests.GeneratorTests;
+
+// These TypedId structs are produced by the source generator at compile time; the
+// partial declarations below supply nothing more than an anchor for the attribute.
+// MA0048: co-locating several TypedId anchors in one test file is intentional.
+#pragma warning disable MA0048
+
+[TypedId(Strategy = IdStrategy.Ulid)]
+public readonly partial record struct FunctionalOrderId;
+
+[TypedId(Strategy = IdStrategy.Uuid7)]
+public readonly partial record struct FunctionalMessageId;
+
+[TypedId(Strategy = IdStrategy.Snowflake)]
+public readonly partial record struct FunctionalSnowflakeId;
+
+[TypedId(Strategy = IdStrategy.Sequential)]
+public readonly partial record struct FunctionalSeqId;
+
+#pragma warning restore MA0048
+
+// Shares a collection with other tests that mutate TypedIdRuntime.SnowflakeProvider to
+// avoid parallel-class races on the static provider slot.
+[Collection("SnowflakeProviderMutation")]
+public sealed class TypedIdFunctionalTests
+{
+    [Fact]
+    public void Ulid_New_ProducesId_RoundTripsThroughString()
+    {
+        var id = FunctionalOrderId.New();
+        var s = id.ToString();
+        Assert.Equal(26, s.Length);
+        Assert.True(FunctionalOrderId.TryParse(s, null, out var parsed));
+        Assert.Equal(id, parsed);
+    }
+
+    [Fact]
+    public void Uuid7_New_ProducesId_RoundTripsThroughString()
+    {
+        var id = FunctionalMessageId.New();
+        var s = id.ToString();
+        Assert.Equal(36, s.Length); // hyphenated UUID
+        Assert.True(FunctionalMessageId.TryParse(s, null, out var parsed));
+        Assert.Equal(id, parsed);
+    }
+
+    [Fact]
+    public void Snowflake_New_WithConfiguredProvider_ProducesIncreasingIds()
+    {
+        var original = TypedIdRuntime.SnowflakeProvider;
+        try
+        {
+            TypedIdRuntime.SnowflakeProvider = new TestProvider(42);
+            var a = FunctionalSnowflakeId.New();
+            var b = FunctionalSnowflakeId.New();
+            Assert.True(b.Value > a.Value);
+
+            var s = b.ToString();
+            Assert.True(FunctionalSnowflakeId.TryParse(s, null, out var parsed));
+            Assert.Equal(b, parsed);
+        }
+        finally
+        {
+            TypedIdRuntime.SnowflakeProvider = original;
+        }
+    }
+
+    [Fact]
+    public void Snowflake_New_WithoutProvider_ReadsFromEnvVar()
+    {
+        var original = TypedIdRuntime.SnowflakeProvider;
+        var originalEnv = Environment.GetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID");
+        try
+        {
+            TypedIdRuntime.SnowflakeProvider = null;
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", "5");
+
+            var id = FunctionalSnowflakeId.New();
+            Assert.True(id.Value > 0);
+        }
+        finally
+        {
+            TypedIdRuntime.SnowflakeProvider = original;
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", originalEnv);
+        }
+    }
+
+    [Fact]
+    public void Snowflake_New_WithoutProviderOrEnvVar_Throws()
+    {
+        var original = TypedIdRuntime.SnowflakeProvider;
+        var originalEnv = Environment.GetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID");
+        try
+        {
+            TypedIdRuntime.SnowflakeProvider = null;
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", null);
+
+            Assert.Throws<TypedIdException>(() => FunctionalSnowflakeId.New());
+        }
+        finally
+        {
+            TypedIdRuntime.SnowflakeProvider = original;
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", originalEnv);
+        }
+    }
+
+    [Fact]
+    public void Sequential_New_Increases()
+    {
+        SequentialCore.Reset();
+        var a = FunctionalSeqId.New();
+        var b = FunctionalSeqId.New();
+        Assert.True(b.Value > a.Value);
+
+        var s = b.ToString();
+        Assert.True(FunctionalSeqId.TryParse(s, null, out var parsed));
+        Assert.Equal(b, parsed);
+    }
+
+    [Fact]
+    public void Ulid_ComparisonOperators_MatchCompareTo()
+    {
+        var a = FunctionalOrderId.New();
+        var b = FunctionalOrderId.New();
+        Assert.Equal(a.CompareTo(b) < 0, a < b);
+        Assert.Equal(a.CompareTo(b) > 0, a > b);
+        Assert.Equal(a.CompareTo(b) <= 0, a <= b);
+        Assert.Equal(a.CompareTo(b) >= 0, a >= b);
+    }
+
+    [Fact]
+    public void Sequential_ComparisonOperators_MatchCompareTo()
+    {
+        SequentialCore.Reset();
+        var a = FunctionalSeqId.New();
+        var b = FunctionalSeqId.New();
+        Assert.True(a < b);
+        Assert.False(a > b);
+        Assert.True(a <= b);
+        Assert.False(a >= b);
+        var sameAsA = a;
+        Assert.True(a <= sameAsA);
+        Assert.True(a >= sameAsA);
+    }
+
+    [Fact]
+    public void AllStrategies_ImplementExpectedInterfaces()
+    {
+        Assert.IsAssignableFrom<IEquatable<FunctionalOrderId>>(FunctionalOrderId.New());
+        Assert.IsAssignableFrom<IComparable<FunctionalOrderId>>(FunctionalOrderId.New());
+
+        // IParsable<T> / ISpanParsable<T> are static-abstract interfaces (net7+). Verify
+        // the generated struct satisfies the constraint at compile time.
+        AssertSatisfiesParsable<FunctionalOrderId>();
+        AssertSatisfiesParsable<FunctionalMessageId>();
+        AssertSatisfiesParsable<FunctionalSnowflakeId>();
+        AssertSatisfiesParsable<FunctionalSeqId>();
+    }
+
+    private static void AssertSatisfiesParsable<T>() where T : IParsable<T>, ISpanParsable<T>
+    {
+        // Compile-time constraint check only; nothing to assert at runtime.
+    }
+
+    [Fact]
+    public void Ulid_TryParse_AcceptsLowercase()
+    {
+        var id = FunctionalOrderId.New();
+        var lower = id.ToString().ToLowerInvariant();
+        Assert.True(FunctionalOrderId.TryParse(lower, null, out var parsed));
+        Assert.Equal(id, parsed);
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task Ulid_New_UnderExtremeContention_IsUnique()
+    {
+        // 4 threads x 1000 ULIDs each must all be distinct — exercises MonotonicGate.
+        const int Threads = 4;
+        const int PerThread = 1000;
+        var bag = new System.Collections.Concurrent.ConcurrentBag<FunctionalOrderId>();
+        var tasks = Enumerable.Range(0, Threads)
+            .Select(_ => System.Threading.Tasks.Task.Run(() =>
+            {
+                for (int j = 0; j < PerThread; j++) bag.Add(FunctionalOrderId.New());
+            }))
+            .ToArray();
+        await System.Threading.Tasks.Task.WhenAll(tasks);
+
+        var set = new System.Collections.Generic.HashSet<FunctionalOrderId>(bag);
+        Assert.Equal(Threads * PerThread, set.Count);
+    }
+
+    private sealed class TestProvider : ISnowflakeWorkerIdProvider
+    {
+        public TestProvider(int id) => WorkerId = id;
+        public int WorkerId { get; }
+    }
+}
