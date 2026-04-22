@@ -85,7 +85,7 @@ public enum BackingType { Default = 0, Guid, Int64 }
 
 - Must be `readonly partial record struct` (ZATI002).
 - Must have an empty body; the generator owns the `Value` field (ZATI003).
-- `[TypedIdDefault]` must target the assembly (ZATI004).
+- `[TypedIdDefault]` must target the assembly (reserved diagnostic ZATI004 — enforced by `[AttributeUsage(AttributeTargets.Assembly)]` on the attribute itself, not a generator diagnostic).
 
 ---
 
@@ -205,7 +205,7 @@ public sealed class TypedIdValueConverter<TId, TBacking> : ValueConverter<TId, T
 | `ZATI001` | Error | Strategy + backing incompatible | "{Strategy} requires {RequiredBacking}; {ProvidedBacking} is incompatible." |
 | `ZATI002` | Error | Target is not `readonly partial record struct` | "[TypedId] requires `readonly partial record struct`; {T} is {actualModifiers}." |
 | `ZATI003` | Error | Struct body declares fields or properties | "[TypedId] structs must have an empty body; generator emits the `Value` field." |
-| `ZATI004` | Error | `[TypedIdDefault]` on non-assembly target | "[TypedIdDefault] must be applied to the assembly." |
+| `ZATI004` | — | Reserved — enforced by `[AttributeUsage(AttributeTargets.Assembly)]` on `TypedIdDefaultAttribute`; no generator diagnostic emitted. | — |
 | `ZATI005` | Warning | Struct declared as partial in multiple files | Advisory — may drift from generator output. |
 
 ### Runtime exceptions
