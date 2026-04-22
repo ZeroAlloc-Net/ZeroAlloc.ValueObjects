@@ -41,6 +41,25 @@ Same performance as `record` — without forcing the `record` keyword on your do
 
 ---
 
+## Typed Identifiers
+
+`[TypedId]` is the companion attribute for strongly-typed IDs — `OrderId`, `UserId`, `MessageId`. Built-in ULID / UUIDv7 / Snowflake / Sequential strategies, JSON, minimal API, and EF Core support out of the box.
+
+| Page | Description |
+|---|---|
+| [Typed Identifiers overview](typed-id/index.md) | When to use `[TypedId]` vs `[ValueObject]`, section contents |
+| [Getting started](typed-id/getting-started.md) | Install, declare, use — five-minute introduction |
+| [Strategies](typed-id/strategies.md) | ULID, UUIDv7, Snowflake, Sequential — formats and trade-offs |
+| [Snowflake configuration](typed-id/snowflake-config.md) | Worker-ID setup via DI, env var, or factory |
+| [JSON serialization](typed-id/json.md) | `System.Text.Json` integration, AOT safety |
+| [ASP.NET minimal API binding](typed-id/aspnet.md) | Route and query binding via `IParsable<T>` |
+| [EF Core integration](typed-id/efcore.md) | `ZeroAlloc.ValueObjects.EfCore` conventions |
+| [Diagnostics](typed-id/diagnostics.md) | `ZATI001`–`ZATI005` reference |
+| [Production checklist](typed-id/production.md) | Operational caveats and audit questions |
+| [Internals](typed-id/internals.md) | Generator pipeline and zero-allocation techniques |
+
+---
+
 ## Quick Example
 
 ```csharp
