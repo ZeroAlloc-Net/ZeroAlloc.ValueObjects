@@ -13,5 +13,5 @@ public static class TypedIdRuntime
     /// null, generated Snowflake <c>New()</c> falls back to the <c>ZA_SNOWFLAKE_WORKER_ID</c>
     /// environment variable, then throws <see cref="TypedIdException"/>.
     /// </summary>
-    public static ISnowflakeWorkerIdProvider? SnowflakeProvider { get; set; }
+    public static ISnowflakeWorkerIdProvider? SnowflakeProvider { get; internal set; }
 }
