@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.6...v1.2.0) (2026-04-22)
+
+
+### Features
+
+* [TypedId] — strongly-typed ID structs with ULID/UUID7/Snowflake/Sequential strategies ([#20](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/20)) ([703cec7](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/703cec7deddabc5f6606fc202c3a29f44eecf0e7))
+
 ## [1.1.6](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.5...v1.1.6) (2026-03-19)
 
 
