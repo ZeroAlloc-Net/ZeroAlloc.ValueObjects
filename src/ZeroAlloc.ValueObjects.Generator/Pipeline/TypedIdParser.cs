@@ -1,5 +1,10 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ZeroAlloc.ValueObjects.Generator.Models;
 
 namespace ZeroAlloc.ValueObjects.Generator.Pipeline;
@@ -8,9 +13,67 @@ internal static class TypedIdParser
 {
     // "Partial" model: values as seen on the struct's [TypedId] attribute (may be 0 = unset).
     // Full resolution happens in Resolve() combining with the assembly-level default.
-    internal sealed record PartialModel(string? Namespace, string Name, int RawStrategy, int RawBacking);
+    // Carries any diagnostics detected while parsing so the source-output stage can report
+    // them and skip emission when errors are present.
+    internal sealed record PartialModel(
+        string? Namespace,
+        string Name,
+        int RawStrategy,
+        int RawBacking,
+        ImmutableArray<DiagnosticInfo> Diagnostics);
 
     internal sealed record AssemblyDefault(int RawStrategy, int RawBacking);
+
+    // A value-type-ish holder for a diagnostic so the incremental pipeline can cache models
+    // without pulling Location objects that compare by reference.
+    internal sealed record DiagnosticInfo(
+        string Id,
+        DiagnosticSeverity Severity,
+        LocationInfo Location,
+        ImmutableArray<string> MessageArgs)
+    {
+        public Diagnostic ToDiagnostic()
+        {
+            var descriptor = Id switch
+            {
+                "ZATI001" => TypedIdDiagnostics.IncompatibleBacking,
+                "ZATI002" => TypedIdDiagnostics.InvalidDeclaration,
+                "ZATI003" => TypedIdDiagnostics.NonEmptyBody,
+                "ZATI005" => TypedIdDiagnostics.MultiFilePartial,
+                _ => throw new System.InvalidOperationException($"Unknown diagnostic id {Id}"),
+            };
+            return Diagnostic.Create(descriptor, Location.ToLocation(), MessageArgs.ToArray());
+        }
+    }
+
+    internal sealed record LocationInfo(string FilePath, TextSpanInfo Span, LinePositionSpanInfo LineSpan)
+    {
+        public Location ToLocation() => Microsoft.CodeAnalysis.Location.Create(
+            FilePath,
+            new Microsoft.CodeAnalysis.Text.TextSpan(Span.Start, Span.Length),
+            new Microsoft.CodeAnalysis.Text.LinePositionSpan(
+                new Microsoft.CodeAnalysis.Text.LinePosition(LineSpan.StartLine, LineSpan.StartCharacter),
+                new Microsoft.CodeAnalysis.Text.LinePosition(LineSpan.EndLine, LineSpan.EndCharacter)));
+
+        public static LocationInfo From(Location location)
+        {
+            var lineSpan = location.GetLineSpan();
+            return new LocationInfo(
+                location.SourceTree?.FilePath ?? string.Empty,
+                new TextSpanInfo(location.SourceSpan.Start, location.SourceSpan.Length),
+                new LinePositionSpanInfo(
+                    lineSpan.StartLinePosition.Line,
+                    lineSpan.StartLinePosition.Character,
+                    lineSpan.EndLinePosition.Line,
+                    lineSpan.EndLinePosition.Character));
+        }
+    }
+
+    [StructLayout(LayoutKind.Auto)]
+    internal readonly record struct TextSpanInfo(int Start, int Length);
+
+    [StructLayout(LayoutKind.Auto)]
+    internal readonly record struct LinePositionSpanInfo(int StartLine, int StartCharacter, int EndLine, int EndCharacter);
 
     public static PartialModel? Parse(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
@@ -24,7 +87,157 @@ internal static class TypedIdParser
             ? null
             : symbol.ContainingNamespace.ToDisplayString();
 
-        return new PartialModel(ns, symbol.Name, strategy, backing);
+        var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
+        DetectDeclarationIssues(symbol, diagnostics, ct);
+        DetectIncompatibleBacking(symbol, attr, strategy, backing, diagnostics, ct);
+
+        return new PartialModel(ns, symbol.Name, strategy, backing, diagnostics.ToImmutable());
+    }
+
+    // ZATI002 (not readonly partial record struct), ZATI003 (non-empty body), ZATI005 (multi-file partial).
+    private static void DetectDeclarationIssues(
+        INamedTypeSymbol symbol,
+        ImmutableArray<DiagnosticInfo>.Builder diagnostics,
+        CancellationToken ct)
+    {
+        var declarations = symbol.DeclaringSyntaxReferences;
+        if (declarations.Length == 0) return;
+
+        bool anyValid = false;
+        bool bodyIssueReported = false;
+        var files = new HashSet<string>(System.StringComparer.Ordinal);
+
+        foreach (var declRef in declarations)
+        {
+            ct.ThrowIfCancellationRequested();
+            var node = declRef.GetSyntax(ct);
+            if (node is not TypeDeclarationSyntax typeDecl) continue;
+
+            files.Add(declRef.SyntaxTree.FilePath ?? string.Empty);
+
+            if (IsValidTypedIdDeclaration(typeDecl)) anyValid = true;
+
+            if (!bodyIssueReported && TryFindBodyIssue(typeDecl, symbol.Name, out var bodyDiag))
+            {
+                diagnostics.Add(bodyDiag);
+                bodyIssueReported = true;
+            }
+        }
+
+        if (!anyValid)
+        {
+            diagnostics.Add(new DiagnosticInfo(
+                "ZATI002",
+                DiagnosticSeverity.Error,
+                LocationInfo.From(GetIdentifierLocation(declarations[0], ct)),
+                ImmutableArray.Create(symbol.Name)));
+        }
+
+        if (files.Count > 1)
+        {
+            diagnostics.Add(new DiagnosticInfo(
+                "ZATI005",
+                DiagnosticSeverity.Warning,
+                LocationInfo.From(GetIdentifierLocation(declarations[0], ct)),
+                ImmutableArray.Create(symbol.Name)));
+        }
+    }
+
+    private static bool IsValidTypedIdDeclaration(TypeDeclarationSyntax typeDecl)
+    {
+        bool isRecord = typeDecl is RecordDeclarationSyntax rec
+            && rec.ClassOrStructKeyword.RawKind == (int)SyntaxKind.StructKeyword;
+        return isRecord
+            && HasModifier(typeDecl, SyntaxKind.ReadOnlyKeyword)
+            && HasModifier(typeDecl, SyntaxKind.PartialKeyword);
+    }
+
+    private static bool TryFindBodyIssue(TypeDeclarationSyntax typeDecl, string symbolName, out DiagnosticInfo diag)
+    {
+        foreach (var member in typeDecl.Members)
+        {
+            if (member is FieldDeclarationSyntax || member is PropertyDeclarationSyntax)
+            {
+                diag = new DiagnosticInfo(
+                    "ZATI003",
+                    DiagnosticSeverity.Error,
+                    LocationInfo.From(member.GetLocation()),
+                    ImmutableArray.Create(symbolName));
+                return true;
+            }
+        }
+
+        diag = null!;
+        return false;
+    }
+
+    private static Location GetIdentifierLocation(SyntaxReference declRef, CancellationToken ct)
+    {
+        var node = declRef.GetSyntax(ct);
+        return node is TypeDeclarationSyntax td ? td.Identifier.GetLocation() : node.GetLocation();
+    }
+
+    // ZATI001: strategy/backing compatibility. An explicit incompatible pairing on the
+    // struct's attribute is always an error; assembly defaults cannot rescue an explicit
+    // user-supplied pair.
+    private static void DetectIncompatibleBacking(
+        INamedTypeSymbol symbol,
+        AttributeData attr,
+        int strategy,
+        int backing,
+        ImmutableArray<DiagnosticInfo>.Builder diagnostics,
+        CancellationToken ct)
+    {
+        if (strategy < 0 || backing <= 0) return;
+
+        var (expected, strategyName, actualName) = DescribePair(strategy, backing);
+        if (expected is null) return;
+
+        Location loc = attr.ApplicationSyntaxReference?.GetSyntax(ct).GetLocation()
+            ?? symbol.Locations[0];
+        diagnostics.Add(new DiagnosticInfo(
+            "ZATI001",
+            DiagnosticSeverity.Error,
+            LocationInfo.From(loc),
+            ImmutableArray.Create(strategyName, expected, actualName)));
+    }
+
+    private static bool HasModifier(TypeDeclarationSyntax typeDecl, SyntaxKind kind)
+    {
+        foreach (var mod in typeDecl.Modifiers)
+        {
+            if (mod.RawKind == (int)kind) return true;
+        }
+        return false;
+    }
+
+    // Returns (expectedBackingName, strategyName, actualBackingName) when the pair is
+    // incompatible; (null, _, _) when compatible.
+    private static (string? expected, string strategyName, string actualName) DescribePair(int strategy, int backing)
+    {
+        // Strategy: 0=Ulid, 1=Uuid7, 2=Snowflake, 3=Sequential
+        // Backing:  1=Guid, 2=Int64
+        string strategyName = strategy switch
+        {
+            0 => "Ulid",
+            1 => "Uuid7",
+            2 => "Snowflake",
+            3 => "Sequential",
+            _ => strategy.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        };
+        string backingName = backing switch
+        {
+            1 => "Guid",
+            2 => "Int64",
+            _ => backing.ToString(System.Globalization.CultureInfo.InvariantCulture),
+        };
+
+        if ((strategy == 2 || strategy == 3) && backing != 2)
+            return ("Int64", strategyName, backingName);
+        if ((strategy == 0 || strategy == 1) && backing != 1)
+            return ("Guid", strategyName, backingName);
+
+        return (null, strategyName, backingName);
     }
 
     public static AssemblyDefault ReadAssemblyDefault(Compilation compilation)

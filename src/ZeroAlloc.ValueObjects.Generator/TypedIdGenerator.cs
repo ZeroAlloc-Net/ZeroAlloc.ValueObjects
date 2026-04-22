@@ -28,6 +28,20 @@ public sealed class TypedIdGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(combined, static (ctx, pair) =>
         {
             var (partial, asmDefault) = pair;
+
+            // Report any diagnostics captured during parsing. Errors suppress source
+            // emission (ZATI001/002/003); warnings (ZATI005) do not.
+            bool hasError = false;
+            foreach (var info in partial.Diagnostics)
+            {
+                var diagnostic = info.ToDiagnostic();
+                ctx.ReportDiagnostic(diagnostic);
+                if (diagnostic.Severity == DiagnosticSeverity.Error)
+                    hasError = true;
+            }
+
+            if (hasError) return;
+
             var resolved = TypedIdParser.Resolve(partial, asmDefault);
             var source = resolved.Backing switch
             {
