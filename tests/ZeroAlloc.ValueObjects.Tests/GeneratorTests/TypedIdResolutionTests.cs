@@ -39,6 +39,55 @@ public sealed class TypedIdResolutionTests
     }
 
     [Fact]
+    public void NoArgs_WithAssemblyDefaultSnowflake_ResolvesToSnowflakeInt64()
+    {
+        var source = """
+            using ZeroAlloc.ValueObjects;
+            [assembly: TypedIdDefault(Strategy = IdStrategy.Snowflake)]
+            namespace MyApp;
+            [TypedId]
+            public readonly partial record struct Id;
+            """;
+        var generated = Generate(source);
+        // Assembly default Snowflake → Int64 backing, uses SnowflakeCore.
+        Assert.Contains("public long Value", generated, StringComparison.Ordinal);
+        Assert.Contains("SnowflakeCore.Next", generated, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Generator_EmitsComparisonOperators()
+    {
+        var source = """
+            using ZeroAlloc.ValueObjects;
+            namespace MyApp;
+            [TypedId]
+            public readonly partial record struct OrderId;
+            """;
+        var generated = Generate(source);
+        // MA0097 requires these on types implementing IComparable<T>.
+        Assert.Contains("operator <(", generated, StringComparison.Ordinal);
+        Assert.Contains("operator >(", generated, StringComparison.Ordinal);
+        Assert.Contains("operator <=(", generated, StringComparison.Ordinal);
+        Assert.Contains("operator >=(", generated, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Generator_EmitsComparisonOperators_ForInt64Strategy()
+    {
+        var source = """
+            using ZeroAlloc.ValueObjects;
+            namespace MyApp;
+            [TypedId(Strategy = IdStrategy.Snowflake)]
+            public readonly partial record struct MessageId;
+            """;
+        var generated = Generate(source);
+        Assert.Contains("operator <(", generated, StringComparison.Ordinal);
+        Assert.Contains("operator >(", generated, StringComparison.Ordinal);
+        Assert.Contains("operator <=(", generated, StringComparison.Ordinal);
+        Assert.Contains("operator >=(", generated, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ExplicitStrategy_OverridesAssemblyDefault()
     {
         var source = """

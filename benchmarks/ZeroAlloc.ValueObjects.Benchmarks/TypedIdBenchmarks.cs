@@ -6,8 +6,7 @@ namespace ZeroAlloc.ValueObjects.Benchmarks;
 // Anchor partials for the TypedId source generator. Multiple TypedId declarations co-locate
 // here intentionally so the benchmark file stays self-contained.
 // MA0048: co-locating several type declarations in one file is intentional.
-// MA0097: generated IComparable<T> does not provide comparison operators (by design).
-#pragma warning disable MA0048, MA0097
+#pragma warning disable MA0048
 
 [TypedId(Strategy = IdStrategy.Ulid)]
 public readonly partial record struct BenchUlidId;
@@ -21,7 +20,7 @@ public readonly partial record struct BenchSnowflakeId;
 [TypedId(Strategy = IdStrategy.Sequential)]
 public readonly partial record struct BenchSequentialId;
 
-#pragma warning restore MA0048, MA0097
+#pragma warning restore MA0048
 
 [MemoryDiagnoser]
 public class TypedIdBenchmarks

@@ -6,9 +6,7 @@ namespace ZeroAlloc.ValueObjects.Tests.GeneratorTests;
 // These TypedId structs are produced by the source generator at compile time; the
 // partial declarations below supply nothing more than an anchor for the attribute.
 // MA0048: co-locating several TypedId anchors in one test file is intentional.
-// MA0097: generated IComparable<T> does not provide comparison operators (by design:
-// id types are sortable but not ordered for arithmetic semantics).
-#pragma warning disable MA0048, MA0097
+#pragma warning disable MA0048
 
 [TypedId(Strategy = IdStrategy.Ulid)]
 public readonly partial record struct FunctionalOrderId;
@@ -22,7 +20,7 @@ public readonly partial record struct FunctionalSnowflakeId;
 [TypedId(Strategy = IdStrategy.Sequential)]
 public readonly partial record struct FunctionalSeqId;
 
-#pragma warning restore MA0048, MA0097
+#pragma warning restore MA0048
 
 // Shares a collection with other tests that mutate TypedIdRuntime.SnowflakeProvider to
 // avoid parallel-class races on the static provider slot.
@@ -120,6 +118,32 @@ public sealed class TypedIdFunctionalTests
         var s = b.ToString();
         Assert.True(FunctionalSeqId.TryParse(s, null, out var parsed));
         Assert.Equal(b, parsed);
+    }
+
+    [Fact]
+    public void Ulid_ComparisonOperators_MatchCompareTo()
+    {
+        var a = FunctionalOrderId.New();
+        var b = FunctionalOrderId.New();
+        Assert.Equal(a.CompareTo(b) < 0, a < b);
+        Assert.Equal(a.CompareTo(b) > 0, a > b);
+        Assert.Equal(a.CompareTo(b) <= 0, a <= b);
+        Assert.Equal(a.CompareTo(b) >= 0, a >= b);
+    }
+
+    [Fact]
+    public void Sequential_ComparisonOperators_MatchCompareTo()
+    {
+        SequentialCore.Reset();
+        var a = FunctionalSeqId.New();
+        var b = FunctionalSeqId.New();
+        Assert.True(a < b);
+        Assert.False(a > b);
+        Assert.True(a <= b);
+        Assert.False(a >= b);
+        var sameAsA = a;
+        Assert.True(a <= sameAsA);
+        Assert.True(a >= sameAsA);
     }
 
     [Fact]

@@ -14,9 +14,7 @@ namespace ZeroAlloc.ValueObjects.Tests;
 // These TypedId structs are produced by the source generator at compile time; the
 // partial declarations below supply nothing more than an anchor for the attribute.
 // MA0048: co-locating several TypedId anchors in one test file is intentional.
-// MA0097: generated IComparable<T> does not provide comparison operators (by design:
-// id types are sortable but not ordered for arithmetic semantics).
-#pragma warning disable MA0048, MA0097
+#pragma warning disable MA0048
 
 [TypedId(Strategy = IdStrategy.Ulid)]
 public readonly partial record struct RouteUlidId;
@@ -24,7 +22,7 @@ public readonly partial record struct RouteUlidId;
 [TypedId(Strategy = IdStrategy.Snowflake)]
 public readonly partial record struct RouteSnowflakeId;
 
-#pragma warning restore MA0048, MA0097
+#pragma warning restore MA0048
 
 // Shares a collection with other tests that mutate TypedIdRuntime.SnowflakeProvider to
 // avoid parallel-class races on the static provider slot.

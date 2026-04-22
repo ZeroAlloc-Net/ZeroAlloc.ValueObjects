@@ -149,6 +149,12 @@ internal static class TypedIdInt64Writer
     {
         sb.AppendLine($"    public int CompareTo({name} other) => Value.CompareTo(other.Value);");
         sb.AppendLine();
+        // MA0097 requires comparison operators on types that implement IComparable<T>.
+        sb.AppendLine($"    public static bool operator <({name} left, {name} right) => left.CompareTo(right) < 0;");
+        sb.AppendLine($"    public static bool operator >({name} left, {name} right) => left.CompareTo(right) > 0;");
+        sb.AppendLine($"    public static bool operator <=({name} left, {name} right) => left.CompareTo(right) <= 0;");
+        sb.AppendLine($"    public static bool operator >=({name} left, {name} right) => left.CompareTo(right) >= 0;");
+        sb.AppendLine();
     }
 
     private static void AppendJsonConverter(StringBuilder sb, string name)

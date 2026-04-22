@@ -8,9 +8,7 @@ namespace ZeroAlloc.ValueObjects.Tests.EfCore;
 // TypedIds + EF support types declared here for the test project — the convention
 // picks them up by attribute presence at model-build time.
 // MA0048: co-locating small test entity types in one file is intentional.
-// MA0097: generated IComparable<T> does not provide comparison operators (by design:
-// id types are sortable but not ordered for arithmetic semantics).
-#pragma warning disable MA0048, MA0097
+#pragma warning disable MA0048
 
 [TypedId(Strategy = IdStrategy.Ulid)]
 public readonly partial record struct EfOrderId;
@@ -44,7 +42,7 @@ public sealed class TestDbContext : DbContext
     }
 }
 
-#pragma warning restore MA0048, MA0097
+#pragma warning restore MA0048
 
 public sealed class TypedIdEfCoreTests : IAsyncLifetime
 {
