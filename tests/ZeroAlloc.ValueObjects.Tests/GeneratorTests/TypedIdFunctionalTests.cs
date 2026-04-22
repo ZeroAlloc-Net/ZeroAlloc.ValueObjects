@@ -24,6 +24,9 @@ public readonly partial record struct FunctionalSeqId;
 
 #pragma warning restore MA0048, MA0097
 
+// Shares a collection with other tests that mutate TypedIdRuntime.SnowflakeProvider to
+// avoid parallel-class races on the static provider slot.
+[Collection("SnowflakeProviderMutation")]
 public sealed class TypedIdFunctionalTests
 {
     [Fact]

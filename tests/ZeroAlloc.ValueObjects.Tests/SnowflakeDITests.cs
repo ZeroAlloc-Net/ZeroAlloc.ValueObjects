@@ -3,6 +3,9 @@ using Microsoft.Extensions.Hosting;
 
 namespace ZeroAlloc.ValueObjects.Tests;
 
+// Shares a collection with other tests that mutate TypedIdRuntime.SnowflakeProvider to
+// avoid parallel-class races on the static provider slot.
+[Collection("SnowflakeProviderMutation")]
 public sealed class SnowflakeDITests : IDisposable
 {
     // Tests mutate the static TypedIdRuntime.SnowflakeProvider — ensure xUnit test collection
