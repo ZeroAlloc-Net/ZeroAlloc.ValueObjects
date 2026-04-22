@@ -30,6 +30,7 @@ A `[TypedId]` struct is a `readonly partial record struct` with one generator-ow
 | [Diagnostics](diagnostics.md) | ZATI001–ZATI005 reference |
 | [Production checklist](production.md) | Caveats and operational notes |
 | [Internals](internals.md) | How the generator works; zero-allocation proof |
+| [Benchmark Results](benchmarks.md) | Measured allocation and timing numbers for each strategy |
 
 ## Minimal example
 
