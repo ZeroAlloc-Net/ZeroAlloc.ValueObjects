@@ -65,6 +65,10 @@ internal static class TypedIdGuidWriter
             1 => "Uuid7Core.NewGuid()",
             _ => throw new InvalidOperationException($"Unexpected Guid-backed strategy {strategy}"),
         };
+        // For UUIDv7 we emit Guid.ToString("D", InvariantCulture). UUIDv7 structs store the
+        // 128 bits in big-endian order via GuidBigEndianHelpers at construction time, so
+        // Guid.ToString("D") — despite .NET's mixed-endian Data1/Data2/Data3 quirk —
+        // produces the canonical hyphenated form that reflects the RFC 9562 byte layout.
         var toStringCall = strategy switch
         {
             0 => "UlidCore.ToBase32(Value)",

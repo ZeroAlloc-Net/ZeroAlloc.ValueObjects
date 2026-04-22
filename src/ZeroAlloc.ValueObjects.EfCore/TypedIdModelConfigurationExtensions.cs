@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,8 +23,23 @@ public static class TypedIdModelConfigurationExtensions
         var typedIdAttr = typeof(TypedIdAttribute);
         var propertiesMethodOpen = FindPropertiesMethodOpen();
 
-        foreach (var t in scan.GetTypes())
+        // GetTypes() throws ReflectionTypeLoadException when the scanned assembly has
+        // optional dependencies missing at runtime. Fall back to the loadable subset so
+        // callers whose host has transitively missing references still get TypedId
+        // mappings for the types that did load.
+        Type[] types;
+        try
         {
+            types = scan.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            types = ex.Types.Where(t => t is not null).ToArray()!;
+        }
+
+        foreach (var t in types)
+        {
+            if (t is null) continue;
             if (!t.IsValueType) continue;
             var attrs = t.GetCustomAttributes(typedIdAttr, inherit: false);
             if (attrs.Length == 0) continue;
