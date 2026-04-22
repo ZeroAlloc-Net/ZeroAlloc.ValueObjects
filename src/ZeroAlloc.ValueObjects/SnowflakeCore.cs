@@ -21,7 +21,9 @@ namespace ZeroAlloc.ValueObjects;
 /// Clock rollback is handled defensively by continuing to increment the sequence at
 /// <c>lastMs</c> rather than throwing, so transient NTP adjustments do not break
 /// production id generation. When that also exhausts the sequence, the call spin-waits
-/// for the clock to surpass <c>lastMs</c>.
+/// for the clock to surpass <c>lastMs</c>. The wait is bounded by
+/// <see cref="MaxSpinWaitMs"/> (default 5 s); exceeding the bound throws
+/// <see cref="TypedIdException"/>.
 /// </para>
 /// </remarks>
 public static class SnowflakeCore
@@ -42,6 +44,14 @@ public static class SnowflakeCore
     // Packed state: top 41+ bits = lastMs (relative to epoch), bottom 12 bits = lastSeq.
     // Updated atomically via Interlocked.CompareExchange.
     private static long _state;
+
+    /// <summary>
+    /// Bound on the spin-wait performed when the clock is pinned to a prior millisecond
+    /// (sequence exhaustion or severe rollback). Exceeding this throws
+    /// <see cref="TypedIdException"/> rather than spinning forever. Exposed as
+    /// <c>internal</c> so tests can shorten it.
+    /// </summary>
+    internal static int MaxSpinWaitMs { get; set; } = 5000;
 
     /// <summary>
     /// Returns the next Snowflake id for the given <paramref name="workerId"/>.
@@ -83,10 +93,20 @@ public static class SnowflakeCore
                 //                so ids remain monotonic across transient NTP adjustments.
                 if (lastSeq >= MaxSequence)
                 {
-                    // Sequence exhausted in this ms — busy-wait for next ms.
+                    // Sequence exhausted in this ms — busy-wait for next ms, but bounded.
                     long waitUntil = lastMs;
-                    SpinWait.SpinUntil(() =>
-                        DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - Epoch > waitUntil);
+                    int startTicks = Environment.TickCount;
+                    int budget = MaxSpinWaitMs;
+                    var spinner = default(SpinWait);
+                    while (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - Epoch <= waitUntil)
+                    {
+                        if (Environment.TickCount - startTicks > budget)
+                            throw new TypedIdException(
+                                $"Snowflake generation stalled for {budget}ms waiting for the " +
+                                "clock to advance past a previous id's millisecond. Check for " +
+                                "severe clock skew.");
+                        spinner.SpinOnce();
+                    }
                     continue;
                 }
                 newMs = lastMs;
