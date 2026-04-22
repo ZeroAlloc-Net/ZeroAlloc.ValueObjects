@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>ZeroAlloc.ValueObjects</PackageId>
-    <Description>Zero-allocation source-generated ValueObject equality for hot paths. Eliminates boxing and iterator allocations from CSharpFunctionalExtensions.ValueObject.GetEqualityComponents().</Description>
+    <Description>Zero-allocation source-generated ValueObject equality and strongly-typed IDs (ULID, UUIDv7, Snowflake, Sequential) for hot paths. Eliminates boxing and iterator allocations from CSharpFunctionalExtensions.ValueObject.GetEqualityComponents().</Description>
     <!-- Version is injected by CI via -p:Version=; fallback for local builds -->
     <Version>0.0.0-local</Version>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

@@ -15,7 +15,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>valueobject;ddd;sourcegenerator;zeroalloc;performance</PackageTags>
+    <PackageTags>valueobject;typedid;ulid;uuid7;snowflake;ddd;sourcegenerator;zeroalloc;performance</PackageTags>
   </PropertyGroup>
 
   <!-- Include README and icon in every packable project -->
