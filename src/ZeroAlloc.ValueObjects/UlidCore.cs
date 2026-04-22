@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace ZeroAlloc.ValueObjects;
@@ -87,7 +86,7 @@ public static class UlidCore
         // 80-bit random (or incremented previous random) in bytes 6-15.
         scratch.AsSpan().CopyTo(buffer.Slice(6, 10));
 
-        return BigEndianBytesToGuid(buffer);
+        return GuidBigEndianHelpers.BigEndianBytesToGuid(buffer);
     }
 
     /// <summary>
@@ -117,7 +116,7 @@ public static class UlidCore
     public static string ToBase32(Guid value)
     {
         Span<byte> b = stackalloc byte[16];
-        GuidToBigEndianBytes(value, b);
+        GuidBigEndianHelpers.GuidToBigEndianBytes(value, b);
 
         Span<char> c = stackalloc char[26];
 
@@ -208,7 +207,7 @@ public static class UlidCore
         b[14] = (byte)((d[22] << 7) | (d[23] << 2) | (d[24] >> 3));
         b[15] = (byte)((d[24] << 5) | d[25]);
 
-        value = BigEndianBytesToGuid(b);
+        value = GuidBigEndianHelpers.BigEndianBytesToGuid(b);
         return true;
     }
 
@@ -260,46 +259,4 @@ public static class UlidCore
         }
     }
 
-    /// <summary>
-    /// Converts a 16-byte big-endian buffer into a <see cref="Guid"/> such that the
-    /// companion <see cref="GuidToBigEndianBytes"/> returns the original byte sequence.
-    /// On little-endian hosts the first three native fields (Data1/Data2/Data3) are
-    /// byte-reversed so that <see cref="Guid.ToByteArray"/> and our big-endian view agree.
-    /// </summary>
-    private static Guid BigEndianBytesToGuid(ReadOnlySpan<byte> be)
-    {
-        Span<byte> tmp = stackalloc byte[16];
-        be.CopyTo(tmp);
-
-        if (BitConverter.IsLittleEndian)
-        {
-            // Reverse Data1 (bytes 0..3), Data2 (4..5), Data3 (6..7).
-            byte t;
-            t = tmp[0]; tmp[0] = tmp[3]; tmp[3] = t;
-            t = tmp[1]; tmp[1] = tmp[2]; tmp[2] = t;
-            t = tmp[4]; tmp[4] = tmp[5]; tmp[5] = t;
-            t = tmp[6]; tmp[6] = tmp[7]; tmp[7] = t;
-        }
-
-        return MemoryMarshal.Read<Guid>(tmp);
-    }
-
-    /// <summary>
-    /// Writes the big-endian 16-byte ULID representation of <paramref name="g"/> into
-    /// <paramref name="dest"/> (which must be at least 16 bytes long). Inverse of
-    /// <see cref="BigEndianBytesToGuid"/>.
-    /// </summary>
-    private static void GuidToBigEndianBytes(Guid g, Span<byte> dest)
-    {
-        MemoryMarshal.Write(dest, ref g);
-
-        if (BitConverter.IsLittleEndian)
-        {
-            byte t;
-            t = dest[0]; dest[0] = dest[3]; dest[3] = t;
-            t = dest[1]; dest[1] = dest[2]; dest[2] = t;
-            t = dest[4]; dest[4] = dest[5]; dest[5] = t;
-            t = dest[6]; dest[6] = dest[7]; dest[7] = t;
-        }
-    }
 }
