@@ -1,4 +1,4 @@
+using System.Reflection;
 using BenchmarkDotNet.Running;
-using ZeroAlloc.ValueObjects.Benchmarks;
 
-BenchmarkRunner.Run<ValueObjectBenchmarks>(args: args);
+BenchmarkSwitcher.FromAssembly(Assembly.GetExecutingAssembly()).Run(args);
