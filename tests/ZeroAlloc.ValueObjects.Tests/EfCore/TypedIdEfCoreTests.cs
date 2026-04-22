@@ -28,12 +28,19 @@ public sealed class Message
     public string Body { get; set; } = "";
 }
 
+public sealed class NullableOrder
+{
+    public int Id { get; set; }
+    public EfOrderId? OptionalId { get; set; }
+}
+
 public sealed class TestDbContext : DbContext
 {
     public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
 
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<NullableOrder> NullableOrders => Set<NullableOrder>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
@@ -91,6 +98,24 @@ public sealed class TypedIdEfCoreTests : IAsyncLifetime
         var found = await _db.Messages.FirstAsync();
         Assert.Equal(id, found.Id);
         Assert.Equal("hey", found.Body);
+    }
+
+    [Fact]
+    public async Task NullableTypedId_RoundTrips_WithAndWithoutValue()
+    {
+        TypedIdRuntime.SnowflakeProvider ??= new StubProv(1);
+        var id = EfOrderId.New();
+        _db.NullableOrders.Add(new NullableOrder { Id = 1, OptionalId = id });
+        _db.NullableOrders.Add(new NullableOrder { Id = 2, OptionalId = null });
+        await _db.SaveChangesAsync();
+        _db.ChangeTracker.Clear();
+
+        var withValue = await _db.NullableOrders.FirstAsync(n => n.Id == 1);
+        Assert.NotNull(withValue.OptionalId);
+        Assert.Equal(id, withValue.OptionalId!.Value);
+
+        var withoutValue = await _db.NullableOrders.FirstAsync(n => n.Id == 2);
+        Assert.Null(withoutValue.OptionalId);
     }
 
     [Fact]

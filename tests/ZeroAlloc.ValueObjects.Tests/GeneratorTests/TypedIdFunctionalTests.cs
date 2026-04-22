@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ZeroAlloc.ValueObjects;
 
 namespace ZeroAlloc.ValueObjects.Tests.GeneratorTests;
@@ -163,6 +164,34 @@ public sealed class TypedIdFunctionalTests
     private static void AssertSatisfiesParsable<T>() where T : IParsable<T>, ISpanParsable<T>
     {
         // Compile-time constraint check only; nothing to assert at runtime.
+    }
+
+    [Fact]
+    public void Ulid_TryParse_AcceptsLowercase()
+    {
+        var id = FunctionalOrderId.New();
+        var lower = id.ToString().ToLowerInvariant();
+        Assert.True(FunctionalOrderId.TryParse(lower, null, out var parsed));
+        Assert.Equal(id, parsed);
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task Ulid_New_UnderExtremeContention_IsUnique()
+    {
+        // 4 threads x 1000 ULIDs each must all be distinct — exercises MonotonicGate.
+        const int Threads = 4;
+        const int PerThread = 1000;
+        var bag = new System.Collections.Concurrent.ConcurrentBag<FunctionalOrderId>();
+        var tasks = Enumerable.Range(0, Threads)
+            .Select(_ => System.Threading.Tasks.Task.Run(() =>
+            {
+                for (int j = 0; j < PerThread; j++) bag.Add(FunctionalOrderId.New());
+            }))
+            .ToArray();
+        await System.Threading.Tasks.Task.WhenAll(tasks);
+
+        var set = new System.Collections.Generic.HashSet<FunctionalOrderId>(bag);
+        Assert.Equal(Threads * PerThread, set.Count);
     }
 
     private sealed class TestProvider : ISnowflakeWorkerIdProvider
