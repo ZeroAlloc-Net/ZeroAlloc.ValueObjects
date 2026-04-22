@@ -155,6 +155,13 @@ Each TypedId carries `[JsonConverter]` pointing at a nested converter that reads
 | `ZATI003` | Error | Struct body declares fields — generator owns `Value` |
 | `ZATI005` | Warning | Struct declared partial across multiple files |
 
+### Production checklist
+
+- **Sequential is not for production**. The counter resets on process restart. Use it only in tests where deterministic IDs matter.
+- **Snowflake worker IDs must be unique across all producing processes**. `AddSnowflakeWorkerId` cannot detect duplicates. Coordinate via orchestrator ordinals (Kubernetes pod index, Nomad alloc index) or a central registry. Duplicate worker IDs silently produce colliding IDs.
+- **Clock skew matters**. Snowflake generation handles small rollbacks by pinning to the last observed millisecond, but severe skew (>5s) throws `TypedIdException`. Run NTP-synced or accept the brief unavailability.
+- **Process restart loses Sequential state but not Snowflake or ULID/UUID7 ordering**. ULID/UUID7 are globally safe to restart; Snowflake is safe if worker ID is stable across restarts.
+
 ## Documentation
 
 | Page | Description |
