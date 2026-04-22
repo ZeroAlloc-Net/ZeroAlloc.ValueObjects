@@ -29,7 +29,13 @@ public sealed class TypedIdGenerator : IIncrementalGenerator
         {
             var (partial, asmDefault) = pair;
             var resolved = TypedIdParser.Resolve(partial, asmDefault);
-            var source = TypedIdStubWriter.Write(resolved);
+            var source = resolved.Backing switch
+            {
+                1 => TypedIdGuidWriter.Write(resolved),
+                2 => TypedIdInt64Writer.Write(resolved),
+                _ => throw new System.InvalidOperationException(
+                    $"Unexpected TypedId backing {resolved.Backing} for {resolved.Name}"),
+            };
             var hintName = resolved.Namespace is null
                 ? $"{resolved.Name}.TypedId.g.cs"
                 : $"{resolved.Namespace}_{resolved.Name}.TypedId.g.cs";

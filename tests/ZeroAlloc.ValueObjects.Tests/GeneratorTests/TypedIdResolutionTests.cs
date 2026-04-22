@@ -16,7 +16,10 @@ public sealed class TypedIdResolutionTests
             public readonly partial record struct OrderId;
             """;
         var generated = Generate(source);
-        Assert.Contains("Strategy: Ulid, Backing: Guid", generated, StringComparison.Ordinal);
+        // Ulid → Guid backing, uses UlidCore for generation.
+        Assert.Contains("public Guid Value", generated, StringComparison.Ordinal);
+        Assert.Contains("UlidCore.NewGuid()", generated, StringComparison.Ordinal);
+        Assert.Contains("UlidCore.ToBase32(Value)", generated, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -30,7 +33,9 @@ public sealed class TypedIdResolutionTests
             public readonly partial record struct MessageId;
             """;
         var generated = Generate(source);
-        Assert.Contains("Strategy: Uuid7", generated, StringComparison.Ordinal);
+        // Uuid7 → Guid backing, uses Uuid7Core for generation.
+        Assert.Contains("public Guid Value", generated, StringComparison.Ordinal);
+        Assert.Contains("Uuid7Core.NewGuid()", generated, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -44,7 +49,10 @@ public sealed class TypedIdResolutionTests
             public readonly partial record struct MessageId;
             """;
         var generated = Generate(source);
-        Assert.Contains("Strategy: Snowflake, Backing: Int64", generated, StringComparison.Ordinal);
+        // Snowflake → Int64 backing, uses SnowflakeCore with worker id resolution.
+        Assert.Contains("public long Value", generated, StringComparison.Ordinal);
+        Assert.Contains("SnowflakeCore.Next(workerId)", generated, StringComparison.Ordinal);
+        Assert.Contains("ResolveWorkerId", generated, StringComparison.Ordinal);
     }
 
     private static string Generate(string source)
