@@ -66,10 +66,10 @@ jobs:
 
   aot-smoke:
     runs-on: ubuntu-latest
-    # ubuntu-latest is fine for Native AOT on net10.0 — no cross-compile needed.
-    # This job verifies that every generator-emitted entry point survives a real
-    # `dotnet publish -p:PublishAot=true` and executes without the ILC linker
-    # firing IL2026/IL3050/IL2067/IL2075/IL2091/IL3050/IL3051 warnings-as-errors.
+    # The repo's global.json pins the .NET 9 SDK, which has full Native AOT
+    # support. This job publishes the sample with PublishAot=true and runs the
+    # binary — it catches IL2026/IL3050 regressions in generator-emitted code
+    # that the xUnit suite cannot.
     steps:
       - uses: actions/checkout@v4
         with:
@@ -78,7 +78,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: 9.0.x
 
       - name: Install AOT native toolchain
         run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
