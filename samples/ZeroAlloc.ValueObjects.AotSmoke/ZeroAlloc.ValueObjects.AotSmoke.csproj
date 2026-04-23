@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Size</OptimizationPreference>
+
+    <!--
+      Directory.Build.props sets TreatWarningsAsErrors=true globally. That turns
+      assembly-level trim roll-ups (IL2104 / IL3053) from third-party dependencies
+      into errors — we cannot fix those from inside this repo. Instead, promote
+      only the per-call trim/AOT codes that the generator is responsible for.
+    -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);IL2026;IL2067;IL2075;IL2091;IL3050;IL3051</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Strip PublishAot from the inherited properties: the main lib is ns2.0-only
+      and the generator is ns2.0-only, neither supports AOT evaluation. UndefineProperties
+      prevents the MSBuild-global `-p:PublishAot=true` (if anyone adds it to the CLI
+      later) from tripping NETSDK1207.
+    -->
+    <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects\ZeroAlloc.ValueObjects.csproj"
+                      UndefineProperties="PublishAot" />
+    <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      UndefineProperties="PublishAot" />
+  </ItemGroup>
+</Project>

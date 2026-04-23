@@ -63,3 +63,35 @@ jobs:
         with:
           name: test-results
           path: "**/*.trx"
+
+  aot-smoke:
+    runs-on: ubuntu-latest
+    # ubuntu-latest is fine for Native AOT on net10.0 — no cross-compile needed.
+    # This job verifies that every generator-emitted entry point survives a real
+    # `dotnet publish -p:PublishAot=true` and executes without the ILC linker
+    # firing IL2026/IL3050/IL2067/IL2075/IL2091/IL3050/IL3051 warnings-as-errors.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install AOT native toolchain
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Restore
+        run: dotnet restore samples/ZeroAlloc.ValueObjects.AotSmoke/ZeroAlloc.ValueObjects.AotSmoke.csproj
+
+      - name: Publish AOT
+        # No `-p:PublishAot=true` on the CLI — that propagates as a global MSBuild
+        # property to every transitive ProjectReference and trips NETSDK1207 when
+        # any referenced project (including the ns2.0 generator) is evaluated for
+        # AOT compatibility. PublishAot is declared inside the sample csproj only.
+        run: dotnet publish samples/ZeroAlloc.ValueObjects.AotSmoke/ZeroAlloc.ValueObjects.AotSmoke.csproj -r linux-x64 -c Release -o ./aot-out
+
+      - name: Run AOT binary
+        run: ./aot-out/ZeroAlloc.ValueObjects.AotSmoke

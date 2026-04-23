@@ -20,3 +20,6 @@ TestResults/
 .vs/
 .vscode/
 *.user
+
+# BenchmarkDotNet output
+BenchmarkDotNet.Artifacts/
