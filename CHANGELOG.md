@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.3.0...v1.3.1) (2026-04-28)
+
+
+### Documentation
+
+* add GitHub Sponsors badge to README ([f1a4c95](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/f1a4c95e04ff12afed0999880ae13559b4aa08dc))
+
+
+### Miscellaneous
+
+* **release:** trigger v1.3.1 to ship the EfCore companion package ([#29](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/29)) ([9089a76](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/9089a766348d4af53a3775ee0f4ae8187c148fbb))
+
 ## [1.3.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.2.0...v1.3.0) (2026-04-28)
 
 
