@@ -54,8 +54,11 @@ jobs:
       - name: Test
         run: dotnet test ZeroAlloc.ValueObjects.slnx --configuration Release --no-build
 
-      - name: Pack
+      - name: Pack ZeroAlloc.ValueObjects
         run: dotnet pack src/ZeroAlloc.ValueObjects/ZeroAlloc.ValueObjects.csproj --configuration Release --no-build -p:Version=${{ needs.release-please.outputs.version }} -o ./artifacts
+
+      - name: Pack ZeroAlloc.ValueObjects.EfCore
+        run: dotnet pack src/ZeroAlloc.ValueObjects.EfCore/ZeroAlloc.ValueObjects.EfCore.csproj --configuration Release --no-build -p:Version=${{ needs.release-please.outputs.version }} -o ./artifacts
 
       - name: Push to NuGet.org
         run: dotnet nuget push "./artifacts/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
