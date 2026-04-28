@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.2.0...v1.3.0) (2026-04-28)
+
+
+### Features
+
+* **efcore:** publish ZeroAlloc.ValueObjects.EfCore companion package ([#26](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/26)) ([79612b1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/79612b1b5daeb0433769764d254421cbf280d56b))
+
 ## [1.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.1.6...v1.2.0) (2026-04-22)
 
 
