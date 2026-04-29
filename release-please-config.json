@@ -11,6 +11,7 @@
         { "type": "refactor", "section": "Refactoring" },
         { "type": "docs", "section": "Documentation" },
         { "type": "test", "section": "Tests" },
+        { "type": "deps", "section": "Dependencies" },
         { "type": "build", "section": "Build", "hidden": true },
         { "type": "ci", "section": "CI", "hidden": true },
         { "type": "chore", "section": "Miscellaneous", "hidden": true }
