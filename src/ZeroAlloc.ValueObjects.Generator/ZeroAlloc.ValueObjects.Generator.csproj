@@ -5,6 +5,13 @@
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
+    <!--
+      The generator is bundled into ZeroAlloc.ValueObjects's NuGet package via the
+      IncludeGeneratorInPackage target in the main library's csproj. Publishing a
+      separate ZeroAlloc.ValueObjects.Generator package would just produce a broken
+      stand-alone nupkg (DLL under lib/, not analyzers/), so suppress packing here.
+    -->
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
