@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.3.3...v1.4.0) (2026-05-01)
+
+
+### Features
+
+* lock public API surface (PublicApiAnalyzers + api-compat gate) ([#38](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/38)) ([c8a5064](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/c8a5064e32449d3dc1093863d08a39785416e818))
+
+
+### Bug Fixes
+
+* restore generator package publishing (revert IsPackable=false) ([4c6f3f5](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/4c6f3f54a4eb23cc0de98e319ab85a1b3699850d))
+* restore generator package publishing with correct packaging ([d6f413a](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/d6f413a1eed821225aaed0949f68f32ad651a3a6))
+
 ## [1.3.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.3.2...v1.3.3) (2026-04-30)
 
 
