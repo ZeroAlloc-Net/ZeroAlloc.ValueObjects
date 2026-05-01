@@ -95,3 +95,9 @@ jobs:
 
       - name: Run AOT binary
         run: ./aot-out/ZeroAlloc.ValueObjects.AotSmoke
+
+  api-compat:
+    uses: ZeroAlloc-Net/.github/.github/workflows/api-compat.yml@main
+    with:
+      package-id: ZeroAlloc.ValueObjects
+      csproj-path: src/ZeroAlloc.ValueObjects/ZeroAlloc.ValueObjects.csproj
