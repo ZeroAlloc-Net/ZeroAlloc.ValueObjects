@@ -1,1 +1,56 @@
 #nullable enable
+ZeroAlloc.ValueObjects.BackingType
+ZeroAlloc.ValueObjects.BackingType.Default = 0 -> ZeroAlloc.ValueObjects.BackingType
+ZeroAlloc.ValueObjects.BackingType.Guid = 1 -> ZeroAlloc.ValueObjects.BackingType
+ZeroAlloc.ValueObjects.BackingType.Int64 = 2 -> ZeroAlloc.ValueObjects.BackingType
+ZeroAlloc.ValueObjects.EqualityMemberAttribute
+ZeroAlloc.ValueObjects.EqualityMemberAttribute.EqualityMemberAttribute() -> void
+ZeroAlloc.ValueObjects.ISnowflakeWorkerIdProvider
+ZeroAlloc.ValueObjects.ISnowflakeWorkerIdProvider.WorkerId.get -> int
+ZeroAlloc.ValueObjects.IdStrategy
+ZeroAlloc.ValueObjects.IdStrategy.Sequential = 3 -> ZeroAlloc.ValueObjects.IdStrategy
+ZeroAlloc.ValueObjects.IdStrategy.Snowflake = 2 -> ZeroAlloc.ValueObjects.IdStrategy
+ZeroAlloc.ValueObjects.IdStrategy.Ulid = 0 -> ZeroAlloc.ValueObjects.IdStrategy
+ZeroAlloc.ValueObjects.IdStrategy.Uuid7 = 1 -> ZeroAlloc.ValueObjects.IdStrategy
+ZeroAlloc.ValueObjects.IgnoreEqualityMemberAttribute
+ZeroAlloc.ValueObjects.IgnoreEqualityMemberAttribute.IgnoreEqualityMemberAttribute() -> void
+ZeroAlloc.ValueObjects.SequentialCore
+ZeroAlloc.ValueObjects.SnowflakeCore
+ZeroAlloc.ValueObjects.SnowflakeServiceCollectionExtensions
+ZeroAlloc.ValueObjects.TypedIdAttribute
+ZeroAlloc.ValueObjects.TypedIdAttribute.Backing.get -> ZeroAlloc.ValueObjects.BackingType
+ZeroAlloc.ValueObjects.TypedIdAttribute.Backing.init -> void
+ZeroAlloc.ValueObjects.TypedIdAttribute.Strategy.get -> ZeroAlloc.ValueObjects.IdStrategy
+ZeroAlloc.ValueObjects.TypedIdAttribute.Strategy.init -> void
+ZeroAlloc.ValueObjects.TypedIdAttribute.TypedIdAttribute() -> void
+ZeroAlloc.ValueObjects.TypedIdDefaultAttribute
+ZeroAlloc.ValueObjects.TypedIdDefaultAttribute.Backing.get -> ZeroAlloc.ValueObjects.BackingType
+ZeroAlloc.ValueObjects.TypedIdDefaultAttribute.Backing.init -> void
+ZeroAlloc.ValueObjects.TypedIdDefaultAttribute.Strategy.get -> ZeroAlloc.ValueObjects.IdStrategy
+ZeroAlloc.ValueObjects.TypedIdDefaultAttribute.Strategy.init -> void
+ZeroAlloc.ValueObjects.TypedIdDefaultAttribute.TypedIdDefaultAttribute() -> void
+ZeroAlloc.ValueObjects.TypedIdException
+ZeroAlloc.ValueObjects.TypedIdException.TypedIdException() -> void
+ZeroAlloc.ValueObjects.TypedIdException.TypedIdException(string! message) -> void
+ZeroAlloc.ValueObjects.TypedIdException.TypedIdException(string! message, System.Exception! innerException) -> void
+ZeroAlloc.ValueObjects.TypedIdRuntime
+ZeroAlloc.ValueObjects.UlidCore
+ZeroAlloc.ValueObjects.Uuid7Core
+ZeroAlloc.ValueObjects.ValueObjectAttribute
+ZeroAlloc.ValueObjects.ValueObjectAttribute.ForceClass.get -> bool
+ZeroAlloc.ValueObjects.ValueObjectAttribute.ForceClass.set -> void
+ZeroAlloc.ValueObjects.ValueObjectAttribute.ValueObjectAttribute() -> void
+const ZeroAlloc.ValueObjects.SnowflakeCore.MaxWorkerId = 1023 -> int
+static ZeroAlloc.ValueObjects.SequentialCore.Next() -> long
+static ZeroAlloc.ValueObjects.SequentialCore.Reset() -> void
+static ZeroAlloc.ValueObjects.SnowflakeCore.ExtractWorkerId(long id) -> int
+static ZeroAlloc.ValueObjects.SnowflakeCore.Next(int workerId) -> long
+static ZeroAlloc.ValueObjects.SnowflakeServiceCollectionExtensions.AddSnowflakeWorkerId(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Func<System.IServiceProvider!, int>! factory) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static ZeroAlloc.ValueObjects.SnowflakeServiceCollectionExtensions.AddSnowflakeWorkerId(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, int workerId) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static ZeroAlloc.ValueObjects.SnowflakeServiceCollectionExtensions.AddSnowflakeWorkerId(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! envVar, int fallback = 0) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static ZeroAlloc.ValueObjects.TypedIdRuntime.SnowflakeProvider.get -> ZeroAlloc.ValueObjects.ISnowflakeWorkerIdProvider?
+static ZeroAlloc.ValueObjects.UlidCore.NewGuid() -> System.Guid
+static ZeroAlloc.ValueObjects.UlidCore.ToBase32(System.Guid value) -> string!
+static ZeroAlloc.ValueObjects.UlidCore.TryFromBase32(System.ReadOnlySpan<char> s, out System.Guid value) -> bool
+static ZeroAlloc.ValueObjects.Uuid7Core.NewGuid() -> System.Guid
+static ZeroAlloc.ValueObjects.Uuid7Core.WriteBigEndianBytes(System.Guid value, System.Span<byte> destination) -> void
