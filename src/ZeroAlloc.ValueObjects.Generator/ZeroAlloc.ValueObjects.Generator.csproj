@@ -5,13 +5,21 @@
     <Nullable>enable</Nullable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
+
     <!--
-      The generator is bundled into ZeroAlloc.ValueObjects's NuGet package via the
-      IncludeGeneratorInPackage target in the main library's csproj. Publishing a
-      separate ZeroAlloc.ValueObjects.Generator package would just produce a broken
-      stand-alone nupkg (DLL under lib/, not analyzers/), so suppress packing here.
+      Dual-publish: the generator is bundled into ZeroAlloc.ValueObjects's NuGet package
+      via IncludeGeneratorInPackage in the main library, AND also published as a standalone
+      ZeroAlloc.ValueObjects.Generator package for backwards compatibility with consumers
+      that have a direct PackageReference to it. New consumers should reference the main
+      ZeroAlloc.ValueObjects package only.
+
+      Source-generator packaging recipe — DLL must end up under analyzers/dotnet/cs/ for
+      Roslyn to load it (issue ZeroAlloc.Rest#67). Without IncludeBuildOutput=false the
+      output also goes to lib/ which can confuse Roslyn's loader.
     -->
-    <IsPackable>false</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
@@ -20,5 +28,16 @@
   <ItemGroup>
     <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
     <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false" />
+    <None Include="$(OutputPath)\$(AssemblyName).pdb"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false"
+          Condition="Exists('$(OutputPath)\$(AssemblyName).pdb')" />
   </ItemGroup>
 </Project>
