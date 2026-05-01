@@ -4,6 +4,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Explicitly elevate public-API analyzer diagnostics so the surface
+         stays locked even if TreatWarningsAsErrors is ever scoped down. -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0016;RS0017</WarningsAsErrors>
 
     <!-- NuGet package metadata (shared across all packable projects) -->
     <Authors>Marcel Roozekrans</Authors>
