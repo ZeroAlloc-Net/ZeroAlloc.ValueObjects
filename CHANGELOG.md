@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.3.2...v1.3.3) (2026-04-30)
+
+
+### Bug Fixes
+
+* stop publishing broken stand-alone generator nupkg ([ce8c1fd](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/ce8c1fdd96db2c115841c033c1a34b554bd421b1))
+* stop publishing broken stand-alone generator nupkg ([9bc0c4d](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/9bc0c4d15038129546fde967f0842765bc63f34c))
+
 ## [1.3.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.3.1...v1.3.2) (2026-04-29)
 
 
