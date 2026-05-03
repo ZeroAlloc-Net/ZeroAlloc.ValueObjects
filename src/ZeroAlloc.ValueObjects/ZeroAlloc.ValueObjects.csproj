@@ -1,6 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <!--
+      Multi-target so consumers on modern TFMs can opt into the
+      ZeroAlloc.Serialisation integration emitted by the [TypedId] generator
+      (closes ValueObjects#25). The netstandard2.0 leg is kept for
+      backwards compatibility — on that TFM the generator continues to emit
+      only the existing JsonConverter<T> and skips the ISerializer<T> block.
+      ZeroAlloc.Serialisation requires netstandard2.1+, so the package
+      reference below is conditional on the modern TFMs.
+    -->
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
     <PackageId>ZeroAlloc.ValueObjects</PackageId>
     <Description>Zero-allocation source-generated ValueObject equality and strongly-typed IDs (ULID, UUIDv7, Snowflake, Sequential) for hot paths. Eliminates boxing and iterator allocations from CSharpFunctionalExtensions.ValueObject.GetEqualityComponents().</Description>
     <!-- Version is injected by CI via -p:Version=; fallback for local builds -->
@@ -8,15 +17,43 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
+  <!--
+    Mark the modern TFM legs as AOT-compatible so trimmer warnings get surfaced
+    in consumers that publish with PublishAot=true. The library doesn't itself
+    publish AOT (it's a library), so PublishAot is left unset here.
+  -->
+  <PropertyGroup>
+    <IsAotCompatible Condition="'$(TargetFramework)' != 'netstandard2.0'">true</IsAotCompatible>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Memory" Version="4.5.5" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="System.Memory" Version="4.6.3" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <!--
+      Modern TFMs need 10.0.0 because ZeroAlloc.Serialisation 2.1.0 transitively
+      requires Microsoft.Extensions.DependencyInjection.Abstractions >= 10.0.0.
+      Keep 8.0.0 on netstandard2.0 to stay compatible with hosts on .NET 8.
+    -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <!--
+    ZeroAlloc.Serialisation requires netstandard2.1+. Reference it only on
+    the modern TFMs so consumers on netstandard2.0 still get a working build
+    (without the new ISerializer<T> emission). Generator output is guarded
+    by #if NETSTANDARD2_1_OR_GREATER || NET so it only compiles where
+    ZeroAlloc.Serialisation is actually present.
+  -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
+    <PackageReference Include="ZeroAlloc.Serialisation" Version="2.1.0" />
   </ItemGroup>
 
   <ItemGroup>

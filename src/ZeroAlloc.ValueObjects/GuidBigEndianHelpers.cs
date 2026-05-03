@@ -51,7 +51,14 @@ internal static class GuidBigEndianHelpers
     /// <param name="dest">The destination buffer (at least 16 bytes).</param>
     public static void GuidToBigEndianBytes(Guid g, Span<byte> dest)
     {
+        // MemoryMarshal.Write's second parameter is `ref T` on netstandard2.0
+        // but `in T` on net7+ (CS9191). Use `in g` so the call is valid against
+        // both signatures across our multi-target build.
+#if NET7_0_OR_GREATER
+        MemoryMarshal.Write(dest, in g);
+#else
         MemoryMarshal.Write(dest, ref g);
+#endif
 
         if (BitConverter.IsLittleEndian)
         {
