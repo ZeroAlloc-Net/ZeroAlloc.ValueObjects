@@ -24,16 +24,26 @@
 
   <ItemGroup>
     <!--
-      Strip PublishAot from the inherited properties: the main lib is ns2.0-only
-      and the generator is ns2.0-only, neither supports AOT evaluation. UndefineProperties
-      prevents the MSBuild-global `-p:PublishAot=true` (if anyone adds it to the CLI
-      later) from tripping NETSDK1207.
+      Pin the lib reference to net8.0 (the highest non-netstandard TFM in the
+      multi-target list) and strip PublishAot. Without SetTargetFramework,
+      MSBuild walks every TFM leg of the multi-target project — including
+      netstandard2.0, which cannot evaluate PublishAot=true (NETSDK1207).
+      Same for the generator: it is ns2.0-only and is consumed purely as an
+      analyzer; its assembly never appears in the AOT-published output.
+
+      Note: when running `dotnet publish` with `-p:PublishAot=true` on the CLI,
+      the property propagates as a global MSBuild property to every transitive
+      project's restore graph and bypasses UndefineProperties. The CI workflow
+      relies on the in-project `<PublishAot>true</PublishAot>` declaration above
+      and does NOT pass `-p:PublishAot=true` on the CLI for this reason.
     -->
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects\ZeroAlloc.ValueObjects.csproj"
+                      SetTargetFramework="TargetFramework=net8.0"
                       UndefineProperties="PublishAot" />
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false"
+                      SetTargetFramework="TargetFramework=netstandard2.0"
                       UndefineProperties="PublishAot" />
   </ItemGroup>
 </Project>
