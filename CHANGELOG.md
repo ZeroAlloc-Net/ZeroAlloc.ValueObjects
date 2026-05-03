@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.4.0...v1.4.1) (2026-05-03)
+
+
+### Bug Fixes
+
+* **release-please:** drop pre-major flags (package is post-1.0) ([#39](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/39)) ([9d08117](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/9d0811726ffc80a28956aa120b68f2f294b180ee))
+
 ## [1.4.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.3.3...v1.4.0) (2026-05-01)
 
 
