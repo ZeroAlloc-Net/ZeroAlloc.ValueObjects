@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.4.1...v1.5.0) (2026-05-03)
+
+
+### Features
+
+* emit ISerializer&lt;T&gt; alongside JsonConverter&lt;T&gt; for [TypedId] types ([#42](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/42)) ([02c7e70](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/02c7e70ef034982180a4add8cd91b729e6e928c1))
+
 ## [1.4.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.4.0...v1.4.1) (2026-05-03)
 
 
