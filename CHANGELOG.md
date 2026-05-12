@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.5.0...v1.5.1) (2026-05-12)
+
+
+### Bug Fixes
+
+* **readme:** absolute GitHub URLs so nuget.org links resolve ([#46](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/46)) ([d86c909](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/d86c9094b03217e0b9e1bb212bbdd911323adf77))
+
 ## [1.5.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.4.1...v1.5.0) (2026-05-03)
 
 
