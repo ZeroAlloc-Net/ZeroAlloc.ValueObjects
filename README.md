@@ -55,7 +55,7 @@ string s   = a.ToString();      // "Money { Amount = 10, Currency = USD }"
 | **ZeroAlloc_GetHashCode**       |  2.4 ns | **0 B**   |
 | **ZeroAllocStruct_GetHashCode** |  2.2 ns | **0 B**   |
 
-Full methodology and more scenarios: [docs/performance.md](docs/performance.md)
+Full methodology and more scenarios: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md)
 
 ## Features
 
@@ -170,26 +170,26 @@ Each TypedId carries `[JsonConverter]` pointing at a nested converter that reads
 
 | Page | Description |
 |------|-------------|
-| [Why this library?](docs/why.md) | The problem with CFE, why not just use `record` |
-| [Installation](docs/installation.md) | NuGet install, .NET version requirements |
-| [Getting Started](docs/getting-started.md) | Step-by-step quickstart with core concepts |
-| [Attribute Reference](docs/attributes.md) | `[ValueObject]`, `[EqualityMember]`, `[IgnoreEqualityMember]` |
-| [Member Selection](docs/member-selection.md) | How properties are chosen for equality |
-| [Generated Output](docs/generated-output.md) | Exact code the generator emits |
-| [Struct vs. Class](docs/struct-vs-class.md) | When to use each, `ForceClass` |
-| [Nullable Properties](docs/nullable-properties.md) | Null-safe comparison generation |
-| [Usage Patterns](docs/patterns.md) | Dictionary keys, HashSets, LINQ, EF Core, pattern matching |
-| [Migration Guide](docs/migration.md) | From CFE `ValueObject`, from manual equality |
-| [Performance](docs/performance.md) | Benchmark results and how to run them |
-| [Design Decisions](docs/design.md) | Trade-offs, intentional omissions |
-| [Troubleshooting](docs/troubleshooting.md) | Common errors and fixes |
-| [Testing](docs/testing.md) | Writing unit tests for value object equality |
+| [Why this library?](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/why.md) | The problem with CFE, why not just use `record` |
+| [Installation](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/installation.md) | NuGet install, .NET version requirements |
+| [Getting Started](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/getting-started.md) | Step-by-step quickstart with core concepts |
+| [Attribute Reference](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/attributes.md) | `[ValueObject]`, `[EqualityMember]`, `[IgnoreEqualityMember]` |
+| [Member Selection](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/member-selection.md) | How properties are chosen for equality |
+| [Generated Output](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/generated-output.md) | Exact code the generator emits |
+| [Struct vs. Class](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/struct-vs-class.md) | When to use each, `ForceClass` |
+| [Nullable Properties](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/nullable-properties.md) | Null-safe comparison generation |
+| [Usage Patterns](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/patterns.md) | Dictionary keys, HashSets, LINQ, EF Core, pattern matching |
+| [Migration Guide](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/migration.md) | From CFE `ValueObject`, from manual equality |
+| [Performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md) | Benchmark results and how to run them |
+| [Design Decisions](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/design.md) | Trade-offs, intentional omissions |
+| [Troubleshooting](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/troubleshooting.md) | Common errors and fixes |
+| [Testing](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/testing.md) | Writing unit tests for value object equality |
 | **Examples** | |
-| [E-Commerce](docs/examples/ecommerce.md) | `ProductId`, `Money`, `ShippingAddress`, `Discount` |
-| [Finance](docs/examples/finance.md) | `Iban`, `CurrencyPair`, `AccountNumber` |
-| [HR / Identity](docs/examples/hr-identity.md) | `EmailAddress`, `EmployeeId`, `FullName` |
-| [Geospatial](docs/examples/geospatial.md) | `Coordinates`, `GeoRegion` |
-| [Scheduling](docs/examples/scheduling.md) | `DateRange`, `TimeSlot` |
+| [E-Commerce](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/ecommerce.md) | `ProductId`, `Money`, `ShippingAddress`, `Discount` |
+| [Finance](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/finance.md) | `Iban`, `CurrencyPair`, `AccountNumber` |
+| [HR / Identity](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/hr-identity.md) | `EmailAddress`, `EmployeeId`, `FullName` |
+| [Geospatial](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/geospatial.md) | `Coordinates`, `GeoRegion` |
+| [Scheduling](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/scheduling.md) | `DateRange`, `TimeSlot` |
 
 ## License
 
