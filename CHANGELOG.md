@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.5.1...v1.6.0) (2026-05-13)
+
+
+### Features
+
+* **benchmarks:** add Vogen as competitor for single-int wrapped IDs ([#48](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/48)) ([1f7928a](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/1f7928abcce98ee9374ddac4f5c06e2ee20e2b95))
+
 ## [1.5.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.5.0...v1.5.1) (2026-05-12)
 
 
