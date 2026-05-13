@@ -5,10 +5,12 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);EPS01;MA0008;MA0011;MA0097;CA1815;CA1066</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="2.42.0" />
+    <PackageReference Include="Vogen" Version="6.0.0" PrivateAssets="all" />
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects\ZeroAlloc.ValueObjects.csproj" />
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj"
                       OutputItemType="Analyzer"

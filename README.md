@@ -40,22 +40,29 @@ string s   = a.ToString();      // "Money { Amount = 10, Currency = USD }"
 
 ## Performance
 
-`ZeroAlloc.ValueObjects` matches `record` and `record struct` performance exactly. The only allocating variant is `CSharpFunctionalExtensions.ValueObject`.
+**Multi-field value objects** (`Money(decimal Amount, string Currency)`): ZA matches `record` / `record struct` exactly. CFE allocates ~90 B per call.
 
-| Method                          | Mean    | Allocated |
-|---------------------------------|--------:|----------:|
-| CFE_Equals                      | 45.2 ns | 96 B      |
-| Record_Equals                   |  3.1 ns | 0 B       |
-| RecordStruct_Equals             |  2.8 ns | 0 B       |
-| **ZeroAlloc_Equals**            |  3.1 ns | **0 B**   |
-| **ZeroAllocStruct_Equals**      |  2.8 ns | **0 B**   |
-| CFE_GetHashCode                 | 38.7 ns | 88 B      |
-| Record_GetHashCode              |  2.4 ns | 0 B       |
-| RecordStruct_GetHashCode        |  2.2 ns | 0 B       |
-| **ZeroAlloc_GetHashCode**       |  2.4 ns | **0 B**   |
-| **ZeroAllocStruct_GetHashCode** |  2.2 ns | **0 B**   |
+| Method | Mean | Allocated |
+|---|---:|---:|
+| CFE_Equals | 45.2 ns | 96 B |
+| Record_Equals | 3.1 ns | 0 B |
+| **ZeroAllocStruct_Equals** | **2.8 ns** | **0 B** |
+| CFE_GetHashCode | 38.7 ns | 88 B |
+| **ZeroAllocStruct_GetHashCode** | **2.2 ns** | **0 B** |
 
-Full methodology and more scenarios: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md)
+**Single-int wrapped IDs vs [Vogen](https://github.com/SteveDunn/Vogen)** (the source-gen alternative):
+
+| Operation | Vogen | ZA.ValueObjects | Winner |
+|---|---:|---:|---|
+| `From(value)` | 4.12 ns | **0.30 ns** | **ZA 14× faster** |
+| `Equals` (equal) | 0.54 ns | **0.08 ns** | **ZA 7× faster** |
+| `Equals` (not equal) | 0.67 ns | **0.20 ns** | **ZA 3× faster** |
+| `GetHashCode` | **0.05 ns** | 1.50 ns | Vogen 30× faster |
+| `ToString` | **4.45 ns** | 41.75 ns / 72 B | Vogen 9× faster |
+
+ZA wins the hot-path operations users hit most (construction + equality). Vogen wins formatting and hashing. **ZA also supports multi-field types** — `[ValueObject]` on records with any number of fields — which Vogen does not.
+
+Full methodology and analysis: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md)
 
 ## Features
 
