@@ -175,6 +175,13 @@ internal static class SourceWriter
             return;
         }
 
+        if (model.Properties.Count == 1)
+        {
+            var expr = ChooseToStringExpr(model.Properties[0]);
+            sb.AppendLine($"    public override string ToString() => {expr};");
+            return;
+        }
+
         var parts = string.Join(", ", model.Properties.Select(p => p.Name + " = {" + p.Name + "}"));
         sb.AppendLine("    public override string ToString() => $\"" + model.TypeName + " {{ " + parts + " }}\";");
     }
