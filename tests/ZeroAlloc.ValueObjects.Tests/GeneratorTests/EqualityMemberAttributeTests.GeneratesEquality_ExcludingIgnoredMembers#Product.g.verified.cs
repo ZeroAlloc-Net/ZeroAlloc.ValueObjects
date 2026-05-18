@@ -13,11 +13,11 @@ sealed partial class Product : System.IEquatable<Product>
 
     public override int GetHashCode()
     {
-        return System.HashCode.Combine(Name);
+        return Name?.GetHashCode() ?? 0;
     }
 
     public static bool operator ==(Product? left, Product? right) => left is null ? right is null : left.Equals(right);
     public static bool operator !=(Product? left, Product? right) => !(left == right);
 
-    public override string ToString() => $"Product {{ Name = {Name} }}";
+    public override string ToString() => Name;
 }

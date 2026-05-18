@@ -13,11 +13,11 @@ sealed partial class GlobalType : System.IEquatable<GlobalType>
 
     public override int GetHashCode()
     {
-        return System.HashCode.Combine(Value);
+        return Value?.GetHashCode() ?? 0;
     }
 
     public static bool operator ==(GlobalType? left, GlobalType? right) => left is null ? right is null : left.Equals(right);
     public static bool operator !=(GlobalType? left, GlobalType? right) => !(left == right);
 
-    public override string ToString() => $"GlobalType {{ Value = {Value} }}";
+    public override string ToString() => Value;
 }

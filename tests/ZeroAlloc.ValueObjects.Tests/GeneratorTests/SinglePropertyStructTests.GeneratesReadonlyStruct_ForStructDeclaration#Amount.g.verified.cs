@@ -12,11 +12,11 @@ readonly partial struct Amount : System.IEquatable<Amount>
 
     public override int GetHashCode()
     {
-        return System.HashCode.Combine(Value);
+        return Value.GetHashCode();
     }
 
     public static bool operator ==(Amount left, Amount right) => left.Equals(right);
     public static bool operator !=(Amount left, Amount right) => !left.Equals(right);
 
-    public override string ToString() => $"Amount {{ Value = {Value} }}";
+    public override string ToString() => Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture);
 }

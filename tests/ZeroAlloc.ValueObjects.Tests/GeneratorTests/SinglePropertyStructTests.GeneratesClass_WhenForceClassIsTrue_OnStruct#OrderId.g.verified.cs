@@ -13,11 +13,11 @@ sealed partial class OrderId : System.IEquatable<OrderId>
 
     public override int GetHashCode()
     {
-        return System.HashCode.Combine(Value);
+        return Value.GetHashCode();
     }
 
     public static bool operator ==(OrderId? left, OrderId? right) => left is null ? right is null : left.Equals(right);
     public static bool operator !=(OrderId? left, OrderId? right) => !(left == right);
 
-    public override string ToString() => $"OrderId {{ Value = {Value} }}";
+    public override string ToString() => Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture);
 }
