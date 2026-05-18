@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.6.0...v1.7.0) (2026-05-18)
+
+
+### Features
+
+* **gen:** emit bare ToString + Value.GetHashCode for single-property [ValueObject] ([#50](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/50)) ([be2c02b](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/be2c02baea8c90df88d1d86c4703ffc999cc26a9))
+
 ## [1.6.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.5.1...v1.6.0) (2026-05-13)
 
 
