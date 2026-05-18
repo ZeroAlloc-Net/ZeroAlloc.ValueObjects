@@ -121,6 +121,18 @@ internal static class SourceWriter
         {
             sb.AppendLine("        return 0;");
         }
+        else if (model.Properties.Count == 1)
+        {
+            var p = model.Properties[0];
+            // For known value types (incl. Nullable<T>), .GetHashCode() is null-safe by construction.
+            // For reference types, the value can be null at runtime even when not nullable-annotated —
+            // use the null-conditional form unconditionally for safety. The JIT inlines this away
+            // for the non-null fast path.
+            var expr = IsValueType(p.TypeName)
+                ? $"{p.Name}.GetHashCode()"
+                : $"{p.Name}?.GetHashCode() ?? 0";
+            sb.AppendLine($"        return {expr};");
+        }
         else if (model.Properties.Count <= 8)
         {
             var args = string.Join(", ", model.Properties.Select(p => p.Name));
