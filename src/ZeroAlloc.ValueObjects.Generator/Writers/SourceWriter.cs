@@ -33,6 +33,21 @@ internal static class SourceWriter
            || string.Equals(typeName, "System.Boolean", System.StringComparison.Ordinal)
            || string.Equals(typeName, "System.Char", System.StringComparison.Ordinal);
 
+    private static string ChooseToStringExpr(EqualityProperty p)
+    {
+        if (IsStringType(p.TypeName))
+            return p.IsNullable ? $"{p.Name} ?? \"\"" : p.Name;
+
+        if (IsFormattable(p.TypeName))
+            return p.IsNullable
+                ? $"{p.Name}?.ToString(global::System.Globalization.CultureInfo.InvariantCulture) ?? \"\""
+                : $"{p.Name}.ToString(global::System.Globalization.CultureInfo.InvariantCulture)";
+
+        return p.IsNullable
+            ? $"{p.Name}?.ToString() ?? \"\""
+            : $"{p.Name}.ToString()";
+    }
+
     public static string Write(ValueObjectModel model)
     {
         var sb = new StringBuilder();
