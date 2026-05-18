@@ -37,21 +37,21 @@ ZA.ValueObjects matches `record` / `record struct` exactly. CFE allocates ~90 B 
 ### Single-int wrapped IDs vs Vogen
 
 <!-- BENCH:START -->
-_Last refreshed: 2026-05-13_
+_Last refreshed: 2026-05-18_
 
 | Operation | Vogen | ZA.ValueObjects | Winner |
 |---|---:|---:|---|
-| `From(value)` | 4.12 ns | **0.30 ns** | **ZA 14× faster** |
-| `Equals` (equal) | 0.54 ns | **0.08 ns** | **ZA 7× faster** |
-| `Equals` (not equal) | 0.67 ns | **0.20 ns** | **ZA 3× faster** |
-| `GetHashCode` | **0.05 ns** | 1.50 ns | Vogen 30× faster |
-| `ToString` | **4.45 ns** | 41.75 ns / **72 B** | Vogen 9× faster; ZA allocates |
+| `From(value)` | 4.66 ns | **0.39 ns** | **ZA 12× faster** |
+| `Equals` (equal) | 1.15 ns | **0.09 ns** | **ZA 13× faster** |
+| `Equals` (not equal) | 0.31 ns | **0.02 ns** | **ZA 15× faster** |
+| `GetHashCode` | 0.03 ns | 0.42 ns | parity (both in BDN ZeroMeasurement zone) |
+| `ToString` | 6.40 ns | **3.52 ns** | **ZA 1.8× faster** |
 
-Both libraries are 0 B on equality and construction. ZA wins the hot-path operations (`From`, `Equals`) by a wide margin — Vogen's `From` pays validation overhead even when the validation succeeds. Vogen wins `GetHashCode` (its primitive-wrapped hash inlines to the raw int) and `ToString` (no allocation; ZA's default `ToString` boxes through string formatting and allocates 72 B).
+Both libraries are 0 B on every row. ZA wins the hot-path operations (`From`, `Equals`) by a wide margin — Vogen's `From` pays validation overhead even when validation succeeds. `GetHashCode` is effectively a tie (both rows sit in BDN's ZeroMeasurement zone — "indistinguishable from empty method"). `ToString` is now ZA's win after the single-property generator emit was aligned: the generator emits `Value.ToString(CultureInfo.InvariantCulture)` directly instead of the previous record-wrapped `$"TypeName {{ Value = {Value} }}"` interpolation.
 
-**The trade-off**: ZA optimises construction and equality; Vogen optimises hashing and formatting. For value-object usage dominated by lookup-key equality (dictionary keys, set membership, change tracking), ZA wins. For value-object usage dominated by logging and display, Vogen wins.
+**The trade-off**: ZA optimises construction, equality, and now `ToString` and hashing alongside Vogen. Vogen's narrower wrapping (single primitive) and ZA's broader surface (multi-field, custom types, EF Core converters) make them complementary choices — pick by feature surface, not raw single-int benchmark numbers.
 
-ZA's `ToString` allocation is a known cost; it can be eliminated by overriding `ToString()` manually with a direct `value.ToString(CultureInfo.InvariantCulture)`.
+History: the previous single-property `ToString` allocated ~72 B per call and `GetHashCode` was ~30× slower than Vogen, both fixed in ZeroAlloc.ValueObjects v1.7 by emitting bare `Value.ToString(InvariantCulture)` / `Value.GetHashCode()` for 1-property `[ValueObject]` types. Multi-property types are unchanged.
 <!-- BENCH:END -->
 
 ### Multi-field is a ZA-only feature

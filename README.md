@@ -54,13 +54,13 @@ string s   = a.ToString();      // "Money { Amount = 10, Currency = USD }"
 
 | Operation | Vogen | ZA.ValueObjects | Winner |
 |---|---:|---:|---|
-| `From(value)` | 4.12 ns | **0.30 ns** | **ZA 14× faster** |
-| `Equals` (equal) | 0.54 ns | **0.08 ns** | **ZA 7× faster** |
-| `Equals` (not equal) | 0.67 ns | **0.20 ns** | **ZA 3× faster** |
-| `GetHashCode` | **0.05 ns** | 1.50 ns | Vogen 30× faster |
-| `ToString` | **4.45 ns** | 41.75 ns / 72 B | Vogen 9× faster |
+| `From(value)` | 4.66 ns | **0.39 ns** | **ZA 12× faster** |
+| `Equals` (equal) | 1.15 ns | **0.09 ns** | **ZA 13× faster** |
+| `Equals` (not equal) | 0.31 ns | **0.02 ns** | **ZA 15× faster** |
+| `GetHashCode` | 0.03 ns | 0.42 ns | parity (both in ZeroMeasurement zone) |
+| `ToString` | 6.40 ns | **3.52 ns** | **ZA 1.8× faster** |
 
-ZA wins the hot-path operations users hit most (construction + equality). Vogen wins formatting and hashing. **ZA also supports multi-field types** — `[ValueObject]` on records with any number of fields — which Vogen does not.
+ZA wins or ties every row, with 0 B allocated on all of them. The previous regressions on `GetHashCode` (~30× slower) and `ToString` (~72 B allocation) were closed in v1.7 by aligning the single-property emit to `Value.ToString(InvariantCulture)` / `Value.GetHashCode()` directly. **ZA also supports multi-field types** — `[ValueObject]` on records with any number of fields — which Vogen does not.
 
 Full methodology and analysis: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md)
 

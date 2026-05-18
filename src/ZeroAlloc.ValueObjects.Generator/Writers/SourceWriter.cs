@@ -6,6 +6,48 @@ namespace ZeroAlloc.ValueObjects.Generator.Writers;
 
 internal static class SourceWriter
 {
+    private static readonly System.Collections.Generic.HashSet<string> s_formattable = new(System.StringComparer.Ordinal)
+    {
+        // Keyword form (default Roslyn ToDisplayString for primitives).
+        "int", "long", "short", "byte", "uint", "ulong", "ushort", "sbyte",
+        "float", "double", "decimal",
+        // FQN form (defensive — covers non-keyword BCL formattables and any future format change).
+        "System.Int32", "System.Int64", "System.Int16", "System.Byte",
+        "System.UInt32", "System.UInt64", "System.UInt16", "System.SByte",
+        "System.Single", "System.Double", "System.Decimal",
+        "System.DateTime", "System.DateTimeOffset",
+        "System.DateOnly", "System.TimeOnly", "System.TimeSpan",
+        "System.Guid", "System.Numerics.BigInteger",
+    };
+
+    private static bool IsFormattable(string typeName) => s_formattable.Contains(typeName);
+
+    private static bool IsStringType(string typeName)
+        => string.Equals(typeName, "string", System.StringComparison.Ordinal)
+           || string.Equals(typeName, "System.String", System.StringComparison.Ordinal);
+
+    private static bool IsValueType(string typeName)
+        => IsFormattable(typeName)
+           || string.Equals(typeName, "bool", System.StringComparison.Ordinal)
+           || string.Equals(typeName, "char", System.StringComparison.Ordinal)
+           || string.Equals(typeName, "System.Boolean", System.StringComparison.Ordinal)
+           || string.Equals(typeName, "System.Char", System.StringComparison.Ordinal);
+
+    private static string ChooseToStringExpr(EqualityProperty p)
+    {
+        if (IsStringType(p.TypeName))
+            return p.IsNullable ? $"{p.Name} ?? \"\"" : p.Name;
+
+        if (IsFormattable(p.TypeName))
+            return p.IsNullable
+                ? $"{p.Name}?.ToString(global::System.Globalization.CultureInfo.InvariantCulture) ?? \"\""
+                : $"{p.Name}.ToString(global::System.Globalization.CultureInfo.InvariantCulture)";
+
+        return p.IsNullable
+            ? $"{p.Name}?.ToString() ?? \"\""
+            : $"{p.Name}.ToString()";
+    }
+
     public static string Write(ValueObjectModel model)
     {
         var sb = new StringBuilder();
@@ -79,6 +121,18 @@ internal static class SourceWriter
         {
             sb.AppendLine("        return 0;");
         }
+        else if (model.Properties.Count == 1)
+        {
+            var p = model.Properties[0];
+            // For known value types (incl. Nullable<T>), .GetHashCode() is null-safe by construction.
+            // For reference types, the value can be null at runtime even when not nullable-annotated —
+            // use the null-conditional form unconditionally for safety. The JIT inlines this away
+            // for the non-null fast path.
+            var expr = IsValueType(p.TypeName)
+                ? $"{p.Name}.GetHashCode()"
+                : $"{p.Name}?.GetHashCode() ?? 0";
+            sb.AppendLine($"        return {expr};");
+        }
         else if (model.Properties.Count <= 8)
         {
             var args = string.Join(", ", model.Properties.Select(p => p.Name));
@@ -118,6 +172,13 @@ internal static class SourceWriter
         if (model.Properties.Count == 0)
         {
             sb.AppendLine($"    public override string ToString() => \"{model.TypeName} {{ }}\";");
+            return;
+        }
+
+        if (model.Properties.Count == 1)
+        {
+            var expr = ChooseToStringExpr(model.Properties[0]);
+            sb.AppendLine($"    public override string ToString() => {expr};");
             return;
         }
 

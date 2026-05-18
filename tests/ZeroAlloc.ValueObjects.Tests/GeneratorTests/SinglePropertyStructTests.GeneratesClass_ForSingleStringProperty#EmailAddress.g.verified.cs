@@ -13,11 +13,11 @@ sealed partial class EmailAddress : System.IEquatable<EmailAddress>
 
     public override int GetHashCode()
     {
-        return System.HashCode.Combine(Value);
+        return Value?.GetHashCode() ?? 0;
     }
 
     public static bool operator ==(EmailAddress? left, EmailAddress? right) => left is null ? right is null : left.Equals(right);
     public static bool operator !=(EmailAddress? left, EmailAddress? right) => !(left == right);
 
-    public override string ToString() => $"EmailAddress {{ Value = {Value} }}";
+    public override string ToString() => Value;
 }
