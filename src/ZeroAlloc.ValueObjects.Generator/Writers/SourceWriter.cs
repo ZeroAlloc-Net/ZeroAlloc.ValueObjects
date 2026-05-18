@@ -6,6 +6,33 @@ namespace ZeroAlloc.ValueObjects.Generator.Writers;
 
 internal static class SourceWriter
 {
+    private static readonly System.Collections.Generic.HashSet<string> s_formattable = new(System.StringComparer.Ordinal)
+    {
+        // Keyword form (default Roslyn ToDisplayString for primitives).
+        "int", "long", "short", "byte", "uint", "ulong", "ushort", "sbyte",
+        "float", "double", "decimal",
+        // FQN form (defensive — covers non-keyword BCL formattables and any future format change).
+        "System.Int32", "System.Int64", "System.Int16", "System.Byte",
+        "System.UInt32", "System.UInt64", "System.UInt16", "System.SByte",
+        "System.Single", "System.Double", "System.Decimal",
+        "System.DateTime", "System.DateTimeOffset",
+        "System.DateOnly", "System.TimeOnly", "System.TimeSpan",
+        "System.Guid", "System.Numerics.BigInteger",
+    };
+
+    private static bool IsFormattable(string typeName) => s_formattable.Contains(typeName);
+
+    private static bool IsStringType(string typeName)
+        => string.Equals(typeName, "string", System.StringComparison.Ordinal)
+           || string.Equals(typeName, "System.String", System.StringComparison.Ordinal);
+
+    private static bool IsValueType(string typeName)
+        => IsFormattable(typeName)
+           || string.Equals(typeName, "bool", System.StringComparison.Ordinal)
+           || string.Equals(typeName, "char", System.StringComparison.Ordinal)
+           || string.Equals(typeName, "System.Boolean", System.StringComparison.Ordinal)
+           || string.Equals(typeName, "System.Char", System.StringComparison.Ordinal);
+
     public static string Write(ValueObjectModel model)
     {
         var sb = new StringBuilder();
