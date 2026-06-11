@@ -129,15 +129,25 @@ The generated `JsonConv` calls `writer.WriteStringValue(value.ToString())` and `
 
 ## JsonConverter pattern
 
-Each `[TypedId]` struct has a nested `private sealed class JsonConv : JsonConverter<T>`. The struct itself carries `[JsonConverter(typeof(JsonConv))]`. `System.Text.Json` discovery:
+Each `[TypedId]` struct has a nested `public sealed class TypedIdJsonConverter : JsonConverter<T>`. The struct itself carries `[JsonConverter(typeof({TypedIdName}.TypedIdJsonConverter))]`. Default-path `System.Text.Json` discovery:
 
 1. `JsonSerializer` sees `[JsonConverter]` on the type.
-2. Instantiates `JsonConv` (parameterless, so no DI, no factory).
+2. Instantiates `TypedIdJsonConverter` (parameterless, so no DI, no factory).
 3. Calls `Read` / `Write` on the instance.
 
-Because the converter type is known at compile time, `PublishAot` and `JsonSerializerContext` both see it as an ordinary converter — no reflection emit, no dynamic type resolution.
+Because the converter type is referenced at compile time, `PublishAot` and `PublishTrimmed` keep it reachable — no reflection emit, no dynamic type resolution.
 
-The nesting keeps the converter invisible in the type's public API and prevents accidental construction from user code.
+### `JsonSerializerContext` (source-gen) interaction
+
+The STJ source generator does **not** observe `[JsonConverter]` attributes emitted by another source generator in the same compilation. Roslyn runs generators against the original syntax in parallel; the partial declaration the TypedId generator emits is never visible to STJ's generator. Consequence: a `[JsonSerializable(typeof(OrderId))]` declaration alone produces a POCO `JsonTypeInfo` that ignores the converter.
+
+The converter is therefore emitted with public accessibility so consumers on the source-gen path can register it explicitly:
+
+```csharp
+options.Converters.Add(new OrderId.TypedIdJsonConverter());
+```
+
+See [JSON Serialization → Source-gen contexts](json.md#source-gen-contexts-jsonserializercontext) for the full pattern. The name `TypedIdJsonConverter` is part of the stable public API.
 
 ## `IParsable<T>` integration with ASP.NET
 

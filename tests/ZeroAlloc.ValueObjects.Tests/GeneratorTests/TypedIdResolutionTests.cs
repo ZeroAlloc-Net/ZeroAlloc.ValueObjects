@@ -104,6 +104,34 @@ public sealed class TypedIdResolutionTests
         Assert.Contains("ResolveWorkerId", generated, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void GuidTypedId_EmitsPublicJsonConverter_ForStjSourceGenInterop()
+    {
+        var source = """
+            using ZeroAlloc.ValueObjects;
+            namespace MyApp;
+            [TypedId(Strategy = IdStrategy.Uuid7)]
+            public readonly partial record struct OrderId;
+            """;
+        var generated = Generate(source);
+        Assert.Contains("public sealed class TypedIdJsonConverter", generated, StringComparison.Ordinal);
+        Assert.DoesNotContain("internal sealed class TypedIdJsonConverter", generated, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Int64TypedId_EmitsPublicJsonConverter_ForStjSourceGenInterop()
+    {
+        var source = """
+            using ZeroAlloc.ValueObjects;
+            namespace MyApp;
+            [TypedId(Strategy = IdStrategy.Snowflake)]
+            public readonly partial record struct AccountId;
+            """;
+        var generated = Generate(source);
+        Assert.Contains("public sealed class TypedIdJsonConverter", generated, StringComparison.Ordinal);
+        Assert.DoesNotContain("internal sealed class TypedIdJsonConverter", generated, StringComparison.Ordinal);
+    }
+
     private static string Generate(string source)
     {
         var syntaxTree = CSharpSyntaxTree.ParseText(source);
