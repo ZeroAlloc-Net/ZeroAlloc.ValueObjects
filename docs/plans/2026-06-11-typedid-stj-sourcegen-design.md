@@ -1,6 +1,6 @@
 # [TypedId] + System.Text.Json source-gen integration
 
-**Status:** Design approved, ready for implementation plan.
+**Status:** Partially superseded — see "Postmortem" at the bottom. The accessibility-widening described here shipped; the full automatic source-gen interop did not, because of a Roslyn-level limitation discovered during execution.
 **Date:** 2026-06-11
 **Tracking:** Session D of the za-cqrs-es template unblock arc.
 
@@ -156,5 +156,93 @@ After this ships and a 1.6.1 NuGet is cut:
 1. `ZeroAlloc.Templates` branch `feat/za-cqrs-es-template` resumes Task 1
    of `docs/plans/2026-06-10-za-cqrs-es-implementation.md`.
 2. The workaround at commit `fef3f2f` (plain `readonly record struct`
-   instead of `[TypedId]`) can be undone — TypedIds become viable in
-   the source-gen pipeline that template ships.
+   instead of `[TypedId]`) can be replaced with `[TypedId]` plus a
+   one-line `options.Converters.Add(new OrderId.TypedIdJsonConverter())`
+   per ID type in the composition root. See the postmortem below for
+   why the template can't go further than that with this release.
+
+---
+
+## Postmortem (2026-06-11, after Tasks 1–2 shipped)
+
+The design above assumed widening the converter from `internal` to
+`public` would enable the documented `JsonSerializerContext`
+source-gen interop scenario. Execution proved that assumption wrong.
+
+### What we found
+
+Once Tasks 1–2 were green (`fix(gen): emit public JsonConverter for [TypedId]`,
+commit `cd84a93`), Task 3 stood up a separate test project with a
+`[JsonSerializable(typeof(InteropOrderId))]` `JsonSerializerContext`. All
+three runtime round-trip tests failed silently — values serialized to
+`{}` and deserialized to `default`. Inspecting the STJ-emitted source
+under `obj/.../System.Text.Json.SourceGeneration/` revealed that STJ's
+generator was emitting `JsonMetadataServices.CreateObjectInfo<T>` (POCO
+mode) for the TypedId, not `CreateValueInfo` (converter mode). The
+runtime fallback `TryGetTypeInfoForRuntimeCustomConverter` only inspects
+`options.Converters` at runtime, never `[JsonConverter]` attributes —
+so the attribute the TypedId generator emitted was effectively dead.
+
+Sanity check: reverting the writer to `internal sealed class` did **not**
+trip SYSLIB1220. STJ never reaches the converter to check accessibility;
+it's looking for the attribute and not finding it.
+
+### Root cause
+
+Roslyn runs source generators against the *original* compilation in
+parallel. Generators do not see each other's emitted output. The
+TypedId generator's partial declaration carrying
+`[JsonConverter(typeof(...))]` is invisible to STJ's source generator,
+so STJ falls through to its POCO path. This is a Roslyn-level
+isolation, not something the TypedId generator can fix from inside its
+own emit.
+
+### Original failure-mode claim (SYSLIB1220 / SYSLIB1030)
+
+The problem statement cited diagnostics observed during the
+`za-cqrs-es` Task 1 attempt. We could not reproduce those diagnostics
+from a fresh `[JsonSerializable]` + `[TypedId]` shape — STJ silently
+goes POCO instead. The original report was likely a different
+configuration (e.g. `JsonSourceGenerationMode.Metadata`) or an
+artifact of partially-staged code at that time. The bug as
+*re-diagnosed* is "STJ source-gen silently produces wrong output," not
+"STJ emits SYSLIB1220."
+
+### What shipped
+
+The `public` widening (commit `cd84a93`) stayed. It is still required
+for the only currently-working source-gen interop pattern:
+
+```csharp
+options.Converters.Add(new OrderId.TypedIdJsonConverter());
+options.TypeInfoResolver = AppJsonContext.Default;
+```
+
+Cross-assembly consumers need the converter to be instantiable from
+outside its declaring assembly — which `internal` doesn't allow. The
+docs at `docs/typed-id/json.md` and `docs/typed-id/internals.md` were
+rewritten to describe this explicit-registration pattern honestly and
+to remove the "auto-discovered via source-gen" claim, which never
+held.
+
+### Cancelled scope
+
+Tasks 3 (cross-assembly compile-time + runtime test project), 4 (AOT
+smoke + CI workflow), and 6 (final verification of the four-test
+posture) of the original plan assumed the auto-discovery scenario
+worked. With the explicit-registration pattern the right test surface
+is a small xUnit fact registering the converter on options and
+round-tripping — not a full new test project with `TreatWarningsAsErrors`
+as a SYSLIB1220 trap. That trap doesn't fire under the actual failure
+mode.
+
+### Future work — proper source-gen interop
+
+If the design's original goal (zero-config STJ source-gen interop)
+remains valuable, it requires a different approach — a candidate is to
+emit an `IJsonTypeInfoResolver` extension from the TypedId generator
+that consumers chain into their context via
+`JsonSerializerOptions.TypeInfoResolverChain.Add(...)`. That resolver
+would manufacture `JsonTypeInfo<T>` with the converter pre-bound,
+sidestepping cross-generator attribute visibility. This is a separate,
+larger initiative and out of scope for 1.6.1.

@@ -1,5 +1,14 @@
 # [TypedId] + STJ source-gen Implementation Plan
 
+> **Status:** Partially executed and then pivoted. Tasks 1 and 2 shipped as
+> commits `47cb031` and `cd84a93`. Tasks 3–6 were cancelled when execution
+> discovered the design's premise was wrong (Roslyn doesn't propagate
+> generator-emitted `[JsonConverter]` attributes to STJ's source generator).
+> See the **Postmortem** section of the sibling
+> [2026-06-11-typedid-stj-sourcegen-design.md](2026-06-11-typedid-stj-sourcegen-design.md)
+> for the full story. The remaining ship was a docs-only update describing
+> the explicit-registration pattern.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task.
 
 **Goal:** Fix `[TypedId]`-generated structs so they participate in System.Text.Json's source-generated `JsonSerializerContext` pipeline without SYSLIB1220 / SYSLIB1030 diagnostics.

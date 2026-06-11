@@ -8,21 +8,23 @@ sidebar_position: 24
 
 # JSON Serialization
 
-Every `[TypedId]` struct is serializable out of the box. The generator emits a nested `JsonConverter<T>` and attaches a `[JsonConverter]` attribute to the struct, so `System.Text.Json` discovers it automatically — no registration, no `JsonSerializerOptions` wiring.
+Every `[TypedId]` struct is serializable through `System.Text.Json` in the default reflection-based mode out of the box. The generator emits a nested `JsonConverter<T>` and attaches a `[JsonConverter]` attribute to the struct, so the default `JsonSerializer.Serialize`/`Deserialize` discovers it automatically — no registration, no `JsonSerializerOptions` wiring.
+
+When you use the source-generated `JsonSerializerContext` pipeline, an extra one-line registration is required. See [Source-gen contexts](#source-gen-contexts-jsonserializercontext) below.
 
 ## Generated shape
 
 For a ULID-backed `OrderId` the generator emits roughly:
 
 ```csharp
-[JsonConverter(typeof(JsonConv))]
+[JsonConverter(typeof(OrderId.TypedIdJsonConverter))]
 public readonly partial record struct OrderId
 {
     public Guid Value { get; }
     public OrderId(Guid value) => Value = value;
     // ... New, Parse, TryParse, ToString, CompareTo ...
 
-    private sealed class JsonConv : JsonConverter<OrderId>
+    public sealed class TypedIdJsonConverter : JsonConverter<OrderId>
     {
         public override OrderId Read(
             ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -40,23 +42,43 @@ public readonly partial record struct OrderId
 }
 ```
 
-The converter is `private sealed` — it is an implementation detail of the struct.
+The converter is emitted as `public sealed` so consumers in other assemblies can instantiate it for the explicit-registration scenario described below. The name `TypedIdJsonConverter` is stable across versions.
 
 ## AOT safety
 
-The converter **type** is resolved at compile time via the `[JsonConverter(typeof(...))]` attribute. `System.Text.Json` uses that attribute ahead of any reflection-based discovery, so:
+The converter **type** is resolved at compile time via the `[JsonConverter(typeof(...))]` attribute. The default `JsonSerializer` uses that attribute ahead of any reflection-based discovery, so:
 
 - No reflection over the struct's members.
 - No runtime codegen.
-- Safe under `PublishAot`, `PublishTrimmed`, and NativeAOT.
+- Safe under `PublishAot`, `PublishTrimmed`, and NativeAOT — provided the converter is registered (either implicitly via the attribute on the default path, or explicitly via `options.Converters.Add(...)` on the source-gen path).
 
-If you use the source-generated `JsonSerializerContext` pattern, include your TypedId types in the context — they participate just like any other serializable type:
+## Source-gen contexts (`JsonSerializerContext`)
+
+The source-generated `JsonSerializerContext` pipeline has a known limitation that affects every library shipping generator-emitted converters, not just this one: **the STJ source generator does not observe `[JsonConverter]` attributes emitted by other source generators.** Roslyn runs all generators against the original compilation in parallel, so the `[JsonConverter]` attribute the TypedId generator emits is invisible to STJ's generator. Without intervention, STJ would treat the TypedId as a POCO and serialize it to `{}`.
+
+The fix is one line — register the converter explicitly on the options:
 
 ```csharp
 [JsonSerializable(typeof(OrderCreated))]
 [JsonSerializable(typeof(OrderId))]
+[JsonSerializable(typeof(UserId))]
 internal partial class AppJsonContext : JsonSerializerContext;
+
+// In your composition root / Program.cs:
+var options = new JsonSerializerOptions
+{
+    Converters =
+    {
+        new OrderId.TypedIdJsonConverter(),
+        new UserId.TypedIdJsonConverter(),
+    },
+    TypeInfoResolver = AppJsonContext.Default,
+};
 ```
+
+STJ then routes serialization through the runtime-registered converter, which the TypedId generator emits. This works under `PublishAot` and `PublishTrimmed` because the converter type, the parameterless constructor, and the TypedId's `Parse`/`ToString` members are all statically reachable from the registration.
+
+> **Why not just `[JsonSerializable(typeof(OrderId))]`?** Because of the Roslyn limitation above, that alone produces a POCO `JsonTypeInfo` for `OrderId` that ignores the converter. The explicit `Converters.Add(...)` line is what wires up the converter for the source-gen path.
 
 ## Serialize and deserialize an order
 
