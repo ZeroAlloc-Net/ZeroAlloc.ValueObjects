@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.7.0...v1.7.1) (2026-06-11)
+
+
+### Bug Fixes
+
+* **gen:** emit public JsonConverter for [TypedId] + honest STJ source-gen docs ([#53](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/53)) ([611c8a7](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/611c8a7816d237b2f5884eaa87d6a0f892457381))
+
 ## [1.7.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.6.0...v1.7.0) (2026-05-18)
 
 
