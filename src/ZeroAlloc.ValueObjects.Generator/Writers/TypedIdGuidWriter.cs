@@ -139,7 +139,7 @@ internal static class TypedIdGuidWriter
 
     private static void AppendJsonConverter(StringBuilder sb, string name)
     {
-        sb.AppendLine($"    internal sealed class TypedIdJsonConverter : JsonConverter<{name}>");
+        sb.AppendLine($"    public sealed class TypedIdJsonConverter : JsonConverter<{name}>");
         sb.AppendLine("    {");
         sb.AppendLine($"        public override {name} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)");
         sb.AppendLine("        {");
