@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.7.1...v1.7.2) (2026-08-06)
+
+
+### Bug Fixes
+
+* **gen:** suppress CS1591 in generated code ([#56](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/56)) ([f9a3ca0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/f9a3ca000ce2bc2e8cc49c6cf577cc3e4455cfb0))
+
 ## [1.7.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.7.0...v1.7.1) (2026-06-11)
 
 
