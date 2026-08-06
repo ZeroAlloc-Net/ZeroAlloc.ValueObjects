@@ -5,20 +5,32 @@
 
 sealed partial class OrderId : System.IEquatable<OrderId>
 {
+    /// <inheritdoc/>
     public override bool Equals(object? obj) =>
         obj is OrderId other && Equals(other);
 
+    /// <inheritdoc/>
     public bool Equals(OrderId? other) =>
         other is not null &&
         Value == other.Value;
 
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         return Value.GetHashCode();
     }
 
+    /// <summary>Determines whether two <c>OrderId</c> values are equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are equal; otherwise <see langword="false"/>.</returns>
     public static bool operator ==(OrderId? left, OrderId? right) => left is null ? right is null : left.Equals(right);
+    /// <summary>Determines whether two <c>OrderId</c> values are not equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are not equal; otherwise <see langword="false"/>.</returns>
     public static bool operator !=(OrderId? left, OrderId? right) => !(left == right);
 
+    /// <summary>Returns the string form of <c>Value</c>, without wrapping type or property names.</summary>
     public override string ToString() => Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture);
 }

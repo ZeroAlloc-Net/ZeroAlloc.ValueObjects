@@ -5,21 +5,33 @@
 
 sealed partial class Money : System.IEquatable<Money>
 {
+    /// <inheritdoc/>
     public override bool Equals(object? obj) =>
         obj is Money other && Equals(other);
 
+    /// <inheritdoc/>
     public bool Equals(Money? other) =>
         other is not null &&
         Amount == other.Amount &&
         Currency == other.Currency;
 
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         return System.HashCode.Combine(Amount, Currency);
     }
 
+    /// <summary>Determines whether two <c>Money</c> values are equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are equal; otherwise <see langword="false"/>.</returns>
     public static bool operator ==(Money? left, Money? right) => left is null ? right is null : left.Equals(right);
+    /// <summary>Determines whether two <c>Money</c> values are not equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are not equal; otherwise <see langword="false"/>.</returns>
     public static bool operator !=(Money? left, Money? right) => !(left == right);
 
+    /// <summary>Returns a string listing each equality member of this <c>Money</c> as Name = value.</summary>
     public override string ToString() => $"Money {{ Amount = {Amount}, Currency = {Currency} }}";
 }

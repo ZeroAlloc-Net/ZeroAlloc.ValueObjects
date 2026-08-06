@@ -82,6 +82,7 @@ internal static class SourceWriter
 
     private static void WriteEquals(StringBuilder sb, ValueObjectModel model)
     {
+        sb.AppendLine("    /// <inheritdoc/>");
         sb.AppendLine($"    public override bool Equals(object? obj) =>");
         sb.AppendLine($"        obj is {model.TypeName} other && Equals(other);");
         sb.AppendLine();
@@ -91,6 +92,8 @@ internal static class SourceWriter
     {
         // Structs can't be null; classes use T? to satisfy IEquatable<T> contract in nullable context
         string paramType = model.IsStruct ? model.TypeName : $"{model.TypeName}?";
+
+        sb.AppendLine("    /// <inheritdoc/>");
 
         if (model.Properties.Count == 0)
         {
@@ -119,6 +122,7 @@ internal static class SourceWriter
 
     private static void WriteGetHashCode(StringBuilder sb, ValueObjectModel model)
     {
+        sb.AppendLine("    /// <inheritdoc/>");
         sb.AppendLine("    public override int GetHashCode()");
         sb.AppendLine("    {");
 
@@ -157,25 +161,47 @@ internal static class SourceWriter
 
     private static void WriteOperators(StringBuilder sb, ValueObjectModel model)
     {
+        // Operators are new members — they inherit no documentation, so they get real summaries.
         if (model.IsStruct)
         {
             // Structs can't be null — simple delegation is safe
+            WriteOperatorDoc(sb, model.TypeName, equality: true);
             sb.AppendLine($"    public static bool operator ==({model.TypeName} left, {model.TypeName} right) => left.Equals(right);");
+            WriteOperatorDoc(sb, model.TypeName, equality: false);
             sb.AppendLine($"    public static bool operator !=({model.TypeName} left, {model.TypeName} right) => !left.Equals(right);");
         }
         else
         {
             // Classes: left may be null — use null-safe pattern
+            WriteOperatorDoc(sb, model.TypeName, equality: true);
             sb.AppendLine($"    public static bool operator ==({model.TypeName}? left, {model.TypeName}? right) => left is null ? right is null : left.Equals(right);");
+            WriteOperatorDoc(sb, model.TypeName, equality: false);
             sb.AppendLine($"    public static bool operator !=({model.TypeName}? left, {model.TypeName}? right) => !(left == right);");
         }
         sb.AppendLine();
     }
 
+    private static void WriteOperatorDoc(StringBuilder sb, string typeName, bool equality)
+    {
+        var verb = equality ? "equal" : "not equal";
+        // No <see cref="..."/> to generated or consumer symbols: an unresolved cref raises
+        // CS1574, which under TreatWarningsAsErrors would recreate the very class of consumer
+        // build break this documentation exists to avoid. <c> is inert. (crefs to BCL types are
+        // safe — corelib is always referenced — and are used for <exception> in the TypedId
+        // writers. GeneratedCodeDocumentationTests asserts no doc diagnostics of any kind.)
+        sb.AppendLine($"    /// <summary>Determines whether two <c>{typeName}</c> values are {verb} by comparing their equality members.</summary>");
+        sb.AppendLine("    /// <param name=\"left\">The left operand.</param>");
+        sb.AppendLine("    /// <param name=\"right\">The right operand.</param>");
+        sb.AppendLine($"    /// <returns><see langword=\"true\"/> if the values are {verb}; otherwise <see langword=\"false\"/>.</returns>");
+    }
+
     private static void WriteToString(StringBuilder sb, ValueObjectModel model)
     {
+        // ToString overrides Object.ToString, but the generated format is specific enough
+        // to be worth stating rather than inheriting Object's generic description.
         if (model.Properties.Count == 0)
         {
+            sb.AppendLine($"    /// <summary>Returns the constant string \"{model.TypeName} {{ }}\", as this type has no equality members.</summary>");
             sb.AppendLine($"    public override string ToString() => \"{model.TypeName} {{ }}\";");
             return;
         }
@@ -183,10 +209,12 @@ internal static class SourceWriter
         if (model.Properties.Count == 1)
         {
             var expr = ChooseToStringExpr(model.Properties[0]);
+            sb.AppendLine($"    /// <summary>Returns the string form of <c>{model.Properties[0].Name}</c>, without wrapping type or property names.</summary>");
             sb.AppendLine($"    public override string ToString() => {expr};");
             return;
         }
 
+        sb.AppendLine($"    /// <summary>Returns a string listing each equality member of this <c>{model.TypeName}</c> as Name = value.</summary>");
         var parts = string.Join(", ", model.Properties.Select(p => p.Name + " = {" + p.Name + "}"));
         sb.AppendLine("    public override string ToString() => $\"" + model.TypeName + " {{ " + parts + " }}\";");
     }

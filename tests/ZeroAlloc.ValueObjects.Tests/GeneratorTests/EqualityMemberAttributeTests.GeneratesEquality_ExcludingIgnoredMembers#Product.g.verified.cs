@@ -5,20 +5,32 @@
 
 sealed partial class Product : System.IEquatable<Product>
 {
+    /// <inheritdoc/>
     public override bool Equals(object? obj) =>
         obj is Product other && Equals(other);
 
+    /// <inheritdoc/>
     public bool Equals(Product? other) =>
         other is not null &&
         Name == other.Name;
 
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         return Name?.GetHashCode() ?? 0;
     }
 
+    /// <summary>Determines whether two <c>Product</c> values are equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are equal; otherwise <see langword="false"/>.</returns>
     public static bool operator ==(Product? left, Product? right) => left is null ? right is null : left.Equals(right);
+    /// <summary>Determines whether two <c>Product</c> values are not equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are not equal; otherwise <see langword="false"/>.</returns>
     public static bool operator !=(Product? left, Product? right) => !(left == right);
 
+    /// <summary>Returns the string form of <c>Name</c>, without wrapping type or property names.</summary>
     public override string ToString() => Name;
 }

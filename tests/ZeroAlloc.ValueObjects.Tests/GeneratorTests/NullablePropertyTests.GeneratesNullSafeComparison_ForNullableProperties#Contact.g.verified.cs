@@ -5,21 +5,33 @@
 
 sealed partial class Contact : System.IEquatable<Contact>
 {
+    /// <inheritdoc/>
     public override bool Equals(object? obj) =>
         obj is Contact other && Equals(other);
 
+    /// <inheritdoc/>
     public bool Equals(Contact? other) =>
         other is not null &&
         Name == other.Name &&
         (other.Email is null ? Email is null : Email == other.Email);
 
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         return System.HashCode.Combine(Name, Email);
     }
 
+    /// <summary>Determines whether two <c>Contact</c> values are equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are equal; otherwise <see langword="false"/>.</returns>
     public static bool operator ==(Contact? left, Contact? right) => left is null ? right is null : left.Equals(right);
+    /// <summary>Determines whether two <c>Contact</c> values are not equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are not equal; otherwise <see langword="false"/>.</returns>
     public static bool operator !=(Contact? left, Contact? right) => !(left == right);
 
+    /// <summary>Returns a string listing each equality member of this <c>Contact</c> as Name = value.</summary>
     public override string ToString() => $"Contact {{ Name = {Name}, Email = {Email} }}";
 }

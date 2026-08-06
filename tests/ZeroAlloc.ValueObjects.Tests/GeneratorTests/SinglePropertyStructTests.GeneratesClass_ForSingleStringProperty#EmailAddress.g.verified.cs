@@ -5,20 +5,32 @@
 
 sealed partial class EmailAddress : System.IEquatable<EmailAddress>
 {
+    /// <inheritdoc/>
     public override bool Equals(object? obj) =>
         obj is EmailAddress other && Equals(other);
 
+    /// <inheritdoc/>
     public bool Equals(EmailAddress? other) =>
         other is not null &&
         Value == other.Value;
 
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         return Value?.GetHashCode() ?? 0;
     }
 
+    /// <summary>Determines whether two <c>EmailAddress</c> values are equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are equal; otherwise <see langword="false"/>.</returns>
     public static bool operator ==(EmailAddress? left, EmailAddress? right) => left is null ? right is null : left.Equals(right);
+    /// <summary>Determines whether two <c>EmailAddress</c> values are not equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are not equal; otherwise <see langword="false"/>.</returns>
     public static bool operator !=(EmailAddress? left, EmailAddress? right) => !(left == right);
 
+    /// <summary>Returns the string form of <c>Value</c>, without wrapping type or property names.</summary>
     public override string ToString() => Value;
 }

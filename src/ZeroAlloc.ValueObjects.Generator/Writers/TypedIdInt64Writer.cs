@@ -58,8 +58,11 @@ internal static class TypedIdInt64Writer
 
     private static void AppendValueAndCtor(StringBuilder sb, string name)
     {
+        sb.AppendLine("    /// <summary>The underlying 64-bit value this identifier wraps.</summary>");
         sb.AppendLine("    public long Value { get; }");
         sb.AppendLine();
+        sb.AppendLine($"    /// <summary>Wraps an existing 64-bit value as a <c>{name}</c>. No validation is performed.</summary>");
+        sb.AppendLine("    /// <param name=\"value\">The value to wrap.</param>");
         sb.AppendLine($"    public {name}(long value) => Value = value;");
         sb.AppendLine();
     }
@@ -69,6 +72,12 @@ internal static class TypedIdInt64Writer
         switch (strategy)
         {
             case 2: // Snowflake
+                sb.AppendLine("    /// <summary>Creates a new Snowflake identifier: time-ordered and monotonically increasing per worker.</summary>");
+                sb.AppendLine("    /// <remarks>");
+                sb.AppendLine("    /// Requires a worker id, resolved from the configured Snowflake provider (services.AddSnowflakeWorkerId)");
+                sb.AppendLine("    /// or the ZA_SNOWFLAKE_WORKER_ID environment variable. Throws TypedIdException if neither is set.");
+                sb.AppendLine("    /// </remarks>");
+                sb.AppendLine("    /// <returns>A new unique identifier.</returns>");
                 sb.AppendLine($"    public static {name} New()");
                 sb.AppendLine("    {");
                 sb.AppendLine("        int workerId = ResolveWorkerId();");
@@ -78,6 +87,8 @@ internal static class TypedIdInt64Writer
                 AppendResolveWorkerId(sb);
                 break;
             case 3: // Sequential
+                sb.AppendLine("    /// <summary>Creates a new sequential identifier, monotonically increasing within this process.</summary>");
+                sb.AppendLine("    /// <returns>A new identifier, unique within this process.</returns>");
                 sb.AppendLine($"    public static {name} New() => new(SequentialCore.Next());");
                 sb.AppendLine();
                 break;
@@ -106,12 +117,21 @@ internal static class TypedIdInt64Writer
 
     private static void AppendFormatting(StringBuilder sb)
     {
+        sb.AppendLine("    /// <summary>Returns the invariant decimal form of the underlying value. This is the form accepted by Parse and TryParse.</summary>");
         sb.AppendLine("    public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);");
         sb.AppendLine();
     }
 
+    // Split string/span overloads into separate methods to stay under MA0051's statement limit.
     private static void AppendParsing(StringBuilder sb, string name)
     {
+        AppendStringParsing(sb, name);
+        AppendSpanParsing(sb, name);
+    }
+
+    private static void AppendStringParsing(StringBuilder sb, string name)
+    {
+        TypedIdDocs.AppendParseDoc(sb, name, span: false, nullThrows: true);
         sb.AppendLine($"    public static {name} Parse(string s, IFormatProvider? provider = null)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (s is null) throw new ArgumentNullException(nameof(s));");
@@ -120,6 +140,7 @@ internal static class TypedIdInt64Writer
         sb.AppendLine($"        throw new FormatException($\"Value is not a valid {name}.\");");
         sb.AppendLine("    }");
         sb.AppendLine();
+        TypedIdDocs.AppendTryParseDoc(sb, name, span: false);
         sb.AppendLine($"    public static bool TryParse(string? s, IFormatProvider? provider, out {name} result)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (s is not null && long.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))");
@@ -131,6 +152,11 @@ internal static class TypedIdInt64Writer
         sb.AppendLine("        return false;");
         sb.AppendLine("    }");
         sb.AppendLine();
+    }
+
+    private static void AppendSpanParsing(StringBuilder sb, string name)
+    {
+        TypedIdDocs.AppendParseDoc(sb, name, span: true, nullThrows: false);
         sb.AppendLine($"    public static {name} Parse(ReadOnlySpan<char> s, IFormatProvider? provider)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (long.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))");
@@ -138,6 +164,7 @@ internal static class TypedIdInt64Writer
         sb.AppendLine($"        throw new FormatException($\"Value is not a valid {name}.\");");
         sb.AppendLine("    }");
         sb.AppendLine();
+        TypedIdDocs.AppendTryParseDoc(sb, name, span: true);
         sb.AppendLine($"    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out {name} result)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (long.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))");
@@ -153,20 +180,27 @@ internal static class TypedIdInt64Writer
 
     private static void AppendComparable(StringBuilder sb, string name)
     {
+        TypedIdDocs.AppendCompareToDoc(sb, name);
         sb.AppendLine($"    public int CompareTo({name} other) => Value.CompareTo(other.Value);");
         sb.AppendLine();
         // MA0097 requires comparison operators on types that implement IComparable<T>.
+        TypedIdDocs.AppendComparisonOperatorDoc(sb, name, "less than");
         sb.AppendLine($"    public static bool operator <({name} left, {name} right) => left.CompareTo(right) < 0;");
+        TypedIdDocs.AppendComparisonOperatorDoc(sb, name, "greater than");
         sb.AppendLine($"    public static bool operator >({name} left, {name} right) => left.CompareTo(right) > 0;");
+        TypedIdDocs.AppendComparisonOperatorDoc(sb, name, "less than or equal to");
         sb.AppendLine($"    public static bool operator <=({name} left, {name} right) => left.CompareTo(right) <= 0;");
+        TypedIdDocs.AppendComparisonOperatorDoc(sb, name, "greater than or equal to");
         sb.AppendLine($"    public static bool operator >=({name} left, {name} right) => left.CompareTo(right) >= 0;");
         sb.AppendLine();
     }
 
     private static void AppendJsonConverter(StringBuilder sb, string name)
     {
+        TypedIdDocs.AppendJsonConverterDoc(sb, name);
         sb.AppendLine($"    public sealed class TypedIdJsonConverter : JsonConverter<{name}>");
         sb.AppendLine("    {");
+        sb.AppendLine("        /// <inheritdoc/>");
         sb.AppendLine($"        public override {name} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)");
         sb.AppendLine("        {");
         sb.AppendLine("            var s = reader.GetString();");
@@ -175,6 +209,7 @@ internal static class TypedIdInt64Writer
         sb.AppendLine($"                : throw new JsonException($\"Invalid {name} value.\");");
         sb.AppendLine("        }");
         sb.AppendLine();
+        sb.AppendLine("        /// <inheritdoc/>");
         sb.AppendLine($"        public override void Write(Utf8JsonWriter writer, {name} value, JsonSerializerOptions options)");
         sb.AppendLine("            => writer.WriteStringValue(value.ToString());");
         sb.AppendLine("    }");

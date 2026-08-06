@@ -5,19 +5,31 @@
 
 sealed partial class Empty : System.IEquatable<Empty>
 {
+    /// <inheritdoc/>
     public override bool Equals(object? obj) =>
         obj is Empty other && Equals(other);
 
+    /// <inheritdoc/>
     public bool Equals(Empty? other) =>
         other is not null;
 
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         return 0;
     }
 
+    /// <summary>Determines whether two <c>Empty</c> values are equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are equal; otherwise <see langword="false"/>.</returns>
     public static bool operator ==(Empty? left, Empty? right) => left is null ? right is null : left.Equals(right);
+    /// <summary>Determines whether two <c>Empty</c> values are not equal by comparing their equality members.</summary>
+    /// <param name="left">The left operand.</param>
+    /// <param name="right">The right operand.</param>
+    /// <returns><see langword="true"/> if the values are not equal; otherwise <see langword="false"/>.</returns>
     public static bool operator !=(Empty? left, Empty? right) => !(left == right);
 
+    /// <summary>Returns the constant string "Empty { }", as this type has no equality members.</summary>
     public override string ToString() => "Empty { }";
 }
