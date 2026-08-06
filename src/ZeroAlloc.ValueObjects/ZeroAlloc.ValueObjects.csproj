@@ -31,14 +31,20 @@
     <PackageReference Include="System.Memory" Version="4.6.3" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <!--
       Modern TFMs need 10.0.0 because ZeroAlloc.Serialisation 2.1.0 transitively
       requires Microsoft.Extensions.DependencyInjection.Abstractions >= 10.0.0.
       Keep 8.0.0 on netstandard2.0 to stay compatible with hosts on .NET 8.
     -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
+    <!--
+      Microsoft.Extensions.Hosting.Abstractions is deliberately absent (ValueObjects#58). It was
+      needed only by the hosted service backing AddSnowflakeWorkerId(Func<IServiceProvider, int>),
+      and it dragged Configuration.Abstractions, Diagnostics.Abstractions,
+      FileProviders.Abstractions and Options into every transitive consumer of this package. That
+      one overload now lives in ZeroAlloc.ValueObjects.Hosting; the rest resolve eagerly and need
+      no host. Do not reintroduce it here.
+    -->
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

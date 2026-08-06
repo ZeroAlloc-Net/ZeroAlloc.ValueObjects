@@ -10,9 +10,11 @@ sidebar_position: 23
 
 Snowflake IDs encode a 10-bit worker ID (0..1023) into every value. The worker ID must be unique across all processes minting the same `[TypedId]` type, or they will silently produce colliding identifiers.
 
-This page documents the three `AddSnowflakeWorkerId` overloads, the env-var fallback, and orchestrator patterns for Kubernetes, Docker Swarm, and Nomad.
+This page documents the four `AddSnowflakeWorkerId` overloads, the env-var fallback, and orchestrator patterns for Kubernetes, Docker Swarm, and Nomad.
 
-## Three overloads
+## Four overloads
+
+Three ship in `ZeroAlloc.ValueObjects` and resolve the worker ID without the service provider:
 
 ```csharp
 // 1. Literal integer — for single-instance deployments or local dev
@@ -23,12 +25,30 @@ public static IServiceCollection AddSnowflakeWorkerId(
 public static IServiceCollection AddSnowflakeWorkerId(
     this IServiceCollection services, string envVar, int fallback = 0);
 
-// 3. Factory with access to IServiceProvider
+// 3. Factory computing the ID directly
+public static IServiceCollection AddSnowflakeWorkerId(
+    this IServiceCollection services, Func<int> factory);
+```
+
+These publish to `TypedIdRuntime.SnowflakeProvider` **immediately**, before the call returns. No host is required, and an out-of-range value throws `TypedIdException` at the call site rather than later at startup.
+
+The fourth needs the built container, so it ships in **`ZeroAlloc.ValueObjects.Hosting`**:
+
+```csharp
+// 4. Factory with access to IServiceProvider
 public static IServiceCollection AddSnowflakeWorkerId(
     this IServiceCollection services, Func<IServiceProvider, int> factory);
 ```
 
-Each overload registers an `IHostedService` that reads the worker ID on `StartAsync` and publishes it to `TypedIdRuntime.SnowflakeProvider`. The first `Snowflake.New()` call after the host has started sees the provider.
+That overload registers an `IHostedService` which invokes the factory on `StartAsync` and publishes the result. The first `Snowflake.New()` call after the host has started sees the provider.
+
+> **Why the split.** `IHostedService` lives in `Microsoft.Extensions.Hosting.Abstractions`, which brings `Configuration.Abstractions`, `Diagnostics.Abstractions`, `FileProviders.Abstractions` and `Options` with it. Because `[ValueObject]` is typically applied in a solution's most foundational assembly, that cost reached every transitive consumer — including the majority who never configure Snowflake at all ([#58](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/58)). Only the `IServiceProvider` overload genuinely needs a host, so only it moved.
+>
+> The namespace is unchanged, so adopting it is a package reference and nothing more — an existing `using ZeroAlloc.ValueObjects;` keeps compiling.
+
+```xml
+<PackageReference Include="ZeroAlloc.ValueObjects.Hosting" Version="..." />
+```
 
 ### Literal
 
@@ -46,22 +66,30 @@ Good for: local development, single-instance services, scheduled jobs where only
 builder.Services.AddSnowflakeWorkerId(envVar: "POD_ORDINAL", fallback: 0);
 ```
 
-The env var must parse to an integer in `[0, 1023]`. Out-of-range values throw `TypedIdException` during host start.
+The env var must parse to an integer in `[0, 1023]`. Out-of-range values throw `TypedIdException` from the `AddSnowflakeWorkerId` call.
 
 ### Factory
+
+```csharp
+builder.Services.AddSnowflakeWorkerId(() => ComputeWorkerIdFromHostname());
+```
+
+Use when the worker ID comes from a computation rather than a constant — hashing the hostname, reading a file, parsing a bespoke env format. Invoked once, immediately.
+
+### Factory with `IServiceProvider` — requires `ZeroAlloc.ValueObjects.Hosting`
 
 ```csharp
 builder.Services.AddSnowflakeWorkerId(sp =>
     sp.GetRequiredService<IMachineIdProvider>().Id);
 ```
 
-Use when the worker ID comes from another service — a central registry, a leader-elected coordinator, or a custom algorithm over hostname.
+Use when the worker ID comes from another registered service — a central registry, a leader-elected coordinator. This is the only overload deferred to host start, because the service provider does not exist until then.
 
 ## Resolution order at runtime
 
 When `Snowflake.New()` runs for the first time in a process:
 
-1. If `TypedIdRuntime.SnowflakeProvider` is set (i.e. `AddSnowflakeWorkerId` ran via the host) → use it.
+1. If `TypedIdRuntime.SnowflakeProvider` is set (i.e. `AddSnowflakeWorkerId` ran — immediately for overloads 1–3, at host start for overload 4) → use it.
 2. Else read env var `ZA_SNOWFLAKE_WORKER_ID`. If present and parseable → use it.
 3. Else throw `TypedIdException` with a message that names both `AddSnowflakeWorkerId` and `ZA_SNOWFLAKE_WORKER_ID`.
 

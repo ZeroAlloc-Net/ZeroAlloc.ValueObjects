@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Mirrors ZeroAlloc.ValueObjects so any consumer of the core package can add this one. -->
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
+    <PackageId>ZeroAlloc.ValueObjects.Hosting</PackageId>
+    <Description>Host-integrated Snowflake worker-id registration for ZeroAlloc.ValueObjects. Adds the AddSnowflakeWorkerId overload that resolves the worker id from the built IServiceProvider at startup. Reference this only if you need that overload — the literal, environment-variable and Func&lt;int&gt; overloads ship in ZeroAlloc.ValueObjects itself.</Description>
+    <Version>0.0.0-local</Version>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageTags>valueobject;typedid;snowflake;hosting;zeroalloc</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsAotCompatible Condition="'$(TargetFramework)' != 'netstandard2.0'">true</IsAotCompatible>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Version split matches the core package: 8.0.0 keeps the netstandard2.0 leg usable by
+         hosts on .NET 8, modern legs track the 10.0.0 line the rest of the graph resolves to. -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.0" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
+    <ProjectReference Include="..\ZeroAlloc.ValueObjects\ZeroAlloc.ValueObjects.csproj" />
+  </ItemGroup>
+</Project>

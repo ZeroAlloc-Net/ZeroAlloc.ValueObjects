@@ -131,8 +131,18 @@ Snowflake IDs encode a 10-bit worker ID so multiple processes can mint IDs concu
 ```csharp
 builder.Services.AddSnowflakeWorkerId(workerId: 5);
 builder.Services.AddSnowflakeWorkerId(envVar: "POD_ORDINAL", fallback: 0);
+builder.Services.AddSnowflakeWorkerId(() => ComputeWorkerIdFromHostname());
+```
+
+These publish the worker ID immediately — no host required.
+
+To derive the ID from a registered service, install `ZeroAlloc.ValueObjects.Hosting`, which adds an overload backed by a hosted service:
+
+```csharp
 builder.Services.AddSnowflakeWorkerId(sp => sp.GetRequiredService<IMachineIdProvider>().Id);
 ```
+
+It lives in a separate package so the core one carries no `Microsoft.Extensions.Hosting.Abstractions` dependency. The namespace is the same, so only the package reference changes.
 
 If no provider is registered, `Snowflake.New()` falls back to `ZA_SNOWFLAKE_WORKER_ID` env var, then throws `TypedIdException`.
 

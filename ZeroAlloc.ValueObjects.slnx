@@ -5,6 +5,7 @@
   <Folder Name="/src/">
     <Project Path="src/ZeroAlloc.ValueObjects.EfCore/ZeroAlloc.ValueObjects.EfCore.csproj" />
     <Project Path="src/ZeroAlloc.ValueObjects.Generator/ZeroAlloc.ValueObjects.Generator.csproj" />
+    <Project Path="src/ZeroAlloc.ValueObjects.Hosting/ZeroAlloc.ValueObjects.Hosting.csproj" />
     <Project Path="src/ZeroAlloc.ValueObjects/ZeroAlloc.ValueObjects.csproj" />
   </Folder>
   <Folder Name="/samples/">
