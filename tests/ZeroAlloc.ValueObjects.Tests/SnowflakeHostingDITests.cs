@@ -13,7 +13,7 @@ namespace ZeroAlloc.ValueObjects.Tests;
 /// starts.
 /// </para>
 /// </summary>
-[Collection("SnowflakeProviderMutation")]
+[Collection("SnowflakeStatics")]
 public sealed class SnowflakeHostingDITests : IDisposable
 {
     private readonly ISnowflakeWorkerIdProvider? _originalProvider;

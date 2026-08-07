@@ -3,7 +3,7 @@ namespace ZeroAlloc.ValueObjects.Tests;
 // Shares a collection with other tests that mutate TypedIdRuntime.SnowflakeProvider to
 // avoid parallel-class races on the static provider slot. This class asserts the slot's exact
 // contents (Assert.Null, Assert.Same), so it cannot tolerate a concurrent writer at all.
-[Collection("SnowflakeProviderMutation")]
+[Collection("SnowflakeStatics")]
 public sealed class TypedIdRuntimeTests
 {
     [Fact]

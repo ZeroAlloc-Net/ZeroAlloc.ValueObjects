@@ -2,10 +2,13 @@ using System.Reflection;
 
 namespace ZeroAlloc.ValueObjects.Tests;
 
-// Tests that mutate SnowflakeCore._state or MaxSpinWaitMs must not run in parallel
-// with other tests touching SnowflakeCore; those tests are serialized via a
-// shared xUnit collection.
-[Collection("SnowflakeCoreState")]
+// Tests that mutate SnowflakeCore._state or MaxSpinWaitMs must not run in parallel with other
+// tests touching SnowflakeCore. That includes every class that generates a Snowflake id, not
+// just those calling SnowflakeCore directly — so they all share the one "SnowflakeStatics"
+// collection. This class previously had a collection of its own, which serialized it against
+// nothing: xUnit only orders classes within a single collection name, so two named collections
+// still run concurrently.
+[Collection("SnowflakeStatics")]
 public sealed class SnowflakeCoreTests
 {
     [Fact]
