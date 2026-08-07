@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.7.2...v2.0.0) (2026-08-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* AddSnowflakeWorkerId(Func<IServiceProvider, int>) has moved to the new ZeroAlloc.ValueObjects.Hosting package. Callers of that overload must add a PackageReference to ZeroAlloc.ValueObjects.Hosting; no code change is needed because the namespace is unchanged. The other overloads are unaffected at the call site, but now publish the worker id when called rather than at host start, so an out-of-range id throws from AddSnowflakeWorkerId instead of StartAsync.
+
+### Features
+
+* drop Microsoft.Extensions.Hosting.Abstractions from the core package ([#59](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/59)) ([f5acf56](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/f5acf56a014db5418a0e9841353bc69623f96036))
+
 ## [1.7.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v1.7.1...v1.7.2) (2026-08-06)
 
 
