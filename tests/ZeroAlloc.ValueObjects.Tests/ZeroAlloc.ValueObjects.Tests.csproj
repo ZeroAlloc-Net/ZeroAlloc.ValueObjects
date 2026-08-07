@@ -23,6 +23,7 @@
                       ReferenceOutputAssembly="true" />
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects\ZeroAlloc.ValueObjects.csproj" />
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects.EfCore\ZeroAlloc.ValueObjects.EfCore.csproj" />
+    <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects.Hosting\ZeroAlloc.ValueObjects.Hosting.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

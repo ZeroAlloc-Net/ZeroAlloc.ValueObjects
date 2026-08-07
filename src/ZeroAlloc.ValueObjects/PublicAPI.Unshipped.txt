@@ -45,7 +45,7 @@ static ZeroAlloc.ValueObjects.SequentialCore.Next() -> long
 static ZeroAlloc.ValueObjects.SequentialCore.Reset() -> void
 static ZeroAlloc.ValueObjects.SnowflakeCore.ExtractWorkerId(long id) -> int
 static ZeroAlloc.ValueObjects.SnowflakeCore.Next(int workerId) -> long
-static ZeroAlloc.ValueObjects.SnowflakeServiceCollectionExtensions.AddSnowflakeWorkerId(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Func<System.IServiceProvider!, int>! factory) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static ZeroAlloc.ValueObjects.SnowflakeServiceCollectionExtensions.AddSnowflakeWorkerId(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Func<int>! factory) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static ZeroAlloc.ValueObjects.SnowflakeServiceCollectionExtensions.AddSnowflakeWorkerId(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, int workerId) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static ZeroAlloc.ValueObjects.SnowflakeServiceCollectionExtensions.AddSnowflakeWorkerId(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, string! envVar, int fallback = 0) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static ZeroAlloc.ValueObjects.TypedIdRuntime.SnowflakeProvider.get -> ZeroAlloc.ValueObjects.ISnowflakeWorkerIdProvider?

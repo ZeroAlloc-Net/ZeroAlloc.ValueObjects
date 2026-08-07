@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -11,6 +10,12 @@ namespace ZeroAlloc.ValueObjects;
 /// startup, validates the result, and publishes it to
 /// <see cref="TypedIdRuntime.SnowflakeProvider"/>.
 /// </summary>
+/// <remarks>
+/// Only the <c>Func&lt;IServiceProvider, int&gt;</c> overload needs this: it is the one form that
+/// cannot be resolved until the container is built. The overloads that take a literal, an
+/// environment variable name, or a <c>Func&lt;int&gt;</c> live in ZeroAlloc.ValueObjects and
+/// publish eagerly, which is why that package needs no hosting dependency.
+/// </remarks>
 internal sealed class SnowflakeWorkerIdStartup : IHostedService
 {
     private readonly Func<IServiceProvider, int> _factory;
@@ -24,26 +29,11 @@ internal sealed class SnowflakeWorkerIdStartup : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        var id = _factory(_sp);
-        if (id < 0 || id > SnowflakeCore.MaxWorkerId)
-            throw new TypedIdException(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "Snowflake worker id {0} is out of range [0, {1}]. " +
-                    "Call services.AddSnowflakeWorkerId with a valid id, set the configured env var, " +
-                    "or register a factory that returns a valid value.",
-                    id,
-                    SnowflakeCore.MaxWorkerId));
-
-        TypedIdRuntime.SnowflakeProvider = new StaticProvider(id);
+        // Validation and publication live in ZeroAlloc.ValueObjects so this path and the eager
+        // ones cannot drift — an out-of-range id throws the same TypedIdException either way.
+        SnowflakeWorkerIdPublisher.Publish(_factory(_sp));
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-
-    private sealed class StaticProvider : ISnowflakeWorkerIdProvider
-    {
-        public StaticProvider(int workerId) => WorkerId = workerId;
-        public int WorkerId { get; }
-    }
 }

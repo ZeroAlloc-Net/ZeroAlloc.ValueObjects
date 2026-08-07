@@ -184,7 +184,10 @@ Per-query and per-row code paths do not reflect — they invoke the cached conve
 | `src/ZeroAlloc.ValueObjects/Runtime/SnowflakeCore.cs` | 41+10+12 packer, CAS loop |
 | `src/ZeroAlloc.ValueObjects/Runtime/SequentialCore.cs` | `Interlocked.Increment` counter |
 | `src/ZeroAlloc.ValueObjects/Runtime/TypedIdRuntime.cs` | Worker-ID provider holder |
-| `src/ZeroAlloc.ValueObjects/SnowflakeServiceCollectionExtensions.cs` | `AddSnowflakeWorkerId` overloads |
+| `src/ZeroAlloc.ValueObjects/SnowflakeServiceCollectionExtensions.cs` | `AddSnowflakeWorkerId` overloads that publish eagerly (literal, env var, `Func<int>`) |
+| `src/ZeroAlloc.ValueObjects/SnowflakeWorkerIdPublisher.cs` | Shared validate-and-publish path used by both registration routes |
+| `src/ZeroAlloc.ValueObjects.Hosting/SnowflakeHostingServiceCollectionExtensions.cs` | `AddSnowflakeWorkerId(Func<IServiceProvider, int>)` — the one overload needing a built container |
+| `src/ZeroAlloc.ValueObjects.Hosting/SnowflakeWorkerIdStartup.cs` | `IHostedService` backing that overload; kept out of the core package so it carries no hosting dependency |
 | `src/ZeroAlloc.ValueObjects.Generator/TypedIdGenerator.cs` | `IIncrementalGenerator` entry |
 | `src/ZeroAlloc.ValueObjects.Generator/TypedId/*` | Parser, writer, diagnostics |
 | `src/ZeroAlloc.ValueObjects.EfCore/TypedIdValueConverter.cs` | EF Core converter |

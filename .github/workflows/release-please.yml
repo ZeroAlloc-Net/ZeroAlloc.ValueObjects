@@ -57,6 +57,9 @@ jobs:
       - name: Pack ZeroAlloc.ValueObjects.EfCore
         run: dotnet pack src/ZeroAlloc.ValueObjects.EfCore/ZeroAlloc.ValueObjects.EfCore.csproj --configuration Release --no-build --output ./artifacts -p:Version=${{ needs.release-please.outputs.version }}
 
+      - name: Pack ZeroAlloc.ValueObjects.Hosting
+        run: dotnet pack src/ZeroAlloc.ValueObjects.Hosting/ZeroAlloc.ValueObjects.Hosting.csproj --configuration Release --no-build --output ./artifacts -p:Version=${{ needs.release-please.outputs.version }}
+
       - name: Push to NuGet
         run: dotnet nuget push ./artifacts/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
 

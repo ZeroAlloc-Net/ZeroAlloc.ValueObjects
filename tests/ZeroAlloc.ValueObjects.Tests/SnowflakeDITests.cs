@@ -1,16 +1,22 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace ZeroAlloc.ValueObjects.Tests;
 
+/// <summary>
+/// Covers the <c>AddSnowflakeWorkerId</c> overloads that ship in ZeroAlloc.ValueObjects itself.
+/// <para>
+/// These resolve the worker id without the service provider, so they publish it immediately
+/// rather than from a hosted service — which is what lets the core package drop its
+/// Microsoft.Extensions.Hosting.Abstractions dependency (ValueObjects#58). None of these tests
+/// builds a host; that is the point. The host-integrated overload is covered by
+/// <see cref="SnowflakeHostingDITests"/>.
+/// </para>
+/// </summary>
 // Shares a collection with other tests that mutate TypedIdRuntime.SnowflakeProvider to
 // avoid parallel-class races on the static provider slot.
 [Collection("SnowflakeProviderMutation")]
 public sealed class SnowflakeDITests : IDisposable
 {
-    // Tests mutate the static TypedIdRuntime.SnowflakeProvider — ensure xUnit test collection
-    // disables parallelization for this class. xUnit2 runs tests in a class sequentially by default,
-    // so using a single class is sufficient.
     private readonly ISnowflakeWorkerIdProvider? _originalProvider;
 
     public SnowflakeDITests()
@@ -24,68 +30,73 @@ public sealed class SnowflakeDITests : IDisposable
     }
 
     [Fact]
-    public async Task AddSnowflakeWorkerId_Literal_PopulatesRuntimeProviderOnHostStart()
+    public void AddSnowflakeWorkerId_Literal_PublishesImmediately()
     {
         TypedIdRuntime.SnowflakeProvider = null;
-        using var host = new HostBuilder()
-            .ConfigureServices(s => s.AddSnowflakeWorkerId(workerId: 42))
-            .Build();
-        await host.StartAsync();
+
+        new ServiceCollection().AddSnowflakeWorkerId(workerId: 42);
+
+        // No host was built or started — the id is available as soon as registration returns.
         Assert.NotNull(TypedIdRuntime.SnowflakeProvider);
         Assert.Equal(42, TypedIdRuntime.SnowflakeProvider!.WorkerId);
-        await host.StopAsync();
     }
 
     [Fact]
-    public async Task AddSnowflakeWorkerId_EnvVar_ReadsFromEnvironment()
+    public void AddSnowflakeWorkerId_EnvVar_ReadsFromEnvironment()
     {
         TypedIdRuntime.SnowflakeProvider = null;
         Environment.SetEnvironmentVariable("ZA_TEST_WORKER", "7");
         try
         {
-            using var host = new HostBuilder()
-                .ConfigureServices(s => s.AddSnowflakeWorkerId(envVar: "ZA_TEST_WORKER"))
-                .Build();
-            await host.StartAsync();
+            new ServiceCollection().AddSnowflakeWorkerId(envVar: "ZA_TEST_WORKER");
+
             Assert.Equal(7, TypedIdRuntime.SnowflakeProvider!.WorkerId);
-            await host.StopAsync();
         }
         finally { Environment.SetEnvironmentVariable("ZA_TEST_WORKER", null); }
     }
 
     [Fact]
-    public async Task AddSnowflakeWorkerId_Factory_InvokesFactoryOnStart()
-    {
-        TypedIdRuntime.SnowflakeProvider = null;
-        int called = 0;
-        using var host = new HostBuilder()
-            .ConfigureServices(s => s.AddSnowflakeWorkerId(_ => { called++; return 99; }))
-            .Build();
-        await host.StartAsync();
-        Assert.Equal(1, called);
-        Assert.Equal(99, TypedIdRuntime.SnowflakeProvider!.WorkerId);
-        await host.StopAsync();
-    }
-
-    [Fact]
-    public async Task AddSnowflakeWorkerId_OutOfRangeId_ThrowsAtStart()
-    {
-        using var host = new HostBuilder()
-            .ConfigureServices(s => s.AddSnowflakeWorkerId(workerId: 2048))
-            .Build();
-        await Assert.ThrowsAsync<TypedIdException>(async () => await host.StartAsync().ConfigureAwait(false));
-    }
-
-    [Fact]
-    public async Task AddSnowflakeWorkerId_EnvVar_MissingValue_UsesFallback()
+    public void AddSnowflakeWorkerId_EnvVar_MissingValue_UsesFallback()
     {
         TypedIdRuntime.SnowflakeProvider = null;
         Environment.SetEnvironmentVariable("ZA_MISSING_WORKER", null);
-        using var host = new HostBuilder()
-            .ConfigureServices(s => s.AddSnowflakeWorkerId(envVar: "ZA_MISSING_WORKER", fallback: 3))
-            .Build();
-        await host.StartAsync();
+
+        new ServiceCollection().AddSnowflakeWorkerId(envVar: "ZA_MISSING_WORKER", fallback: 3);
+
         Assert.Equal(3, TypedIdRuntime.SnowflakeProvider!.WorkerId);
-        await host.StopAsync();
+    }
+
+    [Fact]
+    public void AddSnowflakeWorkerId_Func_InvokesFactoryOnce()
+    {
+        TypedIdRuntime.SnowflakeProvider = null;
+        int called = 0;
+
+        new ServiceCollection().AddSnowflakeWorkerId(() => { called++; return 99; });
+
+        Assert.Equal(1, called);
+        Assert.Equal(99, TypedIdRuntime.SnowflakeProvider!.WorkerId);
+    }
+
+    [Fact]
+    public void AddSnowflakeWorkerId_OutOfRangeId_ThrowsAtRegistration()
+    {
+        // Previously surfaced at host start. Publishing eagerly moves the failure to the call
+        // site, which is both earlier and closer to the mistake.
+        Assert.Throws<TypedIdException>(() => new ServiceCollection().AddSnowflakeWorkerId(workerId: 2048));
+    }
+
+    [Fact]
+    public void AddSnowflakeWorkerId_OutOfRangeFromFactory_ThrowsAtRegistration()
+        => Assert.Throws<TypedIdException>(() => new ServiceCollection().AddSnowflakeWorkerId(() => -1));
+
+    [Fact]
+    public void AddSnowflakeWorkerId_ReturnsSameCollectionForChaining()
+    {
+        var services = new ServiceCollection();
+
+        Assert.Same(services, services.AddSnowflakeWorkerId(workerId: 1));
+        Assert.Same(services, services.AddSnowflakeWorkerId(() => 2));
+        Assert.Same(services, services.AddSnowflakeWorkerId(envVar: "ZA_UNSET_WORKER", fallback: 3));
     }
 }
