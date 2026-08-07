@@ -51,13 +51,23 @@ public sealed class TestDbContext : DbContext
 
 #pragma warning restore MA0048
 
+// Shares a collection with other tests that mutate TypedIdRuntime.SnowflakeProvider to
+// avoid parallel-class races on the static provider slot.
+[Collection("SnowflakeProviderMutation")]
 public sealed class TypedIdEfCoreTests : IAsyncLifetime
 {
     private SqliteConnection _conn = null!;
     private TestDbContext _db = null!;
+    private ISnowflakeWorkerIdProvider? _originalProvider;
 
     public async Task InitializeAsync()
     {
+        // Set unconditionally rather than with ??=. Coalescing only assigns when the slot is
+        // empty, so it silently adopts whatever another class left there — and is then liable to
+        // find it restored to null before New() runs. Own the slot for the duration instead.
+        _originalProvider = TypedIdRuntime.SnowflakeProvider;
+        TypedIdRuntime.SnowflakeProvider = new StubProv(1);
+
         _conn = new SqliteConnection("Data Source=:memory:");
         await _conn.OpenAsync().ConfigureAwait(false);
         var opts = new DbContextOptionsBuilder<TestDbContext>()
@@ -70,12 +80,12 @@ public sealed class TypedIdEfCoreTests : IAsyncLifetime
     {
         await _db.DisposeAsync().ConfigureAwait(false);
         await _conn.DisposeAsync().ConfigureAwait(false);
+        TypedIdRuntime.SnowflakeProvider = _originalProvider;
     }
 
     [Fact]
     public async Task GuidBacked_TypedId_RoundTrips()
     {
-        TypedIdRuntime.SnowflakeProvider ??= new StubProv(1);
         var id = EfOrderId.New();
         _db.Orders.Add(new Order { Id = id, Label = "hi" });
         await _db.SaveChangesAsync();
@@ -89,7 +99,6 @@ public sealed class TypedIdEfCoreTests : IAsyncLifetime
     [Fact]
     public async Task Int64Backed_TypedId_RoundTrips()
     {
-        TypedIdRuntime.SnowflakeProvider ??= new StubProv(1);
         var id = EfMessageId.New();
         _db.Messages.Add(new Message { Id = id, Body = "hey" });
         await _db.SaveChangesAsync();
@@ -103,7 +112,6 @@ public sealed class TypedIdEfCoreTests : IAsyncLifetime
     [Fact]
     public async Task NullableTypedId_RoundTrips_WithAndWithoutValue()
     {
-        TypedIdRuntime.SnowflakeProvider ??= new StubProv(1);
         var id = EfOrderId.New();
         _db.NullableOrders.Add(new NullableOrder { Id = 1, OptionalId = id });
         _db.NullableOrders.Add(new NullableOrder { Id = 2, OptionalId = null });
@@ -121,7 +129,6 @@ public sealed class TypedIdEfCoreTests : IAsyncLifetime
     [Fact]
     public async Task GuidBacked_StoredAsBlob_NotAsString()
     {
-        TypedIdRuntime.SnowflakeProvider ??= new StubProv(1);
         var id = EfOrderId.New();
         _db.Orders.Add(new Order { Id = id, Label = "x" });
         await _db.SaveChangesAsync();
