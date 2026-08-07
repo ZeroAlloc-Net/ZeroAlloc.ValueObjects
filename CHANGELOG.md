@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.1...v2.0.2) (2026-08-07)
+
+
+### Tests
+
+* merge the two Snowflake xUnit collections into one ([#63](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/63)) ([5de66d3](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/5de66d361ea0996b6cf8c189cfb133c539262322))
+
 ## [2.0.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.0...v2.0.1) (2026-08-07)
 
 
