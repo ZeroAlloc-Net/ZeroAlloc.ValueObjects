@@ -23,9 +23,12 @@ public readonly partial record struct FunctionalSeqId;
 
 #pragma warning restore MA0048
 
-// Shares a collection with other tests that mutate TypedIdRuntime.SnowflakeProvider to
-// avoid parallel-class races on the static provider slot.
-[Collection("SnowflakeProviderMutation")]
+// Snowflake id generation touches process-wide static state: the provider slot in
+// TypedIdRuntime and SnowflakeCore's packed timestamp/sequence plus MaxSpinWaitMs.
+// Every class touching either shares this single collection - two differently-named
+// collections still run in parallel with each other, which is what let a test that
+// deliberately poisons SnowflakeCore._state break a concurrent id generation.
+[Collection("SnowflakeStatics")]
 public sealed class TypedIdFunctionalTests
 {
     [Fact]
