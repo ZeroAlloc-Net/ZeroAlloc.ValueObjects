@@ -30,7 +30,7 @@
     <PackageReference Include="System.Memory" Version="4.6.3" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <PackageReference Include="System.Memory" Version="4.6.3" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <!--
       Modern TFMs need 10.0.0 because ZeroAlloc.Serialisation 2.1.0 transitively
       requires Microsoft.Extensions.DependencyInjection.Abstractions >= 10.0.0.
