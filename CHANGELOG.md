@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.2...v2.0.3) (2026-08-07)
+
+
+### Bug Fixes
+
+* **generator:** suppress EPS06 for Roslyn 4.14's larger pipeline struct ([#79](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/79)) ([592d255](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/592d25577faf9750ab68169b665b60d4c4c1f59a))
+
 ## [2.0.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.1...v2.0.2) (2026-08-07)
 
 
