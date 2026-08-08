@@ -8,7 +8,7 @@
     <NoWarn>$(NoWarn);EPS01;MA0008;MA0011;MA0097;CA1815;CA1066</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="3.7.0" />
     <PackageReference Include="Vogen" Version="8.0.7" PrivateAssets="all" />
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects\ZeroAlloc.ValueObjects.csproj" />
