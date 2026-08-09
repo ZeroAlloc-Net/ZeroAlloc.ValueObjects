@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.3...v2.0.4) (2026-08-09)
+
+
+### Bug Fixes
+
+* **sdk:** pin the .NET 10 SDK so the Roslyn 5.6 generator can load ([#88](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/88)) ([c3bfb31](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/c3bfb31768fb35e958f1df9ba868aaa0b1189093))
+
 ## [2.0.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.2...v2.0.3) (2026-08-07)
 
 
