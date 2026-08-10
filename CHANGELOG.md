@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.4...v2.0.5) (2026-08-10)
+
+
+### Bug Fixes
+
+* **benchmarks:** return TryParse's result, as MA0060 asks ([#91](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/91)) ([d086b75](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/d086b7537916935571dc8bd76e6eec8a59385f71))
+
 ## [2.0.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.3...v2.0.4) (2026-08-09)
 
 
