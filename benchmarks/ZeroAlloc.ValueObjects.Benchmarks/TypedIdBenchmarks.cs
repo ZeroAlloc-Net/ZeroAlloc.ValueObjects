@@ -49,11 +49,11 @@ public class TypedIdBenchmarks
     [Benchmark] public BenchUlidId Ulid_New() => BenchUlidId.New();
     [Benchmark] public string Ulid_ToString() => SampleUlid.ToString();
     [Benchmark] public BenchUlidId Ulid_Parse() => BenchUlidId.Parse(SampleUlidString);
-    [Benchmark] public bool Ulid_TryParseSpan()
-    {
-        BenchUlidId.TryParse(SampleUlidString.AsSpan(), null, out var _);
-        return true;
-    }
+    // Returns TryParse's own result rather than a constant (MA0060). The analyzer is right for
+    // a second reason here: a benchmark that returns a literal gives BenchmarkDotNet nothing to
+    // consume, which is exactly the shape dead-code elimination is allowed to remove.
+    [Benchmark] public bool Ulid_TryParseSpan() =>
+        BenchUlidId.TryParse(SampleUlidString.AsSpan(), null, out _);
 
     [Benchmark] public BenchUuid7Id Uuid7_New() => BenchUuid7Id.New();
     [Benchmark] public string Uuid7_ToString() => SampleUuid7.ToString();
