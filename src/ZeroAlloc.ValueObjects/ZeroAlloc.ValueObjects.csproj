@@ -30,13 +30,13 @@
     <PackageReference Include="System.Memory" Version="4.6.3" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <PackageReference Include="System.Memory" Version="4.6.3" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
     <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
     <!--
       Modern TFMs need 10.0.0 because ZeroAlloc.Serialisation 2.1.0 transitively
       requires Microsoft.Extensions.DependencyInjection.Abstractions >= 10.0.0.
       Keep 8.0.0 on netstandard2.0 to stay compatible with hosts on .NET 8.
     -->
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
     <!--
       Microsoft.Extensions.Hosting.Abstractions is deliberately absent (ValueObjects#58). It was
       needed only by the hosted service backing AddSnowflakeWorkerId(Func<IServiceProvider, int>),
