@@ -78,6 +78,11 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
+          # global-json-file installs the SDK global.json pins. Without it this job
+          # only ever installed 9.0.x and built because the runner image happened to
+          # ship a 10.x SDK satisfying the pin -- so it broke the moment global.json
+          # moved to a band the image does not carry yet.
+          global-json-file: global.json
           dotnet-version: 9.0.x
 
       - name: Install AOT native toolchain
