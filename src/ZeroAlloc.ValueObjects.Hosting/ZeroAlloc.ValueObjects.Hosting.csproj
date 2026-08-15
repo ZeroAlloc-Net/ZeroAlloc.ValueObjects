@@ -16,8 +16,8 @@
   <ItemGroup>
     <!-- Version split matches the core package: 8.0.0 keeps the netstandard2.0 leg usable by
          hosts on .NET 8, modern legs track the 10.0.0 line the rest of the graph resolves to. -->
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.11" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
     <ProjectReference Include="..\ZeroAlloc.ValueObjects\ZeroAlloc.ValueObjects.csproj" />
   </ItemGroup>
 </Project>
