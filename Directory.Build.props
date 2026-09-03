@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Meziantou.Analyzer" Version="3.0.194" PrivateAssets="all">
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.195" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Roslynator.Analyzers" Version="5.0.0" PrivateAssets="all">
