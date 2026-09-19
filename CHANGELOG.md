@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.6](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.5...v2.0.6) (2026-09-19)
+
+
+### Bug Fixes
+
+* **ci:** stamp the assembly version when publishing from a manifest ([#158](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/158)) ([63ae64d](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/63ae64dec8b6b900e63918ce732ca29dd1d3f765))
+
 ## [2.0.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.4...v2.0.5) (2026-08-10)
 
 
