@@ -1,14 +1,15 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using VerifyXunit;
 using ZeroAlloc.ValueObjects.Generator;
+
+using ZeroAlloc.TestHelpers;
 
 namespace ZeroAlloc.ValueObjects.Tests.GeneratorTests;
 
 public class MultiPropertyClassTests
 {
     [Fact]
-    public Task GeneratesEquality_ForMultiPropertyClass()
+    public void GeneratesEquality_ForMultiPropertyClass()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
@@ -26,7 +27,7 @@ public class MultiPropertyClassTests
         var driver = CSharpGeneratorDriver.Create(generator)
             .RunGenerators(compilation);
 
-        return Verifier.Verify(driver);
+        GeneratorSnapshot.Verify(driver);
     }
 
     private static CSharpCompilation CreateCompilation(string source) =>

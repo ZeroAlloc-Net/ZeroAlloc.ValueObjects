@@ -1,14 +1,15 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using VerifyXunit;
 using ZeroAlloc.ValueObjects.Generator;
+
+using ZeroAlloc.TestHelpers;
 
 namespace ZeroAlloc.ValueObjects.Tests.GeneratorTests;
 
 public class EqualityMemberAttributeTests
 {
     [Fact]
-    public Task GeneratesEquality_OnlyForMarkedMembers()
+    public void GeneratesEquality_OnlyForMarkedMembers()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
@@ -22,11 +23,11 @@ public class EqualityMemberAttributeTests
             }
             """;
 
-        return Verifier.Verify(RunGenerator(source));
+        GeneratorSnapshot.Verify(RunGenerator(source));
     }
 
     [Fact]
-    public Task GeneratesEquality_ExcludingIgnoredMembers()
+    public void GeneratesEquality_ExcludingIgnoredMembers()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
@@ -39,7 +40,7 @@ public class EqualityMemberAttributeTests
             }
             """;
 
-        return Verifier.Verify(RunGenerator(source));
+        GeneratorSnapshot.Verify(RunGenerator(source));
     }
 
     private static GeneratorDriver RunGenerator(string source)
