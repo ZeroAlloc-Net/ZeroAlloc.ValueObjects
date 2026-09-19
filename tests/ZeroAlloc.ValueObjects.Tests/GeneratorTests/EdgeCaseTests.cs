@@ -1,14 +1,15 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using VerifyXunit;
 using ZeroAlloc.ValueObjects.Generator;
+
+using ZeroAlloc.TestHelpers;
 
 namespace ZeroAlloc.ValueObjects.Tests.GeneratorTests;
 
 public class EdgeCaseTests
 {
     [Fact]
-    public Task GeneratesEquality_ForZeroProperties()
+    public void GeneratesEquality_ForZeroProperties()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
@@ -19,11 +20,11 @@ public class EdgeCaseTests
             }
             """;
 
-        return Verifier.Verify(RunGenerator(source));
+        GeneratorSnapshot.Verify(RunGenerator(source));
     }
 
     [Fact]
-    public Task GeneratesHashCodeAdd_ForNineOrMoreProperties()
+    public void GeneratesHashCodeAdd_ForNineOrMoreProperties()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
@@ -43,11 +44,11 @@ public class EdgeCaseTests
             }
             """;
 
-        return Verifier.Verify(RunGenerator(source));
+        GeneratorSnapshot.Verify(RunGenerator(source));
     }
 
     [Fact]
-    public Task GeneratesEquality_ForTypeInGlobalNamespace()
+    public void GeneratesEquality_ForTypeInGlobalNamespace()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
@@ -59,7 +60,7 @@ public class EdgeCaseTests
             }
             """;
 
-        return Verifier.Verify(RunGenerator(source));
+        GeneratorSnapshot.Verify(RunGenerator(source));
     }
 
     private static GeneratorDriver RunGenerator(string source)

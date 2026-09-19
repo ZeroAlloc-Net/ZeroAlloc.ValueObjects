@@ -1,14 +1,15 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using VerifyXunit;
 using ZeroAlloc.ValueObjects.Generator;
+
+using ZeroAlloc.TestHelpers;
 
 namespace ZeroAlloc.ValueObjects.Tests.GeneratorTests;
 
 public class NullablePropertyTests
 {
     [Fact]
-    public Task GeneratesNullSafeComparison_ForNullableProperties()
+    public void GeneratesNullSafeComparison_ForNullableProperties()
     {
         var source = """
             #nullable enable
@@ -22,7 +23,7 @@ public class NullablePropertyTests
             }
             """;
 
-        return Verifier.Verify(RunGenerator(source));
+        GeneratorSnapshot.Verify(RunGenerator(source));
     }
 
     private static GeneratorDriver RunGenerator(string source)

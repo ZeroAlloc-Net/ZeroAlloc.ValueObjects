@@ -1,14 +1,15 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using VerifyXunit;
 using ZeroAlloc.ValueObjects.Generator;
+
+using ZeroAlloc.TestHelpers;
 
 namespace ZeroAlloc.ValueObjects.Tests.GeneratorTests;
 
 public class SinglePropertyStructTests
 {
     [Fact]
-    public Task GeneratesClass_ForSingleStringProperty()
+    public void GeneratesClass_ForSingleStringProperty()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
@@ -20,11 +21,11 @@ public class SinglePropertyStructTests
             }
             """;
 
-        return Verifier.Verify(RunGenerator(source));
+        GeneratorSnapshot.Verify(RunGenerator(source));
     }
 
     [Fact]
-    public Task GeneratesReadonlyStruct_ForStructDeclaration()
+    public void GeneratesReadonlyStruct_ForStructDeclaration()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
@@ -36,11 +37,11 @@ public class SinglePropertyStructTests
             }
             """;
 
-        return Verifier.Verify(RunGenerator(source));
+        GeneratorSnapshot.Verify(RunGenerator(source));
     }
 
     [Fact]
-    public Task GeneratesClass_WhenForceClassIsTrue_OnStruct()
+    public void GeneratesClass_WhenForceClassIsTrue_OnStruct()
     {
         var source = """
             using ZeroAlloc.ValueObjects;
@@ -52,7 +53,7 @@ public class SinglePropertyStructTests
             }
             """;
 
-        return Verifier.Verify(RunGenerator(source));
+        GeneratorSnapshot.Verify(RunGenerator(source));
     }
 
     private static GeneratorDriver RunGenerator(string source)
