@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.7](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.6...v2.0.7) (2026-09-20)
+
+
+### Bug Fixes
+
+* declare current sibling package versions ([#163](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/163)) ([76ab3f7](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/76ab3f7f01f81cbce2c9ba98d4f5b2d8c88c2aa7))
+
 ## [2.0.6](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.5...v2.0.6) (2026-09-19)
 
 
