@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.8](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.7...v2.0.8) (2026-09-20)
+
+
+### Bug Fixes
+
+* **ci:** pin the SDK floor at the .NET 10 GA band, not the newest patch ([#165](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/165)) ([ee5a200](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/ee5a2006938658d3683246bd7c41dad5fbb7ed57))
+
 ## [2.0.7](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.6...v2.0.7) (2026-09-20)
 
 
