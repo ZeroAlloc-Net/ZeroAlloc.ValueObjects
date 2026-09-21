@@ -34,9 +34,21 @@ internal static class ValueObjectParser
 
     private static IReadOnlyList<EqualityProperty> ResolveProperties(INamedTypeSymbol typeSymbol)
     {
+        // Every instance property, not just the public ones. The accessibility
+        // filter used to run here, before hasExplicitMembers was computed, which
+        // dropped [EqualityMember] from non-public members silently and in two
+        // different ways: a type with some public marks quietly compared a
+        // narrower set than its author wrote, and a type whose marks were all
+        // non-public fell through to the implicit path and compared raw public
+        // properties instead -- a completely different equality. Neither produced
+        // a warning. Normalising through a private helper property is a natural
+        // thing to write, so this was reachable from ordinary code.
+        //
+        // Generated equality is emitted into the same partial type, so a private
+        // member is accessible from it.
         var allProps = typeSymbol.GetMembers()
             .OfType<IPropertySymbol>()
-            .Where(p => p.DeclaredAccessibility == Accessibility.Public && !p.IsStatic)
+            .Where(p => !p.IsStatic)
             .ToList();
 
         bool hasExplicitMembers = allProps.Any(p =>
@@ -49,9 +61,15 @@ internal static class ValueObjectParser
                 var attrs = p.GetAttributes()
                     .Select(a => a.AttributeClass?.ToDisplayString())
                     .ToList();
+                // Explicit opt-in honours whatever the author marked, at any
+                // accessibility -- the attribute is a statement of intent.
+                // Without marks the implicit set stays public-only, since
+                // silently folding private state into equality would be its own
+                // surprise.
                 return hasExplicitMembers
                     ? attrs.Any(a => string.Equals(a, EqualityMemberAttributeName, StringComparison.Ordinal))
-                    : !attrs.Any(a => string.Equals(a, IgnoreEqualityMemberAttributeName, StringComparison.Ordinal));
+                    : p.DeclaredAccessibility == Accessibility.Public
+                      && !attrs.Any(a => string.Equals(a, IgnoreEqualityMemberAttributeName, StringComparison.Ordinal));
             })
             .Select(p => new EqualityProperty(
                 p.Name,
