@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.9](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.8...v2.0.9) (2026-09-21)
+
+
+### Bug Fixes
+
+* honour [EqualityMember] on non-public members ([#170](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/170)) ([51bcc78](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/51bcc78909f768c6c9d5817cd4cf3ff93665a2a8))
+
 ## [2.0.8](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.7...v2.0.8) (2026-09-20)
 
 
