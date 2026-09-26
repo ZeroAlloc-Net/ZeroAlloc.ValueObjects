@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.10](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.9...v2.0.10) (2026-09-26)
+
+
+### Bug Fixes
+
+* mark released analyzer rules and public api as shipped and automate the move ([#182](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/182)) ([fc8fe0c](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/fc8fe0c4f1fac5ec93975e8a259678a4caeda970))
+
 ## [2.0.9](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.8...v2.0.9) (2026-09-21)
 
 
