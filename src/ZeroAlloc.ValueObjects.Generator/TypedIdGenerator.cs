@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using ZeroAlloc.ValueObjects.Generator.Pipeline;
 using ZeroAlloc.ValueObjects.Generator.Writers;
@@ -8,10 +7,6 @@ namespace ZeroAlloc.ValueObjects.Generator;
 [Generator]
 public sealed class TypedIdGenerator : IIncrementalGenerator
 {
-    [SuppressMessage(
-        "ErrorProne.NET.Structs",
-        "EPS06:Hidden struct copy operation",
-        Justification = "Same Roslyn pipeline-API constraint - see the note in the sibling generator.")]
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Collect per-struct [TypedId] candidates
