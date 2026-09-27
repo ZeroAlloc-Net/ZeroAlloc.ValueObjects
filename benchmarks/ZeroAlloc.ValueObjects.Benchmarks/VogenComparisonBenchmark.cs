@@ -16,7 +16,7 @@ namespace ZeroAlloc.ValueObjects.Benchmarks;
 #pragma warning disable MA0048
 
 [ValueObject<int>]
-public partial struct VogenIntId { }
+public readonly partial struct VogenIntId { }
 
 // ZA.ValueObjects' apples-to-apples wrapper: single-int value object via the
 // [ValueObject] attribute (same generative shape as Vogen — From-style factory,

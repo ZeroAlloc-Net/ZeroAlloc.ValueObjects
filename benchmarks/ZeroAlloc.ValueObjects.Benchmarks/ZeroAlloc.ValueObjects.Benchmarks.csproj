@@ -5,7 +5,7 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);EPS01;MA0008;MA0011;MA0097;CA1815;CA1066</NoWarn>
+    <NoWarn>$(NoWarn);MA0008;MA0011;MA0097;CA1815;CA1066</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
