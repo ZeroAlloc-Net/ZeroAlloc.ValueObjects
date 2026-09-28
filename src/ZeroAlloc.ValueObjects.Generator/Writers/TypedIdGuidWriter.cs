@@ -117,8 +117,15 @@ internal static class TypedIdGuidWriter
             _ => throw new InvalidOperationException($"Unexpected Guid-backed strategy {strategy}"),
         };
 
+        // A separate one-argument overload rather than an optional provider: the span overload has
+        // the same parameter count, so an optional parameter here trips RS0027 in every consumer
+        // that tracks its public API. Callers compiled against the old optional form keep working,
+        // since the two-argument signature is unchanged.
+        TypedIdDocs.AppendParseWithoutProviderDoc(sb, name);
+        sb.AppendLine($"    public static {name} Parse(string s) => Parse(s, null);");
+        sb.AppendLine();
         TypedIdDocs.AppendParseDoc(sb, name, span: false, nullThrows: true);
-        sb.AppendLine($"    public static {name} Parse(string s, IFormatProvider? provider = null)");
+        sb.AppendLine($"    public static {name} Parse(string s, IFormatProvider? provider)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (s is null) throw new ArgumentNullException(nameof(s));");
         sb.AppendLine("        if (TryParse(s.AsSpan(), provider, out var r)) return r;");

@@ -26,6 +26,15 @@ internal static class TypedIdDocs
         sb.AppendLine($"    /// <exception cref=\"System.FormatException\"><paramref name=\"s\"/> is not a valid <c>{name}</c>.</exception>");
     }
 
+    public static void AppendParseWithoutProviderDoc(StringBuilder sb, string name)
+    {
+        sb.AppendLine($"    /// <summary>Parses a string into a <c>{name}</c>, accepting the same form produced by ToString.</summary>");
+        sb.AppendLine("    /// <param name=\"s\">The string to parse.</param>");
+        sb.AppendLine($"    /// <returns>The parsed <c>{name}</c>.</returns>");
+        sb.AppendLine("    /// <exception cref=\"System.ArgumentNullException\"><paramref name=\"s\"/> is null.</exception>");
+        sb.AppendLine($"    /// <exception cref=\"System.FormatException\"><paramref name=\"s\"/> is not a valid <c>{name}</c>.</exception>");
+    }
+
     public static void AppendTryParseDoc(StringBuilder sb, string name, bool span)
     {
         var input = span ? "character span" : "string";
