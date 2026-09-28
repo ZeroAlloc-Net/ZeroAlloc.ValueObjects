@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -20,17 +19,17 @@ internal static class TypedIdParser
         string Name,
         int RawStrategy,
         int RawBacking,
-        ImmutableArray<DiagnosticInfo> Diagnostics);
+        EquatableArray<DiagnosticInfo> Diagnostics);
 
     internal sealed record AssemblyDefault(int RawStrategy, int RawBacking);
 
-    // A value-type-ish holder for a diagnostic so the incremental pipeline can cache models
-    // without pulling Location objects that compare by reference.
+    // An equatable holder for a diagnostic, so the incremental pipeline can cache models: a
+    // Diagnostic compares by reference. The location keeps its syntax tree, see LocationInfo.
     internal sealed record DiagnosticInfo(
         string Id,
         DiagnosticSeverity Severity,
         LocationInfo Location,
-        ImmutableArray<string> MessageArgs)
+        EquatableArray<string> MessageArgs)
     {
         public Diagnostic ToDiagnostic()
         {
@@ -46,35 +45,6 @@ internal static class TypedIdParser
         }
     }
 
-    internal sealed record LocationInfo(string FilePath, TextSpanInfo Span, LinePositionSpanInfo LineSpan)
-    {
-        public Location ToLocation() => Microsoft.CodeAnalysis.Location.Create(
-            FilePath,
-            new Microsoft.CodeAnalysis.Text.TextSpan(Span.Start, Span.Length),
-            new Microsoft.CodeAnalysis.Text.LinePositionSpan(
-                new Microsoft.CodeAnalysis.Text.LinePosition(LineSpan.StartLine, LineSpan.StartCharacter),
-                new Microsoft.CodeAnalysis.Text.LinePosition(LineSpan.EndLine, LineSpan.EndCharacter)));
-
-        public static LocationInfo From(Location location)
-        {
-            var lineSpan = location.GetLineSpan();
-            return new LocationInfo(
-                location.SourceTree?.FilePath ?? string.Empty,
-                new TextSpanInfo(location.SourceSpan.Start, location.SourceSpan.Length),
-                new LinePositionSpanInfo(
-                    lineSpan.StartLinePosition.Line,
-                    lineSpan.StartLinePosition.Character,
-                    lineSpan.EndLinePosition.Line,
-                    lineSpan.EndLinePosition.Character));
-        }
-    }
-
-    [StructLayout(LayoutKind.Auto)]
-    internal readonly record struct TextSpanInfo(int Start, int Length);
-
-    [StructLayout(LayoutKind.Auto)]
-    internal readonly record struct LinePositionSpanInfo(int StartLine, int StartCharacter, int EndLine, int EndCharacter);
-
     public static PartialModel? Parse(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
         if (ctx.TargetSymbol is not INamedTypeSymbol symbol) return null;
@@ -87,16 +57,23 @@ internal static class TypedIdParser
             ? null
             : symbol.ContainingNamespace.ToDisplayString();
 
-        var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
-        DetectDeclarationIssues(symbol, diagnostics, ct);
-        DetectIncompatibleBacking(symbol, attr, strategy, backing, diagnostics, ct);
+        // ZATI002 and ZATI005 are reported at the declaration that carries [TypedId].
+        var identifier = ctx.TargetNode is TypeDeclarationSyntax target
+            ? LocationInfo.From(target.Identifier)
+            : LocationInfo.From(ctx.TargetNode);
 
-        return new PartialModel(ns, symbol.Name, strategy, backing, diagnostics.ToImmutable());
+        var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
+        DetectDeclarationIssues(symbol, identifier, diagnostics, ct);
+        DetectIncompatibleBacking(attr, identifier, strategy, backing, diagnostics, ct);
+
+        return new PartialModel(
+            ns, symbol.Name, strategy, backing, new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutable()));
     }
 
     // ZATI002 (not readonly partial record struct), ZATI003 (non-empty body), ZATI005 (multi-file partial).
     private static void DetectDeclarationIssues(
         INamedTypeSymbol symbol,
+        LocationInfo identifier,
         ImmutableArray<DiagnosticInfo>.Builder diagnostics,
         CancellationToken ct)
     {
@@ -129,8 +106,8 @@ internal static class TypedIdParser
             diagnostics.Add(new DiagnosticInfo(
                 "ZATI002",
                 DiagnosticSeverity.Error,
-                LocationInfo.From(GetIdentifierLocation(declarations[0], ct)),
-                ImmutableArray.Create(symbol.Name)));
+                identifier,
+                Args(symbol.Name)));
         }
 
         if (files.Count > 1)
@@ -138,8 +115,8 @@ internal static class TypedIdParser
             diagnostics.Add(new DiagnosticInfo(
                 "ZATI005",
                 DiagnosticSeverity.Warning,
-                LocationInfo.From(GetIdentifierLocation(declarations[0], ct)),
-                ImmutableArray.Create(symbol.Name)));
+                identifier,
+                Args(symbol.Name)));
         }
     }
 
@@ -161,8 +138,8 @@ internal static class TypedIdParser
                 diag = new DiagnosticInfo(
                     "ZATI003",
                     DiagnosticSeverity.Error,
-                    LocationInfo.From(member.GetLocation()),
-                    ImmutableArray.Create(symbolName));
+                    LocationInfo.From(member),
+                    Args(symbolName));
                 return true;
             }
         }
@@ -171,18 +148,15 @@ internal static class TypedIdParser
         return false;
     }
 
-    private static Location GetIdentifierLocation(SyntaxReference declRef, CancellationToken ct)
-    {
-        var node = declRef.GetSyntax(ct);
-        return node is TypeDeclarationSyntax td ? td.Identifier.GetLocation() : node.GetLocation();
-    }
+    private static EquatableArray<string> Args(params string[] args) =>
+        new(ImmutableArray.Create(args));
 
     // ZATI001: strategy/backing compatibility. An explicit incompatible pairing on the
     // struct's attribute is always an error; assembly defaults cannot rescue an explicit
     // user-supplied pair.
     private static void DetectIncompatibleBacking(
-        INamedTypeSymbol symbol,
         AttributeData attr,
+        LocationInfo identifier,
         int strategy,
         int backing,
         ImmutableArray<DiagnosticInfo>.Builder diagnostics,
@@ -193,13 +167,13 @@ internal static class TypedIdParser
         var (expected, strategyName, actualName) = DescribePair(strategy, backing);
         if (expected is null) return;
 
-        Location loc = attr.ApplicationSyntaxReference?.GetSyntax(ct).GetLocation()
-            ?? symbol.Locations[0];
+        // Reported at the [TypedId] attribute that carries the incompatible pair.
+        var syntax = attr.ApplicationSyntaxReference?.GetSyntax(ct);
         diagnostics.Add(new DiagnosticInfo(
             "ZATI001",
             DiagnosticSeverity.Error,
-            LocationInfo.From(loc),
-            ImmutableArray.Create(strategyName, expected, actualName)));
+            syntax is null ? identifier : LocationInfo.From(syntax),
+            Args(strategyName, expected, actualName)));
     }
 
     private static bool HasModifier(TypeDeclarationSyntax typeDecl, SyntaxKind kind)

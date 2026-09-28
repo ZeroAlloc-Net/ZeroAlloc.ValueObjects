@@ -17,11 +17,13 @@ public sealed class TypedIdGenerator : IIncrementalGenerator
                     || node is Microsoft.CodeAnalysis.CSharp.Syntax.RecordDeclarationSyntax,
                 transform: static (ctx, ct) => TypedIdParser.Parse(ctx, ct))
             .Where(static m => m is not null)
-            .Select(static (m, _) => m!);
+            .Select(static (m, _) => m!)
+            .WithTrackingName(TrackingNames.TypedIdCandidates);
 
         // Combine with compilation-level [TypedIdDefault] reading
         var assemblyDefault = context.CompilationProvider
-            .Select(static (comp, _) => TypedIdParser.ReadAssemblyDefault(comp));
+            .Select(static (comp, _) => TypedIdParser.ReadAssemblyDefault(comp))
+            .WithTrackingName(TrackingNames.TypedIdAssemblyDefault);
 
         var combined = candidates.Combine(assemblyDefault);
 
