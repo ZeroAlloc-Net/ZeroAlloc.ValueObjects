@@ -12,13 +12,13 @@ The generator emits five diagnostic IDs, `ZATI001` through `ZATI005`. Each is ra
 
 ## Summary
 
-| ID | Severity | Meaning | Fix |
-|---|---|---|---|
-| [ZATI001](#zati001) | Error | Incompatible strategy/backing | Use the correct `BackingType` or remove the explicit `Backing` |
-| [ZATI002](#zati002) | Error | Type is not `readonly partial record struct` | Add the missing modifiers |
-| [ZATI003](#zati003) | Error | Struct body declares fields or properties | Remove the declarations — generator owns `Value` |
-| [ZATI004](#zati004) | — | Reserved (enforced by `AttributeUsage`) | N/A |
-| [ZATI005](#zati005) | Warning | Struct declared `partial` across multiple files | Consolidate into one file |
+| ID | Severity | Meaning | Reported at | Fix |
+|---|---|---|---|---|
+| [ZATI001](#zati001) | Error | Incompatible strategy/backing | The `[TypedId]` attribute | Use the correct `BackingType` or remove the explicit `Backing` |
+| [ZATI002](#zati002) | Error | Type is not `readonly partial record struct` | The name in the declaration that carries `[TypedId]` | Add the missing modifiers |
+| [ZATI003](#zati003) | Error | Struct body declares fields or properties | The first field or property | Remove the declarations — generator owns `Value` |
+| [ZATI004](#zati004) | — | Reserved (enforced by `AttributeUsage`) | — | N/A |
+| [ZATI005](#zati005) | Warning | Struct declared `partial` across multiple files | The name in the declaration that carries `[TypedId]` | Consolidate into one file |
 
 ---
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -84,17 +85,38 @@ public sealed class TypedIdDiagnosticTests
         Assert.DoesNotContain(diagnostics, d => d.Id.StartsWith("ZATI", StringComparison.Ordinal));
     }
 
-    private static ImmutableArray<Diagnostic> GetDiagnostics(params string[] sources)
+    internal static ImmutableArray<Diagnostic> GetDiagnostics(params string[] sources) =>
+        GetDiagnostics(severities: null, sources);
+
+    /// <summary>
+    /// Runs the generator and returns its diagnostics as the driver filters them: a
+    /// <c>#pragma warning disable</c> marks the ones it covers as suppressed.
+    /// </summary>
+    internal static ImmutableArray<Diagnostic> GetDiagnostics(
+        IReadOnlyDictionary<string, ReportDiagnostic>? severities, params string[] sources)
     {
         var trees = new SyntaxTree[sources.Length];
         for (int i = 0; i < sources.Length; i++)
         {
             // Give each tree a distinct file path so multi-file partial detection (ZATI005) works.
-            trees[i] = CSharpSyntaxTree.ParseText(
-                sources[i],
-                path: string.Create(System.Globalization.CultureInfo.InvariantCulture, $"source{i}.cs"));
+            trees[i] = CSharpSyntaxTree.ParseText(sources[i], path: FilePath(i));
         }
 
+        var compilation = CreateCompilation(trees);
+        if (severities is not null)
+            compilation = compilation.WithOptions(compilation.Options.WithSpecificDiagnosticOptions(severities));
+
+        var driver = CSharpGeneratorDriver.Create(new TypedIdGenerator());
+        var result = driver.RunGenerators(compilation).GetRunResult();
+        return result.Diagnostics;
+    }
+
+    /// <summary>The file path that GetDiagnostics gives the source at <paramref name="index"/>.</summary>
+    internal static string FilePath(int index) =>
+        string.Create(System.Globalization.CultureInfo.InvariantCulture, $"source{index}.cs");
+
+    internal static CSharpCompilation CreateCompilation(params SyntaxTree[] trees)
+    {
         var runtimeDir = System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory();
         var refs = new[]
         {
@@ -104,14 +126,10 @@ public sealed class TypedIdDiagnosticTests
             MetadataReference.CreateFromFile(System.IO.Path.Combine(runtimeDir, "System.Runtime.dll")),
             MetadataReference.CreateFromFile(System.IO.Path.Combine(runtimeDir, "netstandard.dll")),
         };
-        var compilation = CSharpCompilation.Create(
+        return CSharpCompilation.Create(
             "GenTest",
             trees,
             refs,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-        var driver = CSharpGeneratorDriver.Create(new TypedIdGenerator());
-        var result = driver.RunGenerators(compilation).GetRunResult();
-        return result.Diagnostics;
     }
 }
