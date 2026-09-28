@@ -71,11 +71,22 @@
     <ProjectReference Include="..\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- Bundle generator DLL into the analyzers folder of the NuGet package -->
-  <!-- Use a direct path to avoid invoking MSBuild on the generator, which triggers Build in .NET 10+ and breaks the no-build pack step -->
+  <!--
+    Bundle the generator DLL the build actually produced into the analyzers folder of the NuGet
+    package. Asking the generator project for its target path, instead of hardcoding
+    bin\$(Configuration)\netstandard2.0, follows any output redirection such as artifacts-path.
+    The hardcoded path silently bundled whatever stale DLL sat in the repository's bin folder,
+    at whatever version that DLL had been built with. GetTargetPath only reports the path; it
+    does not build the generator, so a no-build pack stays no-build. See ZeroAlloc-Net/.github#43.
+  -->
   <Target Name="IncludeGeneratorInPackage" BeforeTargets="_GetPackageFiles">
+    <MSBuild Projects="..\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj"
+             Targets="GetTargetPath"
+             RemoveProperties="TargetFramework;RuntimeIdentifier;SelfContained">
+      <Output TaskParameter="TargetOutputs" ItemName="_ZeroAllocValueObjectsGeneratorAssembly" />
+    </MSBuild>
     <ItemGroup>
-      <None Include="$(MSBuildThisFileDirectory)..\ZeroAlloc.ValueObjects.Generator\bin\$(Configuration)\netstandard2.0\ZeroAlloc.ValueObjects.Generator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+      <None Include="@(_ZeroAllocValueObjectsGeneratorAssembly)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
   </Target>
 </Project>
