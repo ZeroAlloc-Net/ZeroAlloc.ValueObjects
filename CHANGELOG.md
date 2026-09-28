@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.11](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.10...v2.0.11) (2026-09-28)
+
+
+### Bug Fixes
+
+* emit a separate Parse overload instead of an optional provider parameter ([#192](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/192)) ([c928f9a](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/c928f9a06bf8231adc91049fac5644fb5934df3b)), closes [#191](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/191)
+* report ZATI diagnostics at a source location that #pragma can suppress ([#194](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/194)) ([d35106e](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/d35106e5c0ad28f2afbcc8a930af12dc568f5715))
+
 ## [2.0.10](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.9...v2.0.10) (2026-09-26)
 
 
