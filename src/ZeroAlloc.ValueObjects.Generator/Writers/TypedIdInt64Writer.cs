@@ -125,14 +125,26 @@ internal static class TypedIdInt64Writer
     // Split string/span overloads into separate methods to stay under MA0051's statement limit.
     private static void AppendParsing(StringBuilder sb, string name)
     {
+        AppendParseWithoutProvider(sb, name);
         AppendStringParsing(sb, name);
         AppendSpanParsing(sb, name);
+    }
+
+    // A separate one-argument overload rather than an optional provider: the span overload has the
+    // same parameter count, so an optional parameter here trips RS0027 in every consumer that tracks
+    // its public API. Callers compiled against the old optional form keep working, since the
+    // two-argument signature is unchanged.
+    private static void AppendParseWithoutProvider(StringBuilder sb, string name)
+    {
+        TypedIdDocs.AppendParseWithoutProviderDoc(sb, name);
+        sb.AppendLine($"    public static {name} Parse(string s) => Parse(s, null);");
+        sb.AppendLine();
     }
 
     private static void AppendStringParsing(StringBuilder sb, string name)
     {
         TypedIdDocs.AppendParseDoc(sb, name, span: false, nullThrows: true);
-        sb.AppendLine($"    public static {name} Parse(string s, IFormatProvider? provider = null)");
+        sb.AppendLine($"    public static {name} Parse(string s, IFormatProvider? provider)");
         sb.AppendLine("    {");
         sb.AppendLine("        if (s is null) throw new ArgumentNullException(nameof(s));");
         sb.AppendLine("        if (long.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))");
