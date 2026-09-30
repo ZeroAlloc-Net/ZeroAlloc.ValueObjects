@@ -20,6 +20,26 @@ public partial class OrderId { ... }
 public partial struct Quantity { ... }
 ```
 
+The type can be generic, and it can be nested in another type. A nested value object needs every containing type to be `partial` too, because the generated code reopens them; otherwise the generator reports [ZAVO001](diagnostics.md#zavo001) and generates nothing for it. A member whose type is a type parameter compares through `EqualityComparer<T>.Default`.
+
+```csharp
+public partial class Orders
+{
+    [ValueObject]
+    public partial class Line
+    {
+        public int Quantity { get; }
+    }
+}
+
+[ValueObject]
+public partial struct Range<T>
+{
+    public T Low { get; }
+    public T High { get; }
+}
+```
+
 ### Property: `ForceClass` (bool, default `false`)
 
 When your declaration is a `struct` but you need reference semantics, set `ForceClass = true`. The generator emits a `sealed partial class` instead of a `readonly partial struct`.

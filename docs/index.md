@@ -31,6 +31,7 @@ Same performance as `record` — without forcing the `record` keyword on your do
 | [Performance](performance.md) | Benchmark results and how to run them |
 | [Design & Limitations](design.md) | Trade-offs, things not generated |
 | [Troubleshooting](troubleshooting.md) | Common errors and fixes |
+| [Diagnostics](diagnostics.md) | `ZAVO001`–`ZAVO003` reference |
 | [Testing](testing.md) | Testing value objects — equality, hash codes, serialization |
 | **Examples** | |
 | [E-Commerce](examples/ecommerce.md) | `ProductId`, `Money`, `ShippingAddress`, `Discount` |
@@ -54,7 +55,7 @@ Same performance as `record` — without forcing the `record` keyword on your do
 | [JSON serialization](typed-id/json.md) | `System.Text.Json` integration, AOT safety |
 | [ASP.NET minimal API binding](typed-id/aspnet.md) | Route and query binding via `IParsable<T>` |
 | [EF Core integration](typed-id/efcore.md) | `ZeroAlloc.ValueObjects.EfCore` conventions |
-| [Diagnostics](typed-id/diagnostics.md) | `ZATI001`–`ZATI005` reference |
+| [Diagnostics](typed-id/diagnostics.md) | `ZATI001`–`ZATI009` reference |
 | [Production checklist](typed-id/production.md) | Operational caveats and audit questions |
 | [Internals](typed-id/internals.md) | Generator pipeline and zero-allocation techniques |
 

@@ -2,13 +2,15 @@
 id: typed-id-diagnostics
 title: TypedId Diagnostics
 slug: /docs/typed-id/diagnostics
-description: ZATI001–ZATI005 reference with example code and fixes.
+description: ZATI001–ZATI009 reference with example code and fixes.
 sidebar_position: 27
 ---
 
 # Diagnostics
 
-The generator emits five diagnostic IDs, `ZATI001` through `ZATI005`. Each is raised during compilation, so invalid TypedId declarations never reach runtime.
+The generator emits eight diagnostic IDs, `ZATI001` through `ZATI009`; `ZATI004` is reserved. Each is raised during compilation, so invalid TypedId declarations never reach runtime.
+
+A TypedId can be declared at the top of a namespace, in the global namespace, or nested in another type. It cannot be generic; see [ZATI007](#zati007).
 
 ## Summary
 
@@ -19,6 +21,10 @@ The generator emits five diagnostic IDs, `ZATI001` through `ZATI005`. Each is ra
 | [ZATI003](#zati003) | Error | Struct body declares fields or properties | The first field or property | Remove the declarations — generator owns `Value` |
 | [ZATI004](#zati004) | — | Reserved (enforced by `AttributeUsage`) | — | N/A |
 | [ZATI005](#zati005) | Warning | Struct declared `partial` across multiple files | The name in the declaration that carries `[TypedId]` | Consolidate into one file |
+| [ZATI006](#zati006) | Warning | Nested struct inside a containing type that is not `partial` | The name in the declaration that carries `[TypedId]` | Make every containing type `partial` |
+| [ZATI007](#zati007) | Error | Struct is generic, or nested in a generic type | The name in the declaration that carries `[TypedId]` | Use a non-generic struct outside generic types |
+| [ZATI008](#zati008) | Error | Struct is file-local, or nested in a file-local type | The name in the declaration that carries `[TypedId]` | Remove the `file` modifier |
+| [ZATI009](#zati009) | Error | Struct name differs only in case from another TypedId | The name in the declaration that carries `[TypedId]` | Rename one of them |
 
 ---
 
@@ -183,6 +189,92 @@ Or suppress locally if you intentionally split (e.g. for code-organization reaso
 public readonly partial record struct OrderId { /* extras */ }
 #pragma warning restore ZATI005
 ```
+
+---
+
+## ZATI006
+
+**Warning.** `[TypedId] struct 'App.Orders.Id' is not generated because its containing type 'App.Orders' is not partial`.
+
+A nested TypedId is generated inside partial declarations of every containing type, so each of them must be `partial`. When one is not, the generator reports ZATI006 and generates nothing for the struct. The message names the outermost containing type that is not `partial`. Earlier versions generated such a struct into a new top-level type with its simple name.
+
+### Example — offending code
+
+```csharp
+public class Orders
+{
+    [TypedId]
+    public readonly partial record struct Id;
+}
+```
+
+### Fix
+
+Make every containing type `partial`, or move the struct to the top level of a namespace:
+
+```csharp
+public partial class Orders
+{
+    [TypedId]
+    public readonly partial record struct Id;
+}
+```
+
+Under `TreatWarningsAsErrors` this warning fails the build.
+
+---
+
+## ZATI007
+
+**Error.** `[TypedId] struct 'App.Key<TEntity>' is not generated because 'App.Key<TEntity>' is generic; a JsonConverterAttribute cannot name a converter for an open generic type`.
+
+Every TypedId carries `[JsonConverter(typeof(Id.TypedIdJsonConverter))]`. For a generic struct, or a struct nested in a generic type, the converter is generic too. An attribute cannot name `Key<TEntity>.TypedIdJsonConverter`, and System.Text.Json cannot create the open form `Key<>.TypedIdJsonConverter`: it throws at runtime on .NET 8, 9 and 10. So the generator reports ZATI007 and generates nothing for the struct. When the struct itself is not generic, the message names the generic containing type.
+
+### Example — offending code
+
+```csharp
+[TypedId]
+public readonly partial record struct Key<TEntity>;
+
+public partial class Repository<T>
+{
+    [TypedId]
+    public readonly partial record struct Id;
+}
+```
+
+### Fix
+
+Declare one non-generic TypedId per entity, outside generic types:
+
+```csharp
+[TypedId] public readonly partial record struct OrderKey;
+[TypedId] public readonly partial record struct CustomerKey;
+```
+
+---
+
+## ZATI008
+
+**Error.** `[TypedId] struct 'App.Id' is not generated because 'App.Id' is file-local`.
+
+A `file` type is visible only in the file that declares it, so the generated file cannot reopen it. The same applies to a struct nested in a `file` type; the message then names that type.
+
+### Fix
+
+Remove the `file` modifier. Use `internal` to keep the struct out of the public surface.
+
+---
+
+## ZATI009
+
+**Error.** `[TypedId] struct 'App.orderId' is not generated because its file name 'App.orderId.TypedId.g.cs' differs only in case from that of 'App.OrderId'`.
+
+Each TypedId is generated into a file named after its namespace, containing types and name. Roslyn compares those file names ignoring case, so two TypedIds whose qualified names differ only in case would need the same file. The one declared first, by file path and then position, is generated. Every later one gets ZATI009 and is not generated. Earlier versions failed with CS8785 in this case, and generated no TypedId in the project at all.
+
+### Fix
+
+Rename one of the structs, or move it to another namespace, so the qualified names differ in more than case.
 
 ---
 

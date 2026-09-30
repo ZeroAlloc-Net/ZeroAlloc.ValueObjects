@@ -66,7 +66,7 @@ readonly partial struct CustomerId : System.IEquatable<CustomerId>
         Value == other.Value;
 
     public override int GetHashCode() =>
-        System.HashCode.Combine(Value);
+        Value.GetHashCode();                   // one member: no HashCode.Combine
 
     public static bool operator ==(CustomerId left, CustomerId right) =>
         left.Equals(right);                    // no null guard needed
@@ -74,8 +74,38 @@ readonly partial struct CustomerId : System.IEquatable<CustomerId>
     public static bool operator !=(CustomerId left, CustomerId right) =>
         !left.Equals(right);
 
-    public override string ToString() =>
-        $"CustomerId {{ Value = {Value} }}";
+    public override string ToString() =>       // one member: its value alone
+        Value.ToString(global::System.Globalization.CultureInfo.InvariantCulture);
+}
+```
+
+## Nested and generic output
+
+A nested value object is generated inside partial declarations of its containing types, outermost first, so every containing type must be `partial`; otherwise the generator reports [ZAVO001](diagnostics.md#zavo001). A generic value object keeps its type parameters, and a member whose type is a type parameter compares through `EqualityComparer<T>.Default`:
+
+```csharp
+// Input
+public partial class Orders
+{
+    [ValueObject]
+    public partial class Line<T>
+    {
+        public T Item { get; }
+        public int Quantity { get; }
+    }
+}
+
+// Generated
+partial class Orders
+{
+sealed partial class Line<T> : System.IEquatable<Line<T>>
+{
+    public bool Equals(Line<T>? other) =>
+        other is not null &&
+        global::System.Collections.Generic.EqualityComparer<T>.Default.Equals(Item, other.Item) &&
+        Quantity == other.Quantity;
+    // ... the same members as above
+}
 }
 ```
 
@@ -84,7 +114,8 @@ readonly partial struct CustomerId : System.IEquatable<CustomerId>
 | Number of properties | Strategy |
 |---|---|
 | 0 | `return 0;` |
-| 1–8 | `System.HashCode.Combine(p1, p2, ...)` |
+| 1 | `p1.GetHashCode()`, null-safe for reference types |
+| 2–8 | `System.HashCode.Combine(p1, p2, ...)` |
 | 9+ | `var hc = new System.HashCode(); hc.Add(p1); ... return hc.ToHashCode();` |
 
 ## Type modifiers

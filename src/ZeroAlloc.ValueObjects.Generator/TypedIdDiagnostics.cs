@@ -42,4 +42,36 @@ internal static class TypedIdDiagnostics
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ContainingTypeNotPartial = new(
+        id: "ZATI006",
+        title: "Nested [TypedId] struct inside a containing type that is not partial",
+        messageFormat: "[TypedId] struct '{0}' is not generated because its containing type '{1}' is not partial",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor Generic = new(
+        id: "ZATI007",
+        title: "Generic [TypedId] struct",
+        messageFormat: "[TypedId] struct '{0}' is not generated because '{1}' is generic; a JsonConverterAttribute cannot name a converter for an open generic type",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FileLocal = new(
+        id: "ZATI008",
+        title: "File-local [TypedId] struct",
+        messageFormat: "[TypedId] struct '{0}' is not generated because '{1}' is file-local",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor NameDiffersOnlyInCase = new(
+        id: "ZATI009",
+        title: "[TypedId] struct name differs only in case from another [TypedId] struct",
+        messageFormat: "[TypedId] struct '{0}' is not generated because its file name '{1}' differs only in case from that of '{2}'",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

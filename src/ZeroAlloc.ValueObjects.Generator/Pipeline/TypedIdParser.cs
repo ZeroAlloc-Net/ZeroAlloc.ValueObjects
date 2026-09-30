@@ -13,38 +13,20 @@ internal static class TypedIdParser
     // "Partial" model: values as seen on the struct's [TypedId] attribute (may be 0 = unset).
     // Full resolution happens in Resolve() combining with the assembly-level default.
     // Carries any diagnostics detected while parsing so the source-output stage can report
-    // them and skip emission when errors are present.
+    // them. File is null when the struct is not generated, for an error or for a
+    // blocking warning such as ZATI006; only a struct with a File takes part in ZATI009.
     internal sealed record PartialModel(
         string HintName,
         string? Namespace,
         string Name,
+        string Accessibility,
+        EquatableArray<string> ContainingTypes,
         int RawStrategy,
         int RawBacking,
-        EquatableArray<DiagnosticInfo> Diagnostics);
+        EquatableArray<DiagnosticInfo> Diagnostics,
+        GeneratedFile? File);
 
     internal sealed record AssemblyDefault(int RawStrategy, int RawBacking);
-
-    // An equatable holder for a diagnostic, so the incremental pipeline can cache models: a
-    // Diagnostic compares by reference. The location keeps its syntax tree, see LocationInfo.
-    internal sealed record DiagnosticInfo(
-        string Id,
-        DiagnosticSeverity Severity,
-        LocationInfo Location,
-        EquatableArray<string> MessageArgs)
-    {
-        public Diagnostic ToDiagnostic()
-        {
-            var descriptor = Id switch
-            {
-                "ZATI001" => TypedIdDiagnostics.IncompatibleBacking,
-                "ZATI002" => TypedIdDiagnostics.InvalidDeclaration,
-                "ZATI003" => TypedIdDiagnostics.NonEmptyBody,
-                "ZATI005" => TypedIdDiagnostics.MultiFilePartial,
-                _ => throw new System.InvalidOperationException($"Unknown diagnostic id {Id}"),
-            };
-            return Diagnostic.Create(descriptor, Location.ToLocation(), MessageArgs.ToArray());
-        }
-    }
 
     public static PartialModel? Parse(GeneratorAttributeSyntaxContext ctx, CancellationToken ct)
     {
@@ -58,18 +40,62 @@ internal static class TypedIdParser
             ? null
             : symbol.ContainingNamespace.ToDisplayString();
 
-        // ZATI002 and ZATI005 are reported at the declaration that carries [TypedId].
+        // Every diagnostic is reported at the declaration that carries [TypedId], except
+        // ZATI001, which goes on the attribute, and ZATI003, which goes on the member.
         var identifier = ctx.TargetNode is TypeDeclarationSyntax target
             ? LocationInfo.From(target.Identifier)
             : LocationInfo.From(ctx.TargetNode);
+        var hintName = HintNames.For(symbol, ".TypedId.g.cs");
+        var displayName = symbol.ToDisplayString();
 
         var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
-        DetectDeclarationIssues(symbol, identifier, diagnostics, ct);
-        DetectIncompatibleBacking(attr, identifier, strategy, backing, diagnostics, ct);
+        var blocked = DetectUngeneratable(symbol, identifier, displayName);
+        if (blocked is not null)
+        {
+            diagnostics.Add(blocked);
+        }
+        else
+        {
+            DetectDeclarationIssues(symbol, identifier, diagnostics, ct);
+            DetectIncompatibleBacking(attr, identifier, strategy, backing, diagnostics, ct);
+        }
+
+        // An error suppresses emission, and so does ZATI006, a warning: the containing type
+        // cannot be reopened. ZATI005 does not.
+        var generated = blocked is null;
+        foreach (var d in diagnostics)
+        {
+            if (d.Severity == DiagnosticSeverity.Error) generated = false;
+        }
 
         return new PartialModel(
-            HintNames.For(symbol, ".TypedId.g.cs"),
-            ns, symbol.Name, strategy, backing, new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutable()));
+            hintName,
+            ns,
+            symbol.Name,
+            TypeDeclarations.AccessibilityModifier(symbol),
+            TypeDeclarations.ContainingDeclarations(symbol),
+            strategy,
+            backing,
+            new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutable()),
+            generated ? new GeneratedFile(hintName, displayName, identifier) : null);
+    }
+
+    // ZATI008 (file-local), ZATI007 (generic), ZATI006 (containing type not partial). Each
+    // means nothing can be generated, so the other checks are skipped.
+    private static DiagnosticInfo? DetectUngeneratable(INamedTypeSymbol symbol, LocationInfo identifier, string displayName)
+    {
+        if (TypeDeclarations.FileLocalType(symbol) is { } fileLocal)
+            return DiagnosticInfo.Create(TypedIdDiagnostics.FileLocal, identifier, displayName, fileLocal.ToDisplayString());
+
+        // [JsonConverter(typeof ...)] cannot name Key<T>.TypedIdJsonConverter, and
+        // System.Text.Json cannot instantiate the open form Key<>.TypedIdJsonConverter.
+        if (TypeDeclarations.GenericType(symbol) is { } generic)
+            return DiagnosticInfo.Create(TypedIdDiagnostics.Generic, identifier, displayName, generic.ToDisplayString());
+
+        if (TypeDeclarations.FirstNonPartialContainingType(symbol) is { } notPartial)
+            return DiagnosticInfo.Create(TypedIdDiagnostics.ContainingTypeNotPartial, identifier, displayName, notPartial.ToDisplayString());
+
+        return null;
     }
 
     // ZATI002 (not readonly partial record struct), ZATI003 (non-empty body), ZATI005 (multi-file partial).
@@ -105,20 +131,12 @@ internal static class TypedIdParser
 
         if (!anyValid)
         {
-            diagnostics.Add(new DiagnosticInfo(
-                "ZATI002",
-                DiagnosticSeverity.Error,
-                identifier,
-                Args(symbol.Name)));
+            diagnostics.Add(DiagnosticInfo.Create(TypedIdDiagnostics.InvalidDeclaration, identifier, symbol.Name));
         }
 
         if (files.Count > 1)
         {
-            diagnostics.Add(new DiagnosticInfo(
-                "ZATI005",
-                DiagnosticSeverity.Warning,
-                identifier,
-                Args(symbol.Name)));
+            diagnostics.Add(DiagnosticInfo.Create(TypedIdDiagnostics.MultiFilePartial, identifier, symbol.Name));
         }
     }
 
@@ -137,11 +155,7 @@ internal static class TypedIdParser
         {
             if (member is FieldDeclarationSyntax || member is PropertyDeclarationSyntax)
             {
-                diag = new DiagnosticInfo(
-                    "ZATI003",
-                    DiagnosticSeverity.Error,
-                    LocationInfo.From(member),
-                    Args(symbolName));
+                diag = DiagnosticInfo.Create(TypedIdDiagnostics.NonEmptyBody, LocationInfo.From(member), symbolName);
                 return true;
             }
         }
@@ -149,9 +163,6 @@ internal static class TypedIdParser
         diag = null!;
         return false;
     }
-
-    private static EquatableArray<string> Args(params string[] args) =>
-        new(ImmutableArray.Create(args));
 
     // ZATI001: strategy/backing compatibility. An explicit incompatible pairing on the
     // struct's attribute is always an error; assembly defaults cannot rescue an explicit
@@ -171,11 +182,10 @@ internal static class TypedIdParser
 
         // Reported at the [TypedId] attribute that carries the incompatible pair.
         var syntax = attr.ApplicationSyntaxReference?.GetSyntax(ct);
-        diagnostics.Add(new DiagnosticInfo(
-            "ZATI001",
-            DiagnosticSeverity.Error,
+        diagnostics.Add(DiagnosticInfo.Create(
+            TypedIdDiagnostics.IncompatibleBacking,
             syntax is null ? identifier : LocationInfo.From(syntax),
-            Args(strategyName, expected, actualName)));
+            strategyName, expected, actualName));
     }
 
     private static bool HasModifier(TypeDeclarationSyntax typeDecl, SyntaxKind kind)
@@ -250,7 +260,9 @@ internal static class TypedIdParser
             Namespace: partial.Namespace,
             Name: partial.Name,
             Strategy: strategy,
-            Backing: backing);
+            Backing: backing,
+            Accessibility: partial.Accessibility,
+            ContainingTypes: partial.ContainingTypes);
     }
 
     private static int AutoBacking(int strategy) => strategy switch

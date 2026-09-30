@@ -27,7 +27,7 @@ A `[TypedId]` struct is a `readonly partial record struct` with one generator-ow
 | [JSON serialization](json.md) | System.Text.Json integration; AOT behaviour |
 | [ASP.NET minimal API binding](aspnet.md) | Route and query binding via `IParsable<T>` |
 | [EF Core integration](efcore.md) | `ZeroAlloc.ValueObjects.EfCore` adapter and conventions |
-| [Diagnostics](diagnostics.md) | ZATI001–ZATI005 reference |
+| [Diagnostics](diagnostics.md) | ZATI001–ZATI009 reference |
 | [Production checklist](production.md) | Caveats and operational notes |
 | [Internals](internals.md) | How the generator works; zero-allocation proof |
 | [Benchmark Results](benchmarks.md) | Measured allocation and timing numbers for each strategy |

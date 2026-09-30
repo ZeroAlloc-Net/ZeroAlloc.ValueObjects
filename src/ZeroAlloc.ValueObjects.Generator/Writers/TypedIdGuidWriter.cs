@@ -9,15 +9,18 @@ internal static class TypedIdGuidWriter
     public static string Write(TypedIdModel model)
     {
         var sb = new StringBuilder();
+        // A keyword name is written as a verbatim identifier wherever it is used as a type.
+        var name = TypeDeclarations.Identifier(model.Name);
         AppendHeader(sb, model);
-        AppendTypeDeclaration(sb, model.Name);
-        AppendValueAndCtor(sb, model.Name);
-        AppendFactoryAndFormatting(sb, model.Name, model.Strategy);
-        AppendParsing(sb, model.Name, model.Strategy);
-        AppendComparable(sb, model.Name);
-        AppendJsonConverter(sb, model.Name);
-        AppendZeroAllocSerializer(sb, model.Name);
+        AppendTypeDeclaration(sb, name, model.Accessibility);
+        AppendValueAndCtor(sb, name);
+        AppendFactoryAndFormatting(sb, name, model.Strategy);
+        AppendParsing(sb, name, model.Strategy);
+        AppendComparable(sb, name);
+        AppendJsonConverter(sb, name);
+        AppendZeroAllocSerializer(sb, name);
         sb.AppendLine("}");
+        for (var i = 0; i < model.ContainingTypes.Count; i++) sb.AppendLine("}");
         return sb.ToString();
     }
 
@@ -42,12 +45,21 @@ internal static class TypedIdGuidWriter
             sb.AppendLine($"namespace {model.Namespace};");
             sb.AppendLine();
         }
+
+        // A nested struct is emitted inside partial declarations of its containing types.
+        foreach (var containing in model.ContainingTypes)
+        {
+            sb.AppendLine(containing);
+            sb.AppendLine("{");
+        }
     }
 
-    private static void AppendTypeDeclaration(StringBuilder sb, string name)
+    // The declared accessibility is repeated, so an internal or nested private struct gets no
+    // conflicting modifier (CS0262); a file-local struct is never generated.
+    private static void AppendTypeDeclaration(StringBuilder sb, string name, string accessibility)
     {
         sb.AppendLine($"[JsonConverter(typeof({name}.TypedIdJsonConverter))]");
-        sb.AppendLine($"public readonly partial record struct {name} :");
+        sb.AppendLine($"{accessibility} readonly partial record struct {name} :");
         sb.AppendLine($"    IEquatable<{name}>,");
         sb.AppendLine($"    IComparable<{name}>,");
         sb.AppendLine($"    IParsable<{name}>,");

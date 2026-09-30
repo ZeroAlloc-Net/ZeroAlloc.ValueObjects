@@ -209,8 +209,10 @@ public class HintNameTests
     }
 
     [Fact]
-    public void TypedId_GenericAndNonGenericWithTheSameName_GetDistinctFiles()
+    public void TypedId_GenericWithTheSameNameAsANonGenericOne_IsNotGenerated_AndTheOtherIs()
     {
+        // A generic typed ID cannot be generated at all, ZATI007, so the non-generic one keeps
+        // its file and nothing collides.
         var source = """
             using ZeroAlloc.ValueObjects;
 
@@ -224,7 +226,8 @@ public class HintNameTests
         var result = RunTypedId(source);
 
         AssertNoGeneratorFailure(result);
-        Assert.Equal(["App.Key.TypedId.g.cs", "App.Key`1.TypedId.g.cs"], HintNames(result));
+        Assert.Equal(["App.Key.TypedId.g.cs"], HintNames(result));
+        Assert.Equal("ZATI007", AssertEx.One(result.Diagnostics).Id);
     }
 
     [Fact]

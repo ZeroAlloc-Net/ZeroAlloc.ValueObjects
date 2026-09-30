@@ -35,6 +35,10 @@ internal static class SourceWriter
 
     private static string ChooseToStringExpr(EqualityProperty p)
     {
+        // A type parameter may be instantiated with a nullable type, and its ToString returns string?.
+        if (p.IsTypeParameter)
+            return $"{p.Name}?.ToString() ?? \"\"";
+
         if (IsStringType(p.TypeName))
             return p.IsNullable ? $"{p.Name} ?? \"\"" : p.Name;
 
@@ -66,8 +70,15 @@ internal static class SourceWriter
             sb.AppendLine();
         }
 
+        // A nested value object is emitted inside partial declarations of its containing types.
+        foreach (var containing in model.ContainingTypes)
+        {
+            sb.AppendLine(containing);
+            sb.AppendLine("{");
+        }
+
         string typeKind = model.IsStruct ? "readonly partial struct" : "sealed partial class";
-        sb.AppendLine($"{typeKind} {model.TypeName} : System.IEquatable<{model.TypeName}>");
+        sb.AppendLine($"{typeKind} {TypeReference(model)} : System.IEquatable<{TypeReference(model)}>");
         sb.AppendLine("{");
 
         WriteEquals(sb, model);
@@ -77,21 +88,43 @@ internal static class SourceWriter
         WriteToString(sb, model);
 
         sb.AppendLine("}");
+        for (var i = 0; i < model.ContainingTypes.Count; i++) sb.AppendLine("}");
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// The value object as a type in code: its name, a verbatim identifier when it is a keyword,
+    /// with its type parameters. Text such as ToString keeps the plain <see cref="ValueObjectModel.TypeName"/>.
+    /// </summary>
+    private static string TypeReference(ValueObjectModel model) =>
+        TypeDeclarations.Identifier(model.TypeName) + model.TypeParameters;
+
+    /// <summary>
+    /// A member typed as a type parameter compares through <c>EqualityComparer&lt;T&gt;.Default</c>,
+    /// since <c>==</c> is not defined for an unconstrained type parameter. It also handles null.
+    /// </summary>
+    private static string Comparison(EqualityProperty p)
+    {
+        if (p.IsTypeParameter)
+            return $"global::System.Collections.Generic.EqualityComparer<{p.TypeName}>.Default.Equals({p.Name}, other.{p.Name})";
+
+        return p.IsNullable
+            ? $"(other.{p.Name} is null ? {p.Name} is null : {p.Name} == other.{p.Name})"
+            : $"{p.Name} == other.{p.Name}";
     }
 
     private static void WriteEquals(StringBuilder sb, ValueObjectModel model)
     {
         sb.AppendLine("    /// <inheritdoc/>");
         sb.AppendLine($"    public override bool Equals(object? obj) =>");
-        sb.AppendLine($"        obj is {model.TypeName} other && Equals(other);");
+        sb.AppendLine($"        obj is {TypeReference(model)} other && Equals(other);");
         sb.AppendLine();
     }
 
     private static void WriteIEquatable(StringBuilder sb, ValueObjectModel model)
     {
         // Structs can't be null; classes use T? to satisfy IEquatable<T> contract in nullable context
-        string paramType = model.IsStruct ? model.TypeName : $"{model.TypeName}?";
+        string paramType = model.IsStruct ? TypeReference(model) : $"{TypeReference(model)}?";
 
         sb.AppendLine("    /// <inheritdoc/>");
 
@@ -104,10 +137,7 @@ internal static class SourceWriter
         {
             sb.AppendLine($"    public bool Equals({paramType} other) =>");
 
-            var comparisons = model.Properties.Select(p =>
-                p.IsNullable
-                    ? $"(other.{p.Name} is null ? {p.Name} is null : {p.Name} == other.{p.Name})"
-                    : $"{p.Name} == other.{p.Name}");
+            var comparisons = model.Properties.Select(Comparison);
 
             // For classes, guard against null before accessing members
             if (!model.IsStruct)
@@ -137,9 +167,12 @@ internal static class SourceWriter
             // For reference types, the value can be null at runtime even when not nullable-annotated —
             // use the null-conditional form unconditionally for safety. The JIT inlines this away
             // for the non-null fast path.
-            var expr = IsValueType(p.TypeName)
-                ? $"{p.Name}.GetHashCode()"
-                : $"{p.Name}?.GetHashCode() ?? 0";
+            // A type parameter may be a value type, which ?. cannot be applied to.
+            var expr = p.IsTypeParameter
+                ? $"{p.Name} is null ? 0 : {p.Name}.GetHashCode()"
+                : IsValueType(p.TypeName)
+                    ? $"{p.Name}.GetHashCode()"
+                    : $"{p.Name}?.GetHashCode() ?? 0";
             sb.AppendLine($"        return {expr};");
         }
         else if (model.Properties.Count <= 8)
@@ -166,17 +199,17 @@ internal static class SourceWriter
         {
             // Structs can't be null — simple delegation is safe
             WriteOperatorDoc(sb, model.TypeName, equality: true);
-            sb.AppendLine($"    public static bool operator ==({model.TypeName} left, {model.TypeName} right) => left.Equals(right);");
+            sb.AppendLine($"    public static bool operator ==({TypeReference(model)} left, {TypeReference(model)} right) => left.Equals(right);");
             WriteOperatorDoc(sb, model.TypeName, equality: false);
-            sb.AppendLine($"    public static bool operator !=({model.TypeName} left, {model.TypeName} right) => !left.Equals(right);");
+            sb.AppendLine($"    public static bool operator !=({TypeReference(model)} left, {TypeReference(model)} right) => !left.Equals(right);");
         }
         else
         {
             // Classes: left may be null — use null-safe pattern
             WriteOperatorDoc(sb, model.TypeName, equality: true);
-            sb.AppendLine($"    public static bool operator ==({model.TypeName}? left, {model.TypeName}? right) => left is null ? right is null : left.Equals(right);");
+            sb.AppendLine($"    public static bool operator ==({TypeReference(model)}? left, {TypeReference(model)}? right) => left is null ? right is null : left.Equals(right);");
             WriteOperatorDoc(sb, model.TypeName, equality: false);
-            sb.AppendLine($"    public static bool operator !=({model.TypeName}? left, {model.TypeName}? right) => !(left == right);");
+            sb.AppendLine($"    public static bool operator !=({TypeReference(model)}? left, {TypeReference(model)}? right) => !(left == right);");
         }
         sb.AppendLine();
     }
