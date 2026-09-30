@@ -15,6 +15,7 @@ internal static class TypedIdParser
     // Carries any diagnostics detected while parsing so the source-output stage can report
     // them and skip emission when errors are present.
     internal sealed record PartialModel(
+        string HintName,
         string? Namespace,
         string Name,
         int RawStrategy,
@@ -67,6 +68,7 @@ internal static class TypedIdParser
         DetectIncompatibleBacking(attr, identifier, strategy, backing, diagnostics, ct);
 
         return new PartialModel(
+            HintNames.For(symbol, ".TypedId.g.cs"),
             ns, symbol.Name, strategy, backing, new EquatableArray<DiagnosticInfo>(diagnostics.ToImmutable()));
     }
 

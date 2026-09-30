@@ -52,10 +52,7 @@ public sealed class TypedIdGenerator : IIncrementalGenerator
                 _ => throw new System.InvalidOperationException(
                     $"Unexpected TypedId backing {resolved.Backing} for {resolved.Name}"),
             };
-            var hintName = resolved.Namespace is null
-                ? $"{resolved.Name}.TypedId.g.cs"
-                : $"{resolved.Namespace}_{resolved.Name}.TypedId.g.cs";
-            ctx.AddSource(hintName, source);
+            ctx.AddSource(partial.HintName, source);
         });
     }
 }

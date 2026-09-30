@@ -26,9 +26,6 @@ public sealed class ValueObjectGenerator : IIncrementalGenerator
     private static void Emit(SourceProductionContext ctx, ValueObjectModel model)
     {
         var source = SourceWriter.Write(model);
-        var hintName = string.IsNullOrEmpty(model.Namespace)
-            ? $"{model.TypeName}.g.cs"
-            : $"{model.Namespace}_{model.TypeName}.g.cs";
-        ctx.AddSource(hintName, source);
+        ctx.AddSource(model.HintName, source);
     }
 }
