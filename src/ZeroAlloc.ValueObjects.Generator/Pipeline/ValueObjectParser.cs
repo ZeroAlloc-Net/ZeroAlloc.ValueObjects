@@ -24,6 +24,7 @@ internal static class ValueObjectParser
         bool isStruct = !forceClass && typeSymbol.TypeKind == TypeKind.Struct;
 
         return new ValueObjectModel(
+            HintNames.For(typeSymbol, ".g.cs"),
             typeSymbol.ContainingNamespace.IsGlobalNamespace
                 ? string.Empty
                 : typeSymbol.ContainingNamespace.ToDisplayString(),
