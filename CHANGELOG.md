@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.12](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.11...v2.0.12) (2026-09-30)
+
+
+### Bug Fixes
+
+* generate nested and generic value objects and typed IDs into the real type ([#199](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/199)) ([7b7a7a1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/7b7a7a1d7b271d4b8746bdd050635704f50fbe76)), closes [#196](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/196)
+* name generated files after the type's namespace and containing types ([#197](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/197)) ([8c8a010](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/8c8a010a3f515a4f935a36164d65a0e4a30e3380)), closes [#195](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/195)
+
 ## [2.0.11](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.10...v2.0.11) (2026-09-28)
 
 
