@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -15,25 +16,51 @@ internal static class ValueObjectParser
     public static bool IsValueObjectCandidate(SyntaxNode node) =>
         node is TypeDeclarationSyntax { AttributeLists.Count: > 0 };
 
-    public static ValueObjectModel? Parse(GeneratorAttributeSyntaxContext ctx, System.Threading.CancellationToken _)
+    public static ValueObjectTarget? Parse(GeneratorAttributeSyntaxContext ctx, System.Threading.CancellationToken _)
     {
         if (ctx.TargetSymbol is not INamedTypeSymbol typeSymbol) return null;
+
+        var location = ctx.TargetNode is TypeDeclarationSyntax declaration
+            ? LocationInfo.From(declaration.Identifier)
+            : LocationInfo.From(ctx.TargetNode);
+        var displayName = typeSymbol.ToDisplayString();
+
+        // ZAVO002: a generated file cannot reopen a type that is visible only in its own file.
+        if (TypeDeclarations.FileLocalType(typeSymbol) is { } fileLocal)
+        {
+            return Blocked(DiagnosticInfo.Create(
+                ValueObjectDiagnostics.FileLocal, location, displayName, fileLocal.ToDisplayString()));
+        }
+
+        // ZAVO001: the generated code reopens every containing type, so each must be partial.
+        if (TypeDeclarations.FirstNonPartialContainingType(typeSymbol) is { } notPartial)
+        {
+            return Blocked(DiagnosticInfo.Create(
+                ValueObjectDiagnostics.ContainingTypeNotPartial, location, displayName, notPartial.ToDisplayString()));
+        }
 
         var properties = ResolveProperties(typeSymbol);
         bool forceClass = DetectForceClass(ctx.TargetNode);
         bool isStruct = !forceClass && typeSymbol.TypeKind == TypeKind.Struct;
+        var hintName = HintNames.For(typeSymbol, ".g.cs");
 
-        return new ValueObjectModel(
-            HintNames.For(typeSymbol, ".g.cs"),
+        var model = new ValueObjectModel(
+            hintName,
             typeSymbol.ContainingNamespace.IsGlobalNamespace
                 ? string.Empty
                 : typeSymbol.ContainingNamespace.ToDisplayString(),
             typeSymbol.Name,
             isStruct,
-            properties);
+            properties,
+            TypeDeclarations.TypeParameterList(typeSymbol),
+            TypeDeclarations.ContainingDeclarations(typeSymbol));
+        return new ValueObjectTarget(model, default, new GeneratedFile(hintName, displayName, location));
     }
 
-    private static IReadOnlyList<EqualityProperty> ResolveProperties(INamedTypeSymbol typeSymbol)
+    private static ValueObjectTarget Blocked(DiagnosticInfo diagnostic) =>
+        new(null, new EquatableArray<DiagnosticInfo>(ImmutableArray.Create(diagnostic)), null);
+
+    private static EquatableArray<EqualityProperty> ResolveProperties(INamedTypeSymbol typeSymbol)
     {
         // Every instance property, not just the public ones. The accessibility
         // filter used to run here, before hasExplicitMembers was computed, which
@@ -56,7 +83,7 @@ internal static class ValueObjectParser
             p.GetAttributes().Any(a => string.Equals(
                 a.AttributeClass?.ToDisplayString(), EqualityMemberAttributeName, StringComparison.Ordinal)));
 
-        return allProps
+        return new EquatableArray<EqualityProperty>(allProps
             .Where(p =>
             {
                 var attrs = p.GetAttributes()
@@ -75,9 +102,20 @@ internal static class ValueObjectParser
             .Select(p => new EqualityProperty(
                 p.Name,
                 p.Type.ToDisplayString(),
-                p.NullableAnnotation == NullableAnnotation.Annotated))
-            .ToList();
+                p.NullableAnnotation == NullableAnnotation.Annotated,
+                IsTypeParameter(p.Type)))
+            .ToImmutableArray());
     }
+
+    /// <summary>
+    /// A type parameter, or a nullable value type over one: <c>==</c> is defined for neither
+    /// unless a constraint provides it, so the member compares through
+    /// <c>EqualityComparer&lt;T&gt;.Default</c>.
+    /// </summary>
+    private static bool IsTypeParameter(ITypeSymbol type) =>
+        type is ITypeParameterSymbol
+        || type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable
+           && nullable.TypeArguments[0] is ITypeParameterSymbol;
 
     private static bool DetectForceClass(SyntaxNode? targetNode)
     {

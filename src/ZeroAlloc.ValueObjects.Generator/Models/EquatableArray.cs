@@ -21,6 +21,10 @@ internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IEnu
 
     public bool IsEmpty => _items.IsDefaultOrEmpty;
 
+    public int Count => _items.IsDefault ? 0 : _items.Length;
+
+    public T this[int index] => _items[index];
+
     public ImmutableArray<T>.Enumerator GetEnumerator() =>
         (_items.IsDefault ? ImmutableArray<T>.Empty : _items).GetEnumerator();
 

@@ -32,7 +32,7 @@ public sealed class TypedIdIncrementalityTests
         """;
 
     // The tracking names the generator gives its steps, in ZeroAlloc.ValueObjects.Generator.TrackingNames.
-    private static readonly string[] GeneratorStepNames = ["TypedIdCandidates", "TypedIdAssemblyDefault"];
+    private static readonly string[] GeneratorStepNames = ["TypedIdCandidates", "TypedIdAssemblyDefault", "TypedIdCaseCollisions"];
 
     [Fact]
     public void UnrelatedEdit_LeavesEveryTrackedStepAndOutputCached()

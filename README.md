@@ -175,6 +175,12 @@ Each TypedId carries `[JsonConverter]` pointing at a nested converter that reads
 | `ZATI002` | Error | Type is not `readonly partial record struct` |
 | `ZATI003` | Error | Struct body declares fields — generator owns `Value` |
 | `ZATI005` | Warning | Struct declared partial across multiple files |
+| `ZATI006` | Warning | Nested struct inside a containing type that is not `partial` |
+| `ZATI007` | Error | Struct is generic, or nested in a generic type |
+| `ZATI008` | Error | Struct is file-local |
+| `ZATI009` | Error | Struct name differs only in case from another TypedId |
+
+`[ValueObject]` reports `ZAVO001`–`ZAVO003` for value objects it cannot generate; see [docs/diagnostics.md](docs/diagnostics.md).
 
 ### Production checklist
 
