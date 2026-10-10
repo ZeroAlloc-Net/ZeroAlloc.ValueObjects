@@ -130,6 +130,16 @@ public sealed class TypedIdEfCoreTests : IAsyncLifetime
     }
 
     [Fact]
+    public void AddTypedIdConventions_ConfiguresTypedIdProperty_WithTypedIdValueConverter()
+    {
+        var orderId = _db.Model.FindEntityType(typeof(Order))!.FindProperty(nameof(Order.Id))!;
+        Assert.IsType<TypedIdValueConverter<EfOrderId, Guid>>(orderId.GetValueConverter());
+
+        var messageId = _db.Model.FindEntityType(typeof(Message))!.FindProperty(nameof(Message.Id))!;
+        Assert.IsType<TypedIdValueConverter<EfMessageId, long>>(messageId.GetValueConverter());
+    }
+
+    [Fact]
     public async Task GuidBacked_StoredAsBlob_NotAsString()
     {
         var id = EfOrderId.New();

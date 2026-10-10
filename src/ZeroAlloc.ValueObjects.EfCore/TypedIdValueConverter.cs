@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -11,7 +12,12 @@ namespace ZeroAlloc.ValueObjects.EfCore;
 /// </summary>
 /// <typeparam name="TId">The TypedId struct (must expose <c>Value</c> of type <typeparamref name="TBacking"/>).</typeparam>
 /// <typeparam name="TBacking">The backing primitive: <see cref="Guid"/> or <see cref="long"/>.</typeparam>
-public sealed class TypedIdValueConverter<TId, TBacking> : ValueConverter<TId, TBacking>
+public sealed class TypedIdValueConverter<
+    [DynamicallyAccessedMembers(
+        DynamicallyAccessedMemberTypes.PublicProperties |
+        DynamicallyAccessedMemberTypes.PublicConstructors |
+        DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] TId,
+    TBacking> : ValueConverter<TId, TBacking>
     where TId : struct
 {
     public TypedIdValueConverter()

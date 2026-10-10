@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <IsAotCompatible>true</IsAotCompatible>
     <PackageId>ZeroAlloc.ValueObjects.EfCore</PackageId>
     <Description>EF Core value converters and conventions for ZeroAlloc.ValueObjects [TypedId] structs.</Description>
     <Version>0.0.0-local</Version>
