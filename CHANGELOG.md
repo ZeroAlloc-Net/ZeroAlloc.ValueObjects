@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.12...v2.1.0) (2026-10-10)
+
+
+### Features
+
+* mark ZeroAlloc.ValueObjects.EfCore AOT-compatible with an annotated scanning entry point ([#206](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/206)) ([02ec222](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/02ec2226d9b26fe200147da4e10722c4c81dbe76))
+
 ## [2.0.12](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.11...v2.0.12) (2026-09-30)
 
 
