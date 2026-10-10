@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,20 @@ public static class TypedIdModelConfigurationExtensions
     /// a <see cref="TypedIdValueConverter{TId,TBacking}"/> for each on the model configuration builder,
     /// so EF Core stores them as their backing type without per-property <c>HasConversion</c>.
     /// </summary>
+    /// <remarks>
+    /// Not trim-safe and not NativeAOT-safe: it enumerates every type in the assembly and closes
+    /// generic EF Core methods and converters over the ids it finds. Trimming can remove those ids,
+    /// and NativeAOT cannot create the generic instantiations at run time.
+    /// </remarks>
+    [RequiresUnreferencedCode(
+        "AddTypedIdConventions scans the assembly with reflection and closes generic types over the " +
+        "[TypedId] structs it finds, so trimming can remove them. Apply HasConversion with " +
+        "TypedIdValueConverter<TId, TBacking> to each typed-ID property instead, or root the " +
+        "[TypedId] structs and their members.")]
+    [RequiresDynamicCode(
+        "AddTypedIdConventions closes generic types and methods over types found at run time, " +
+        "which NativeAOT cannot compile ahead of time. Apply HasConversion with " +
+        "TypedIdValueConverter<TId, TBacking> to each typed-ID property instead.")]
     public static ModelConfigurationBuilder AddTypedIdConventions(
         this ModelConfigurationBuilder builder,
         Assembly? scan = null)
@@ -83,7 +98,8 @@ public static class TypedIdModelConfigurationExtensions
             "ModelConfigurationBuilder.Properties<T>() not found — unexpected EF Core version.");
     }
 
-    private static MethodInfo? FindHaveConversionOpen(Type propBuilderType)
+    private static MethodInfo? FindHaveConversionOpen(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods)] Type propBuilderType)
     {
         var methods = propBuilderType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
         foreach (var m in methods)
