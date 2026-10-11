@@ -1,2 +1,1 @@
 #nullable enable
-static ZeroAlloc.ValueObjects.UlidCore.TryFormatBase32(System.Guid value, System.Span<char> destination, out int charsWritten) -> bool
