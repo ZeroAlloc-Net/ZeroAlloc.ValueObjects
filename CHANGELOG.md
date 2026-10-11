@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.1.0...v2.1.1) (2026-10-11)
+
+
+### Performance
+
+* write and read TypedId JSON without strings, cache the Snowflake env worker id ([#209](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/209)) ([b9d33a0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/b9d33a0a32cc5174b4c8a9aeb69a3750b438962c)), closes [#208](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/208)
+
 ## [2.1.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.0.12...v2.1.0) (2026-10-10)
 
 

@@ -10,6 +10,7 @@ static ZeroAlloc.ValueObjects.SnowflakeServiceCollectionExtensions.AddSnowflakeW
 static ZeroAlloc.ValueObjects.TypedIdRuntime.SnowflakeProvider.get -> ZeroAlloc.ValueObjects.ISnowflakeWorkerIdProvider?
 static ZeroAlloc.ValueObjects.UlidCore.NewGuid() -> System.Guid
 static ZeroAlloc.ValueObjects.UlidCore.ToBase32(System.Guid value) -> string!
+static ZeroAlloc.ValueObjects.UlidCore.TryFormatBase32(System.Guid value, System.Span<char> destination, out int charsWritten) -> bool
 static ZeroAlloc.ValueObjects.UlidCore.TryFromBase32(System.ReadOnlySpan<char> s, out System.Guid value) -> bool
 static ZeroAlloc.ValueObjects.Uuid7Core.NewGuid() -> System.Guid
 static ZeroAlloc.ValueObjects.Uuid7Core.WriteBigEndianBytes(System.Guid value, System.Span<byte> destination) -> void
