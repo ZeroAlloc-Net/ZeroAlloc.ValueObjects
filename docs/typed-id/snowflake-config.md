@@ -90,7 +90,7 @@ Use when the worker ID comes from another registered service — a central regis
 When `Snowflake.New()` runs for the first time in a process:
 
 1. If `TypedIdRuntime.SnowflakeProvider` is set (i.e. `AddSnowflakeWorkerId` ran — immediately for overloads 1–3, at host start for overload 4) → use it.
-2. Else read env var `ZA_SNOWFLAKE_WORKER_ID`. If present and parseable → use it.
+2. Else read env var `ZA_SNOWFLAKE_WORKER_ID`. If present and parseable → use it. The value is read once per id type and cached, so changing the variable later in the process has no effect. A variable that is unset at first use is not cached, so setting it afterwards still works.
 3. Else throw `TypedIdException` with a message that names both `AddSnowflakeWorkerId` and `ZA_SNOWFLAKE_WORKER_ID`.
 
 This means **console apps and short-lived scripts that cannot run a host** can still mint IDs by setting `ZA_SNOWFLAKE_WORKER_ID` in the environment:

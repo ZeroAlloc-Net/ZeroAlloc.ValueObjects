@@ -87,7 +87,7 @@ internal static class TypedIdInt64Writer
                 sb.AppendLine("    /// <summary>Creates a new Snowflake identifier: time-ordered and monotonically increasing per worker.</summary>");
                 sb.AppendLine("    /// <remarks>");
                 sb.AppendLine("    /// Requires a worker id, resolved from the configured Snowflake provider (services.AddSnowflakeWorkerId)");
-                sb.AppendLine("    /// or the ZA_SNOWFLAKE_WORKER_ID environment variable. Throws TypedIdException if neither is set.");
+                sb.AppendLine("    /// or the ZA_SNOWFLAKE_WORKER_ID environment variable, which is read once and then cached. Throws TypedIdException if neither is set.");
                 sb.AppendLine("    /// </remarks>");
                 sb.AppendLine("    /// <returns>A new unique identifier.</returns>");
                 sb.AppendLine($"    public static {name} New()");
@@ -109,16 +109,30 @@ internal static class TypedIdInt64Writer
         }
     }
 
+    // The environment variable is read and parsed once, then kept in a static: reading it on
+    // every New() allocated a string and dominated the call. Only a usable worker id is cached,
+    // so a variable that is unset at first use still takes effect once it is set. The provider is
+    // still consulted on every call, since AddSnowflakeWorkerId may register it after first use.
     private static void AppendResolveWorkerId(StringBuilder sb)
     {
+        sb.AppendLine("    // Worker ids are never negative, so -1 marks the environment variable as not yet resolved.");
+        sb.AppendLine("    private static int s_environmentWorkerId = -1;");
+        sb.AppendLine();
         sb.AppendLine("    private static int ResolveWorkerId()");
         sb.AppendLine("    {");
         sb.AppendLine("        var provider = TypedIdRuntime.SnowflakeProvider;");
         sb.AppendLine("        if (provider is not null) return provider.WorkerId;");
         sb.AppendLine();
+        sb.AppendLine("        var cached = s_environmentWorkerId;");
+        sb.AppendLine("        if (cached >= 0) return cached;");
+        sb.AppendLine();
         sb.AppendLine("        var raw = Environment.GetEnvironmentVariable(\"ZA_SNOWFLAKE_WORKER_ID\");");
         sb.AppendLine("        if (raw is not null && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var fromEnv))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            // A negative value is left uncached; SnowflakeCore.Next rejects it on every call.");
+        sb.AppendLine("            if (fromEnv >= 0) s_environmentWorkerId = fromEnv;");
         sb.AppendLine("            return fromEnv;");
+        sb.AppendLine("        }");
         sb.AppendLine();
         sb.AppendLine("        throw new TypedIdException(");
         sb.AppendLine("            \"Snowflake worker id not configured. Call services.AddSnowflakeWorkerId(...) \" +");
@@ -219,25 +233,14 @@ internal static class TypedIdInt64Writer
         sb.AppendLine();
     }
 
-    private static void AppendJsonConverter(StringBuilder sb, string name)
-    {
-        TypedIdDocs.AppendJsonConverterDoc(sb, name);
-        sb.AppendLine($"    public sealed class TypedIdJsonConverter : JsonConverter<{name}>");
-        sb.AppendLine("    {");
-        sb.AppendLine("        /// <inheritdoc/>");
-        sb.AppendLine($"        public override {name} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            var s = reader.GetString();");
-        sb.AppendLine("            return s is not null && TryParse(s, CultureInfo.InvariantCulture, out var id)");
-        sb.AppendLine("                ? id");
-        sb.AppendLine($"                : throw new JsonException($\"Invalid {name} value.\");");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine("        /// <inheritdoc/>");
-        sb.AppendLine($"        public override void Write(Utf8JsonWriter writer, {name} value, JsonSerializerOptions options)");
-        sb.AppendLine("            => writer.WriteStringValue(value.ToString());");
-        sb.AppendLine("    }");
-    }
+    // Writes the same characters ToString returns, straight into a stack buffer. 20 chars hold
+    // long.MinValue, the longest invariant decimal form.
+    private static void AppendJsonConverter(StringBuilder sb, string name) =>
+        TypedIdJsonConverterWriter.Append(
+            sb,
+            name,
+            20,
+            "value.Value.TryFormat(chars, out var written, default, CultureInfo.InvariantCulture)");
 
     // Emits a nested ISerializer<TypedId> implementation alongside the existing
     // JsonConverter<T>. Closes ValueObjects#25 — additive integration with

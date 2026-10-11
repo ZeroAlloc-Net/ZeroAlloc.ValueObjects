@@ -21,6 +21,20 @@ public readonly partial record struct FunctionalSnowflakeId;
 [TypedId(Strategy = IdStrategy.Sequential)]
 public readonly partial record struct FunctionalSeqId;
 
+// The environment-variable worker id is resolved once per type and then cached, so each test
+// that depends on what the variable held at first use gets a type of its own.
+[TypedId(Strategy = IdStrategy.Snowflake)]
+public readonly partial record struct FunctionalEnvSnowflakeId;
+
+[TypedId(Strategy = IdStrategy.Snowflake)]
+public readonly partial record struct FunctionalCachedEnvSnowflakeId;
+
+[TypedId(Strategy = IdStrategy.Snowflake)]
+public readonly partial record struct FunctionalAllocEnvSnowflakeId;
+
+[TypedId(Strategy = IdStrategy.Snowflake)]
+public readonly partial record struct FunctionalUnconfiguredSnowflakeId;
+
 #pragma warning restore MA0048
 
 // Snowflake id generation touches process-wide static state: the provider slot in
@@ -82,8 +96,9 @@ public sealed class TypedIdFunctionalTests
             TypedIdRuntime.SnowflakeProvider = null;
             Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", "5");
 
-            var id = FunctionalSnowflakeId.New();
+            var id = FunctionalEnvSnowflakeId.New();
             Assert.True(id.Value > 0);
+            Assert.Equal(5, SnowflakeCore.ExtractWorkerId(id.Value));
         }
         finally
         {
@@ -102,7 +117,54 @@ public sealed class TypedIdFunctionalTests
             TypedIdRuntime.SnowflakeProvider = null;
             Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", null);
 
-            Assert.Throws<TypedIdException>(() => FunctionalSnowflakeId.New());
+            Assert.Throws<TypedIdException>(() => FunctionalUnconfiguredSnowflakeId.New());
+            // An unset variable is not cached: setting it afterwards takes effect.
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", "9");
+            Assert.Equal(9, SnowflakeCore.ExtractWorkerId(FunctionalUnconfiguredSnowflakeId.New().Value));
+        }
+        finally
+        {
+            TypedIdRuntime.SnowflakeProvider = original;
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", originalEnv);
+        }
+    }
+
+    [Fact]
+    public void Snowflake_New_WithoutProvider_ResolvesEnvVarOnce()
+    {
+        var original = TypedIdRuntime.SnowflakeProvider;
+        var originalEnv = Environment.GetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID");
+        try
+        {
+            TypedIdRuntime.SnowflakeProvider = null;
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", "6");
+            Assert.Equal(6, SnowflakeCore.ExtractWorkerId(FunctionalCachedEnvSnowflakeId.New().Value));
+
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", "8");
+            Assert.Equal(6, SnowflakeCore.ExtractWorkerId(FunctionalCachedEnvSnowflakeId.New().Value));
+
+            // A registered provider still takes precedence over the cached value.
+            TypedIdRuntime.SnowflakeProvider = new TestProvider(42);
+            Assert.Equal(42, SnowflakeCore.ExtractWorkerId(FunctionalCachedEnvSnowflakeId.New().Value));
+        }
+        finally
+        {
+            TypedIdRuntime.SnowflakeProvider = original;
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", originalEnv);
+        }
+    }
+
+    [Fact]
+    public void Snowflake_New_WithoutProvider_DoesNotAllocate()
+    {
+        var original = TypedIdRuntime.SnowflakeProvider;
+        var originalEnv = Environment.GetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID");
+        try
+        {
+            TypedIdRuntime.SnowflakeProvider = null;
+            Environment.SetEnvironmentVariable("ZA_SNOWFLAKE_WORKER_ID", "4");
+            ZeroAlloc.TestHelpers.AllocationGate.AssertBudget(
+                0, 1000, () => FunctionalAllocEnvSnowflakeId.New(), "Snowflake New from env var");
         }
         finally
         {

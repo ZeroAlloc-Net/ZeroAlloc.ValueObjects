@@ -11,15 +11,11 @@
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
     <OptimizationPreference>Size</OptimizationPreference>
-
     <!--
-      Directory.Build.props sets TreatWarningsAsErrors=true globally. That turns
-      assembly-level trim roll-ups (IL2104 / IL3053) from third-party dependencies
-      into errors — we cannot fix those from inside this repo. Instead, promote
-      only the per-call trim/AOT codes that the generator is responsible for.
+      TreatWarningsAsErrors=true comes from Directory.Build.props and is deliberately not
+      narrowed here: every trim and AOT warning the publish raises, IL2xxx and IL3xxx alike,
+      fails the build.
     -->
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningsAsErrors>$(WarningsAsErrors);IL2026;IL2067;IL2075;IL2091;IL3050;IL3051</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

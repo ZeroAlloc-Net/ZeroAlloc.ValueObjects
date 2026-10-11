@@ -26,6 +26,9 @@ public static class UlidCore
     // Crockford base32 alphabet: digits 0-9 followed by A-Z omitting I, L, O, U.
     private const string Alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
+    // 128 bits at 5 bits per character, rounded up.
+    private const int Base32Length = 26;
+
     // netstandard2.0 has no RandomNumberGenerator.Fill(Span<byte>) overload; we keep a
     // single shared cryptographic RNG (documented thread-safe) and a per-thread 10-byte
     // scratch buffer so the random-fill path allocates nothing after the first call.
@@ -115,10 +118,32 @@ public static class UlidCore
     /// <returns>A 26-character Crockford base32 string.</returns>
     public static string ToBase32(Guid value)
     {
+        Span<char> c = stackalloc char[Base32Length];
+        TryFormatBase32(value, c, out _);
+        return c.ToString();
+    }
+
+    /// <summary>
+    /// Writes the 26-character Crockford base32 form of a ULID-shaped <see cref="Guid"/>
+    /// into <paramref name="destination"/> without allocating. The characters are the
+    /// same as those returned by <see cref="ToBase32(Guid)"/>.
+    /// </summary>
+    /// <param name="value">The value to encode.</param>
+    /// <param name="destination">The span to write to; it needs room for 26 characters.</param>
+    /// <param name="charsWritten">26 on success; otherwise 0.</param>
+    /// <returns><c>true</c> when the value was written; <c>false</c> when <paramref name="destination"/> is shorter than 26 characters.</returns>
+    public static bool TryFormatBase32(Guid value, Span<char> destination, out int charsWritten)
+    {
+        if (destination.Length < Base32Length)
+        {
+            charsWritten = 0;
+            return false;
+        }
+
         Span<byte> b = stackalloc byte[16];
         GuidBigEndianHelpers.GuidToBigEndianBytes(value, b);
 
-        Span<char> c = stackalloc char[26];
+        Span<char> c = destination;
 
         // Top 2 bits are implicit zero; char[0] carries the top 3 bits of byte 0.
         c[0]  = Alphabet[(b[0] & 0xE0) >> 5];
@@ -149,7 +174,8 @@ public static class UlidCore
         c[24] = Alphabet[((b[14] & 0x03) << 3) | ((b[15] & 0xE0) >> 5)];
         c[25] = Alphabet[b[15] & 0x1F];
 
-        return c.ToString();
+        charsWritten = Base32Length;
+        return true;
     }
 
     /// <summary>
