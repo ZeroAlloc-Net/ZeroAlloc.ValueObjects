@@ -120,6 +120,8 @@ public sealed class GeneratedCodeDocumentationTests
             MetadataReference.CreateFromFile(System.IO.Path.Combine(runtimeDir, "netstandard.dll")),
             MetadataReference.CreateFromFile(System.IO.Path.Combine(runtimeDir, "System.Text.Json.dll")),
             MetadataReference.CreateFromFile(System.IO.Path.Combine(runtimeDir, "System.Collections.dll")),
+            // The JSON converter reads Utf8JsonReader.ValueSequence, a ReadOnlySequence<byte>.
+            MetadataReference.CreateFromFile(System.IO.Path.Combine(runtimeDir, "System.Memory.dll")),
         };
 
         var compilation = CSharpCompilation.Create(

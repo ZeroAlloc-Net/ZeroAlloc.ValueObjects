@@ -134,18 +134,50 @@ private readonly partial record struct Id :
     /// </remarks>
     public sealed class TypedIdJsonConverter : JsonConverter<Id>
     {
+        private const int MaxStackChars = 256;
+
         /// <inheritdoc/>
         public override Id Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var s = reader.GetString();
-            return s is not null && TryParse(s, CultureInfo.InvariantCulture, out var id)
-                ? id
-                : throw new JsonException($"Invalid Id value.");
+            if (reader.TokenType != JsonTokenType.String)
+            {
+                // A null token reads as null and is rejected below. Any other token makes
+                // GetString throw the reader's own InvalidOperationException, which
+                // JsonSerializer reports as a JsonException.
+                _ = reader.GetString();
+                throw new JsonException($"Invalid Id value.");
+            }
+
+            // Unescaping and transcoding never yield more chars than the raw value has bytes, so a
+            // buffer of the raw length always fits. Escaped or whitespace-padded input can exceed
+            // the stack buffer and then borrows a pooled one.
+            var rawLength = reader.HasValueSequence ? reader.ValueSequence.Length : reader.ValueSpan.Length;
+            char[]? rented = null;
+            Span<char> buffer = rawLength <= MaxStackChars
+                ? stackalloc char[MaxStackChars]
+                : (rented = global::System.Buffers.ArrayPool<char>.Shared.Rent(checked((int)rawLength)));
+            try
+            {
+                // CopyString unescapes, joins segments and validates UTF-8 exactly as GetString does.
+                ReadOnlySpan<char> chars = buffer.Slice(0, reader.CopyString(buffer));
+                return TryParse(chars, CultureInfo.InvariantCulture, out var id)
+                    ? id
+                    : throw new JsonException($"Invalid Id value.");
+            }
+            finally
+            {
+                if (rented is not null) global::System.Buffers.ArrayPool<char>.Shared.Return(rented);
+            }
         }
 
         /// <inheritdoc/>
         public override void Write(Utf8JsonWriter writer, Id value, JsonSerializerOptions options)
-            => writer.WriteStringValue(value.ToString());
+        {
+            Span<char> chars = stackalloc char[20];
+            if (!value.Value.TryFormat(chars, out var written, default, CultureInfo.InvariantCulture))
+                throw new InvalidOperationException("Failed to format Id.");
+            writer.WriteStringValue(chars.Slice(0, written));
+        }
     }
 
 #if NETSTANDARD2_1_OR_GREATER || NET

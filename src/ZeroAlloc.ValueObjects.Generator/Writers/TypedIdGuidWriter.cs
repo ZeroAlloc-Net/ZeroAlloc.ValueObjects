@@ -17,7 +17,7 @@ internal static class TypedIdGuidWriter
         AppendFactoryAndFormatting(sb, name, model.Strategy);
         AppendParsing(sb, name, model.Strategy);
         AppendComparable(sb, name);
-        AppendJsonConverter(sb, name);
+        AppendJsonConverter(sb, name, model.Strategy);
         AppendZeroAllocSerializer(sb, name);
         sb.AppendLine("}");
         for (var i = 0; i < model.ContainingTypes.Count; i++) sb.AppendLine("}");
@@ -189,24 +189,20 @@ internal static class TypedIdGuidWriter
         sb.AppendLine();
     }
 
-    private static void AppendJsonConverter(StringBuilder sb, string name)
+    private static void AppendJsonConverter(StringBuilder sb, string name, int strategy)
     {
-        TypedIdDocs.AppendJsonConverterDoc(sb, name);
-        sb.AppendLine($"    public sealed class TypedIdJsonConverter : JsonConverter<{name}>");
-        sb.AppendLine("    {");
-        sb.AppendLine("        /// <inheritdoc/>");
-        sb.AppendLine($"        public override {name} Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            var s = reader.GetString();");
-        sb.AppendLine("            return s is not null && TryParse(s, CultureInfo.InvariantCulture, out var id)");
-        sb.AppendLine("                ? id");
-        sb.AppendLine($"                : throw new JsonException($\"Invalid {name} value.\");");
-        sb.AppendLine("        }");
-        sb.AppendLine();
-        sb.AppendLine("        /// <inheritdoc/>");
-        sb.AppendLine($"        public override void Write(Utf8JsonWriter writer, {name} value, JsonSerializerOptions options)");
-        sb.AppendLine("            => writer.WriteStringValue(value.ToString());");
-        sb.AppendLine("    }");
+        // Writes the same characters ToString returns, straight into a stack buffer.
+        switch (strategy)
+        {
+            case 0:
+                TypedIdJsonConverterWriter.Append(sb, name, 26, "UlidCore.TryFormatBase32(value.Value, chars, out var written)");
+                break;
+            case 1:
+                TypedIdJsonConverterWriter.Append(sb, name, 36, "value.Value.TryFormat(chars, out var written, \"D\")");
+                break;
+            default:
+                throw new InvalidOperationException($"Unexpected Guid-backed strategy {strategy}");
+        }
     }
 
     // Emits a nested ISerializer<TypedId> implementation alongside the existing

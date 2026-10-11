@@ -64,8 +64,30 @@ This is the zero-allocation claim from the README, observed in the wild: generat
 
 `Sequential_ToString` reports `-` because the sample value sits in the small-integer cache that `long.ToString` returns by reference — single- and double-digit sequence values do not allocate. Once the counter grows past that cache boundary the call allocates a fresh string, identical in shape to the Snowflake row.
 
-If you need a zero-allocation textual representation, use the span-producing `TryFormat` / `TryWriteStringify` path exposed by the generator instead of `ToString`.
+The generated id has no `TryFormat` of its own. To get the text into a buffer without allocating, format the underlying value: `UlidCore.TryFormatBase32(id.Value, destination, out var written)` for a ULID, `id.Value.TryFormat(destination, out var written, "D")` for a UUIDv7, and `id.Value.TryFormat(destination, out var written, default, CultureInfo.InvariantCulture)` for Snowflake and Sequential. Each writes exactly what `ToString` returns. The generated JSON converter already writes this way, so serializing an id with `System.Text.Json` does not allocate a string.
+
+## Serialization
+
+`TypedIdSerializationBenchmarks` drives each generated `TypedIdJsonConverter` directly, without `JsonSerializer` around it, and the generated `TypedIdSerializer` for ZeroAlloc.Serialisation. `SnowflakeEnvironmentBenchmarks` measures `New()` when the worker id comes from `ZA_SNOWFLAKE_WORKER_ID` instead of a registered provider. Measured in-process with the `ShortRun` job on 2026-10-11:
+
+| Method                           | Allocated |
+|--------------------------------- |----------:|
+| Json_Ulid_Read                   |         - |
+| Json_Ulid_ReadEscaped            |         - |
+| Json_Uuid7_Read                  |         - |
+| Json_Snowflake_Read              |         - |
+| Json_Ulid_Write                  |         - |
+| Json_Uuid7_Write                 |         - |
+| Json_Snowflake_Write             |         - |
+| Json_Sequential_Write            |         - |
+| Serializer_Ulid_Serialize        |         - |
+| Serializer_Ulid_Deserialize      |         - |
+| Serializer_Snowflake_Serialize   |         - |
+| Serializer_Snowflake_Deserialize |         - |
+| Snowflake_New_FromEnvironment    |         - |
+
+The converter reads the JSON string into a stack buffer, or a pooled one for oversized input, and parses that span; it writes by formatting into a stack buffer. Before this change every read and write allocated the id's string: 80 B for a ULID, 96 B for a UUIDv7, 64 B for a Snowflake id. Reading the environment variable cost 24 B per Snowflake `New()`; it is now read once per id type and cached.
 
 **Timing notes.** `Snowflake_New` is substantially slower (~3 µs) because the benchmark fixture spins in the Snowflake sequence loop waiting for the next millisecond tick; this is expected behaviour under sustained load and not representative of steady-state throughput at realistic call rates. `Sequential_New` at ~7 ns is dominated by a single interlocked increment. The short-run job produces wide confidence intervals — for precise numbers re-run without `--job short`.
 
-**Validation.** The numbers confirm the README's zero-allocation guarantee for the hot paths (`New`, `Parse`, span-based `TryParse`). The only allocations in the entire suite come from `ToString`, which is an unavoidable property of returning a `string` — applications that render IDs to strings on the hot path should reach for the span-writing overloads.
+**Validation.** The numbers confirm the README's zero-allocation guarantee for the hot paths (`New`, `Parse`, span-based `TryParse`). The only allocations in the entire suite come from `ToString`, which is an unavoidable property of returning a `string` — applications that render IDs to text on the hot path should format the underlying value into a span as described above.

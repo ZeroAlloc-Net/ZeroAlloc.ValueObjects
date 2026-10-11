@@ -56,4 +56,22 @@ public sealed class UlidCoreTests
         Assert.True(UlidCore.TryFromBase32(lower.AsSpan(), out var g2));
         Assert.Equal(g, g2);
     }
+
+    [Fact]
+    public void TryFormatBase32_WritesTheToBase32Characters()
+    {
+        var g = UlidCore.NewGuid();
+        Span<char> destination = stackalloc char[40];
+        Assert.True(UlidCore.TryFormatBase32(g, destination, out var written));
+        Assert.Equal(26, written);
+        Assert.Equal(UlidCore.ToBase32(g), destination.Slice(0, written).ToString());
+    }
+
+    [Fact]
+    public void TryFormatBase32_ReturnsFalse_WhenDestinationIsTooShort()
+    {
+        Span<char> destination = stackalloc char[25];
+        Assert.False(UlidCore.TryFormatBase32(UlidCore.NewGuid(), destination, out var written));
+        Assert.Equal(0, written);
+    }
 }
