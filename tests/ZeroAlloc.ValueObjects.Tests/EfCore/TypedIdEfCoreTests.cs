@@ -5,8 +5,8 @@ using ZeroAlloc.ValueObjects.EfCore;
 
 namespace ZeroAlloc.ValueObjects.Tests.EfCore;
 
-// TypedIds + EF support types declared here for the test project — the convention
-// picks them up by attribute presence at model-build time.
+// TypedIds + EF support types declared here for the test project. The scanning convention picks
+// them up by attribute presence at model-build time; the generated one names them at compile time.
 // MA0048: co-locating small test entity types in one file is intentional.
 #pragma warning disable MA0048
 
@@ -34,17 +34,36 @@ public sealed class NullableOrder
     public EfOrderId? OptionalId { get; set; }
 }
 
-public sealed class TestDbContext : DbContext
+public abstract class TestDbContext : DbContext
 {
-    public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
+    protected TestDbContext(DbContextOptions options) : base(options) { }
 
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<NullableOrder> NullableOrders => Set<NullableOrder>();
+}
+
+// Registers the converters with the reflection-based assembly scan.
+public sealed class ScanningTestDbContext : TestDbContext
+{
+    public ScanningTestDbContext(DbContextOptions<ScanningTestDbContext> options) : base(options) { }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
         builder.AddTypedIdConventions(typeof(EfOrderId).Assembly);
+        base.ConfigureConventions(builder);
+    }
+}
+
+// Registers the converters with the method the generator emits for this assembly: no reflection
+// and no scan, so the same model builds in a trimmed or NativeAOT app.
+public sealed class GeneratedTestDbContext : TestDbContext
+{
+    public GeneratedTestDbContext(DbContextOptions<GeneratedTestDbContext> options) : base(options) { }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder builder)
+    {
+        builder.AddZeroAllocValueObjectsTestsTypedIdConventions();
         base.ConfigureConventions(builder);
     }
 }
@@ -56,8 +75,10 @@ public sealed class TestDbContext : DbContext
 // Every class touching either shares this single collection - two differently-named
 // collections still run in parallel with each other, which is what let a test that
 // deliberately poisons SnowflakeCore._state break a concurrent id generation.
+// The same tests run against both registrations; see ScanningTypedIdEfCoreTests and
+// GeneratedTypedIdEfCoreTests.
 [Collection("SnowflakeStatics")]
-public sealed class TypedIdEfCoreTests : IAsyncLifetime
+public abstract class TypedIdEfCoreTests : IAsyncLifetime
 {
     private SqliteConnection _conn = null!;
     private TestDbContext _db = null!;
@@ -73,11 +94,11 @@ public sealed class TypedIdEfCoreTests : IAsyncLifetime
 
         _conn = new SqliteConnection("Data Source=:memory:");
         await _conn.OpenAsync().ConfigureAwait(false);
-        var opts = new DbContextOptionsBuilder<TestDbContext>()
-            .UseSqlite(_conn).Options;
-        _db = new TestDbContext(opts);
+        _db = CreateContext(_conn);
         await _db.Database.EnsureCreatedAsync().ConfigureAwait(false);
     }
+
+    protected abstract TestDbContext CreateContext(SqliteConnection connection);
 
     public async Task DisposeAsync()
     {
@@ -130,13 +151,16 @@ public sealed class TypedIdEfCoreTests : IAsyncLifetime
     }
 
     [Fact]
-    public void AddTypedIdConventions_ConfiguresTypedIdProperty_WithTypedIdValueConverter()
+    public void Conventions_ConfigureTypedIdProperties_WithTypedIdValueConverter()
     {
         var orderId = _db.Model.FindEntityType(typeof(Order))!.FindProperty(nameof(Order.Id))!;
         Assert.IsType<TypedIdValueConverter<EfOrderId, Guid>>(orderId.GetValueConverter());
 
         var messageId = _db.Model.FindEntityType(typeof(Message))!.FindProperty(nameof(Message.Id))!;
         Assert.IsType<TypedIdValueConverter<EfMessageId, long>>(messageId.GetValueConverter());
+
+        var optionalId = _db.Model.FindEntityType(typeof(NullableOrder))!.FindProperty(nameof(NullableOrder.OptionalId))!;
+        Assert.IsType<TypedIdValueConverter<EfOrderId, Guid>>(optionalId.GetValueConverter());
     }
 
     [Fact]

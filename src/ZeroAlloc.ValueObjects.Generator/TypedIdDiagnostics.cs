@@ -74,4 +74,13 @@ internal static class TypedIdDiagnostics
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    // Reported without a location: it is about the project's MSBuild property, not about code.
+    public static readonly DiagnosticDescriptor InvalidGeneratedAccessibility = new(
+        id: "ZATI010",
+        title: "Invalid ZeroAllocGeneratedAccessibility value",
+        messageFormat: "MSBuild property 'ZeroAllocGeneratedAccessibility' has invalid value '{0}'; allowed values are 'Public' and 'Internal'",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

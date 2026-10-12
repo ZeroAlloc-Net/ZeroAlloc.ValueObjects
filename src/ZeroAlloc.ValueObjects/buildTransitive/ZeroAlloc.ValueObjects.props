@@ -1,0 +1,18 @@
+<Project>
+  <!--
+    Makes the org-wide ZeroAllocGeneratedAccessibility MSBuild property visible to the bundled
+    [TypedId] generator as build_property.ZeroAllocGeneratedAccessibility (see #205):
+
+      <PropertyGroup>
+        <ZeroAllocGeneratedAccessibility>Internal</ZeroAllocGeneratedAccessibility>
+      </PropertyGroup>
+
+    Unset or "Public", the default, keeps the generated EF Core conventions class public.
+    "Internal" emits it internal. Any other value is generator error ZATI010. Members generated
+    into a [TypedId] struct keep the struct's accessibility. build/ serves a project that
+    references this package directly, buildTransitive/ one that gets it through another project.
+  -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="ZeroAllocGeneratedAccessibility" />
+  </ItemGroup>
+</Project>

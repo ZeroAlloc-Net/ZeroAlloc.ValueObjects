@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    Makes the org-wide ZeroAllocGeneratedAccessibility MSBuild property visible to the generator
+    as build_property.ZeroAllocGeneratedAccessibility (see #205). See
+    build/ZeroAlloc.ValueObjects.props in the ZeroAlloc.ValueObjects package for the values.
+
+    No buildTransitive/ counterpart: this standalone package is a development-only analyzer meant
+    to be referenced directly, so no project gets it transitively. New consumers should reference
+    ZeroAlloc.ValueObjects, which bundles this generator and ships both build/ and buildTransitive/.
+  -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="ZeroAllocGeneratedAccessibility" />
+  </ItemGroup>
+</Project>

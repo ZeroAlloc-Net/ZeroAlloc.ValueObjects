@@ -148,16 +148,16 @@ If no provider is registered, `Snowflake.New()` falls back to `ZA_SNOWFLAKE_WORK
 
 ### EF Core
 
-Install `ZeroAlloc.ValueObjects.EfCore` and register the convention:
+Install `ZeroAlloc.ValueObjects.EfCore` and call the registration the generator emits for your assembly, here `MyApp`:
 
 ```csharp
 protected override void ConfigureConventions(ModelConfigurationBuilder builder)
 {
-    builder.AddTypedIdConventions();
+    builder.AddMyAppTypedIdConventions();
 }
 ```
 
-All `[TypedId]` structs in the DbContext's assembly are auto-mapped: Guid-backed → `uniqueidentifier`/`uuid`, long-backed → `bigint`. Per-property `HasConversion` still overrides.
+All `[TypedId]` structs in the assembly are mapped: Guid-backed → `uniqueidentifier`/`uuid`, long-backed → `bigint`. The generated `Add{Assembly}TypedIdConventions()` calls `Properties<TId>().HaveConversion<TypedIdValueConverter<TId, TBacking>>()` for each struct by name, so it needs no reflection or assembly scan and is trim-safe and NativeAOT-safe. Each struct also gets `OrderId.AddTypedIdConvention(builder)` to register one ID. The reflection-based `builder.AddTypedIdConventions()` remains for apps that do not trim. Per-property `HasConversion` still overrides. See [EF Core integration](docs/typed-id/efcore.md).
 
 ### Minimal API binding
 
@@ -179,6 +179,7 @@ Each TypedId carries `[JsonConverter]` pointing at a nested converter that reads
 | `ZATI007` | Error | Struct is generic, or nested in a generic type |
 | `ZATI008` | Error | Struct is file-local |
 | `ZATI009` | Error | Struct name differs only in case from another TypedId |
+| `ZATI010` | Error | Invalid `ZeroAllocGeneratedAccessibility` MSBuild property value |
 
 `[ValueObject]` reports `ZAVO001`–`ZAVO003` for value objects it cannot generate; see [docs/diagnostics.md](docs/diagnostics.md).
 

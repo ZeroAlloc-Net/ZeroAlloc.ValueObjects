@@ -17,17 +17,19 @@ public static class TypedIdModelConfigurationExtensions
     /// <remarks>
     /// Not trim-safe and not NativeAOT-safe: it enumerates every type in the assembly and closes
     /// generic EF Core methods and converters over the ids it finds. Trimming can remove those ids,
-    /// and NativeAOT cannot create the generic instantiations at run time.
+    /// and NativeAOT cannot create the generic instantiations at run time. A project that references
+    /// this package gets a generated alternative that needs neither: the <c>[TypedId]</c> generator
+    /// emits <c>Add{Assembly}TypedIdConventions()</c> for the assembly, and a static
+    /// <c>AddTypedIdConvention(builder)</c> on each <c>[TypedId]</c> struct.
     /// </remarks>
     [RequiresUnreferencedCode(
         "AddTypedIdConventions scans the assembly with reflection and closes generic types over the " +
-        "[TypedId] structs it finds, so trimming can remove them. Apply HasConversion with " +
-        "TypedIdValueConverter<TId, TBacking> to each typed-ID property instead, or root the " +
-        "[TypedId] structs and their members.")]
+        "[TypedId] structs it finds, so trimming can remove them. Call the generated " +
+        "Add{Assembly}TypedIdConventions() or each struct's AddTypedIdConvention(builder) instead.")]
     [RequiresDynamicCode(
         "AddTypedIdConventions closes generic types and methods over types found at run time, " +
-        "which NativeAOT cannot compile ahead of time. Apply HasConversion with " +
-        "TypedIdValueConverter<TId, TBacking> to each typed-ID property instead.")]
+        "which NativeAOT cannot compile ahead of time. Call the generated " +
+        "Add{Assembly}TypedIdConventions() or each struct's AddTypedIdConvention(builder) instead.")]
     public static ModelConfigurationBuilder AddTypedIdConventions(
         this ModelConfigurationBuilder builder,
         Assembly? scan = null)

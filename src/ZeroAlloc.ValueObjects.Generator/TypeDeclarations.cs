@@ -100,6 +100,22 @@ internal static class TypeDeclarations
         _ => string.Empty,
     };
 
+    /// <summary>
+    /// Whether code at namespace level in the declaring assembly can name <paramref name="type"/>:
+    /// it and every containing type are public, internal or protected internal. A private,
+    /// protected or private protected type, or one nested in such a type, is visible only inside
+    /// its containing types.
+    /// </summary>
+    public static bool ReachableFromAssembly(INamedTypeSymbol type)
+    {
+        for (var t = type; t is not null; t = t.ContainingType)
+        {
+            if (t.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal or Accessibility.ProtectedOrInternal))
+                return false;
+        }
+        return true;
+    }
+
     /// <summary>A name written as an identifier: a keyword gets the verbatim <c>@</c> prefix.</summary>
     public static string Identifier(string name) =>
         SyntaxFacts.GetKeywordKind(name) != SyntaxKind.None ? "@" + name : name;

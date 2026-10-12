@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using ZeroAlloc.ValueObjects.Generator;
@@ -97,13 +98,26 @@ public sealed class GeneratedCodeDocumentationTests
     public void TypedIdInt64_GeneratedMembers_AppearInXmlDocumentation(string memberId)
         => Assert.Contains(memberId, Compile(new TypedIdGenerator(), TypedIdInt64Source).Xml, StringComparison.Ordinal);
 
+    [Fact]
+    public void TypedIdEfCore_GeneratedCode_RaisesNoDocumentationDiagnostics()
+        => Assert.Empty(Compile(new TypedIdGenerator(), TypedIdGuidSource, efCore: true).DocDiagnostics);
+
+    [Theory]
+    [InlineData("M:DocumentId.AddTypedIdConvention(Microsoft.EntityFrameworkCore.ModelConfigurationBuilder)")]
+    [InlineData("T:Microsoft.EntityFrameworkCore.DocGenTestTypedIdModelConfigurationExtensions")]
+    [InlineData("M:Microsoft.EntityFrameworkCore.DocGenTestTypedIdModelConfigurationExtensions.AddDocGenTestTypedIdConventions(Microsoft.EntityFrameworkCore.ModelConfigurationBuilder)")]
+    public void TypedIdEfCore_GeneratedMembers_AppearInXmlDocumentation(string memberId)
+        => Assert.Contains(memberId, Compile(new TypedIdGenerator(), TypedIdGuidSource, efCore: true).Xml, StringComparison.Ordinal);
+
     private sealed record CompileResult(IReadOnlyList<Diagnostic> DocDiagnostics, string Xml);
 
     /// <summary>
     /// Runs <paramref name="generator"/> over <paramref name="source"/> in a compilation that
-    /// requests XML documentation, then emits it to capture the resulting documentation file.
+    /// requests XML documentation, then emits it to capture the resulting documentation file. With
+    /// <paramref name="efCore"/>, the compilation references every assembly of the test host, EF Core
+    /// and ZeroAlloc.ValueObjects.EfCore among them, so the EF Core registration is generated too.
     /// </summary>
-    private static CompileResult Compile(IIncrementalGenerator generator, string source)
+    private static CompileResult Compile(IIncrementalGenerator generator, string source, bool efCore = false)
     {
         // DocumentationMode.Diagnose is the parse-options equivalent of
         // <GenerateDocumentationFile>true</GenerateDocumentationFile>.
@@ -111,7 +125,7 @@ public sealed class GeneratedCodeDocumentationTests
         var sourceTree = CSharpSyntaxTree.ParseText(source, parseOptions, path: "Source.cs");
 
         var runtimeDir = System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory();
-        var refs = new[]
+        var refs = efCore ? HostReferences() : new[]
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(TypedIdAttribute).Assembly.Location),
@@ -159,6 +173,15 @@ public sealed class GeneratedCodeDocumentationTests
 
         return new CompileResult(docDiagnostics, System.Text.Encoding.UTF8.GetString(xmlStream.ToArray()));
     }
+
+    private static MetadataReference[] HostReferences() =>
+        ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
+            .Split(System.IO.Path.PathSeparator)
+            .Where(p => !string.IsNullOrEmpty(p))
+            .Append(typeof(ZeroAlloc.ValueObjects.EfCore.TypedIdValueConverter<,>).Assembly.Location)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(p => (MetadataReference)MetadataReference.CreateFromFile(p))
+            .ToArray();
 
     private static List<string> DescribeErrors(IEnumerable<Diagnostic> diagnostics)
     {

@@ -109,19 +109,19 @@ Details in [ASP.NET minimal API binding](aspnet.md).
 
 ## Step 7 — EF Core
 
-Install `ZeroAlloc.ValueObjects.EfCore` and register the convention once:
+Install `ZeroAlloc.ValueObjects.EfCore` and call the registration the generator emits for your assembly once. For an assembly named `MyApp`:
 
 ```csharp
 public sealed class AppDbContext : DbContext
 {
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
-        builder.AddTypedIdConventions();
+        builder.AddMyAppTypedIdConventions();
     }
 }
 ```
 
-Every `[TypedId]` struct defined in the DbContext's assembly maps automatically: Guid-backed IDs become `uniqueidentifier`/`uuid` columns, Int64-backed IDs become `bigint`. Details in [EF Core integration](efcore.md).
+It names every `[TypedId]` struct at compile time, so it needs no reflection and is NativeAOT-safe. Every `[TypedId]` struct defined in the assembly maps automatically: Guid-backed IDs become `uniqueidentifier`/`uuid` columns, Int64-backed IDs become `bigint`. Details in [EF Core integration](efcore.md).
 
 ## What next
 

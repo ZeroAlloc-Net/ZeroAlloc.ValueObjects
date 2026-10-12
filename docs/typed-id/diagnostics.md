@@ -2,13 +2,13 @@
 id: typed-id-diagnostics
 title: TypedId Diagnostics
 slug: /docs/typed-id/diagnostics
-description: ZATI001–ZATI009 reference with example code and fixes.
+description: ZATI001–ZATI010 reference with example code and fixes.
 sidebar_position: 27
 ---
 
 # Diagnostics
 
-The generator emits eight diagnostic IDs, `ZATI001` through `ZATI009`; `ZATI004` is reserved. Each is raised during compilation, so invalid TypedId declarations never reach runtime.
+The generator emits nine diagnostic IDs, `ZATI001` through `ZATI010`; `ZATI004` is reserved. Each is raised during compilation, so invalid TypedId declarations and settings never reach runtime.
 
 A TypedId can be declared at the top of a namespace, in the global namespace, or nested in another type. It cannot be generic; see [ZATI007](#zati007).
 
@@ -25,6 +25,7 @@ A TypedId can be declared at the top of a namespace, in the global namespace, or
 | [ZATI007](#zati007) | Error | Struct is generic, or nested in a generic type | The name in the declaration that carries `[TypedId]` | Use a non-generic struct outside generic types |
 | [ZATI008](#zati008) | Error | Struct is file-local, or nested in a file-local type | The name in the declaration that carries `[TypedId]` | Remove the `file` modifier |
 | [ZATI009](#zati009) | Error | Struct name differs only in case from another TypedId | The name in the declaration that carries `[TypedId]` | Rename one of them |
+| [ZATI010](#zati010) | Error | Invalid `ZeroAllocGeneratedAccessibility` MSBuild property value | No source location: it is about the project file | Use `Public` or `Internal` |
 
 ---
 
@@ -275,6 +276,24 @@ Each TypedId is generated into a file named after its namespace, containing type
 ### Fix
 
 Rename one of the structs, or move it to another namespace, so the qualified names differ in more than case.
+
+---
+
+## ZATI010
+
+**Error.** `MSBuild property 'ZeroAllocGeneratedAccessibility' has invalid value 'Private'; allowed values are 'Public' and 'Internal'`.
+
+The org-wide `ZeroAllocGeneratedAccessibility` property sets the accessibility of the entry points ZeroAlloc generators add outside your own types. For this generator that is the EF Core conventions class; see [EF Core integration](efcore.md#keeping-the-class-internal). The value is compared ignoring case. Any other value is reported, and the class stays `public`.
+
+### Fix
+
+```xml
+<PropertyGroup>
+  <ZeroAllocGeneratedAccessibility>Internal</ZeroAllocGeneratedAccessibility>
+</PropertyGroup>
+```
+
+Use `Internal` or `Public`, or remove the property.
 
 ---
 

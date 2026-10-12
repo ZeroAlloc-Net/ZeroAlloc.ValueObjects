@@ -36,6 +36,9 @@
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects\ZeroAlloc.ValueObjects.csproj"
                       SetTargetFramework="TargetFramework=net8.0"
                       UndefineProperties="PublishAot" />
+    <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects.EfCore\ZeroAlloc.ValueObjects.EfCore.csproj"
+                      SetTargetFramework="TargetFramework=net9.0"
+                      UndefineProperties="PublishAot" />
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false"

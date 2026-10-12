@@ -67,6 +67,23 @@
     <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
+  <!--
+    build/ makes ZeroAllocGeneratedAccessibility CompilerVisible for a project that references this
+    package directly. buildTransitive/ does the same for a project that only gets it transitively,
+    through a project reference to another project that references this package; the bundled
+    generator runs for those consumers too.
+  -->
+  <ItemGroup>
+    <None Remove="build\ZeroAlloc.ValueObjects.props" />
+    <None Remove="buildTransitive\ZeroAlloc.ValueObjects.props" />
+    <None Include="$(MSBuildThisFileDirectory)build\ZeroAlloc.ValueObjects.props"
+          Pack="true"
+          PackagePath="build/ZeroAlloc.ValueObjects.props" />
+    <None Include="$(MSBuildThisFileDirectory)buildTransitive\ZeroAlloc.ValueObjects.props"
+          Pack="true"
+          PackagePath="buildTransitive/ZeroAlloc.ValueObjects.props" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
