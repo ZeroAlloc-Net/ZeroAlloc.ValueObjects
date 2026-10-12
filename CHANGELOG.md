@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.1.1...v2.2.0) (2026-10-12)
+
+
+### Features
+
+* generate the typed-ID EF Core converter registration ([#213](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/213)) ([39ad399](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/39ad39936591cf5d2ad014223b702477bea8821f)), closes [#205](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/205)
+
 ## [2.1.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.1.0...v2.1.1) (2026-10-11)
 
 
