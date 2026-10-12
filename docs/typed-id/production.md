@@ -127,6 +127,6 @@ Before shipping a TypedId-heavy service:
 - [ ] Do replicas run as StatefulSets (stable ordinals) or Deployments (ephemeral)?
 - [ ] Is NTP running and monitored?
 - [ ] Are TypedIds logged as their string form?
-- [ ] Does the DbContext call `AddTypedIdConventions()` exactly once?
+- [ ] Does the DbContext call the generated `Add{Assembly}TypedIdConventions()` once for each assembly that declares TypedIds? A trimmed or NativeAOT app must not use the reflection-based `AddTypedIdConventions()`.
 
 If you can answer all ten in the affirmative, you are probably fine. The remainder is ordinary operations hygiene.

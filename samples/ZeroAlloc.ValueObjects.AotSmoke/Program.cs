@@ -13,6 +13,8 @@ using ZeroAlloc.ValueObjects.AotSmoke;
 //  * Every TypedId's nested TypedIdJsonConverter, driven directly through Utf8JsonWriter and
 //    Utf8JsonReader so no reflection-based JsonSerializer path is involved.
 //  * The nested ZeroAlloc.Serialisation TypedIdSerializer, Guid- and Int64-backed.
+//  * ZeroAlloc.ValueObjects.EfCore: the generated converter registration, a model build and a
+//    SQLite round-trip; see EfCoreSmoke.
 //  * A [ValueObject] class — structural equality + GetHashCode + ToString.
 //
 // Each block returns 1 on failure so we get a single exit code for CI to gate on.
@@ -73,6 +75,9 @@ var z = new Money("USD", 42.5m);
 if (!x.Equals(y)) return Fail("Money equality: identical state not equal");
 if (x.GetHashCode() != y.GetHashCode()) return Fail("Money hash: identical state produced different hashes");
 if (x.Equals(z)) return Fail("Money equality: different currency compared equal");
+
+// ZeroAlloc.ValueObjects.EfCore: generated converter registration and a SQLite round-trip.
+if (EfCoreSmoke.Run() is { } efError) return Fail(efError);
 
 Console.WriteLine("AOT smoke: PASS");
 return 0;

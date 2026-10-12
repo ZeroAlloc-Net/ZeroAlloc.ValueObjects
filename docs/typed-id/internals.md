@@ -162,13 +162,17 @@ The generated `TryParse` sits at #1. The binder calls it with the raw route / qu
 
 For span-based routes (the framework uses spans where the URI is already available as one), `ISpanParsable<T>.TryParse` is preferred — zero-alloc binding end-to-end.
 
-## EF Core convention via reflection
+## EF Core conventions
 
-`AddTypedIdConventions` uses reflection **once** at `ModelConfigurationBuilder` time, not per operation. The hot path is:
+In a project that references `ZeroAlloc.ValueObjects.EfCore`, the generator emits a static `AddTypedIdConvention(ModelConfigurationBuilder)` into each `[TypedId]` struct, in its own `*.TypedId.EfCore.g.cs` file, and an `Add{Assembly}TypedIdConventions()` extension that calls them all. Each calls `builder.Properties<TId>().HaveConversion<TypedIdValueConverter<TId, TBacking>>()` with both types named, so the closed generics are known at compile time and NativeAOT compiles them ahead of time. The generator detects the reference by looking up `ZeroAlloc.ValueObjects.EfCore.TypedIdValueConverter<,>` and EF Core's `ModelConfigurationBuilder` in the compilation; without them it emits neither.
+
+The older `AddTypedIdConventions` uses reflection **once** at `ModelConfigurationBuilder` time, not per operation:
 
 1. At convention-build (model-build): scan the target assembly for `[TypedId]` structs.
 2. For each, instantiate `TypedIdValueConverter<TId, TBacking>` and register via `builder.Properties<TId>().HaveConversion<...>()`.
 3. EF Core compiles the converter into its internal query/materialization pipeline and caches the result in the model.
+
+Either way, step 3 is the same.
 
 Per-query and per-row code paths do not reflect — they invoke the cached converter directly. The converter itself is a trivial `TId -> TBacking` lambda over `Value`, which the runtime JITs into a field read on the struct and a field assignment on the other side. No boxing, no allocations beyond what EF Core already does.
 
@@ -191,7 +195,8 @@ Per-query and per-row code paths do not reflect — they invoke the cached conve
 | `src/ZeroAlloc.ValueObjects.Generator/TypedIdGenerator.cs` | `IIncrementalGenerator` entry |
 | `src/ZeroAlloc.ValueObjects.Generator/TypedId/*` | Parser, writer, diagnostics |
 | `src/ZeroAlloc.ValueObjects.EfCore/TypedIdValueConverter.cs` | EF Core converter |
-| `src/ZeroAlloc.ValueObjects.EfCore/TypedIdModelConfigurationExtensions.cs` | `AddTypedIdConventions` |
+| `src/ZeroAlloc.ValueObjects.EfCore/TypedIdModelConfigurationExtensions.cs` | `AddTypedIdConventions`, the reflection-based scan |
+| `src/ZeroAlloc.ValueObjects.Generator/Writers/TypedIdEfCoreWriter.cs` | The generated `AddTypedIdConvention` and `Add{Assembly}TypedIdConventions` |
 
 ## Testing invariants
 

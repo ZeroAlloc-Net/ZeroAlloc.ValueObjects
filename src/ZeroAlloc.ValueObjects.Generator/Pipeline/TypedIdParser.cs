@@ -15,10 +15,15 @@ internal static class TypedIdParser
     // Carries any diagnostics detected while parsing so the source-output stage can report
     // them. File is null when the struct is not generated, for an error or for a
     // blocking warning such as ZATI006; only a struct with a File takes part in ZATI009.
+    //
+    // FullyQualifiedName and ReachableFromAssembly serve the EF Core conventions method, which
+    // names every generated struct that code at namespace level in the assembly can see.
     internal sealed record PartialModel(
         string HintName,
         string? Namespace,
         string Name,
+        string FullyQualifiedName,
+        bool ReachableFromAssembly,
         string Accessibility,
         EquatableArray<string> ContainingTypes,
         int RawStrategy,
@@ -72,6 +77,8 @@ internal static class TypedIdParser
             hintName,
             ns,
             symbol.Name,
+            symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+            TypeDeclarations.ReachableFromAssembly(symbol),
             TypeDeclarations.AccessibilityModifier(symbol),
             TypeDeclarations.ContainingDeclarations(symbol),
             strategy,

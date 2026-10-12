@@ -40,4 +40,15 @@
           Visible="false"
           Condition="Exists('$(OutputPath)\$(AssemblyName).pdb')" />
   </ItemGroup>
+  <!--
+    Makes the org-wide ZeroAllocGeneratedAccessibility MSBuild property CompilerVisible for a
+    project that references this standalone package directly. See the props file for why there is
+    no buildTransitive/ counterpart.
+  -->
+  <ItemGroup>
+    <None Include="build/ZeroAlloc.ValueObjects.Generator.props"
+          Pack="true"
+          PackagePath="build/ZeroAlloc.ValueObjects.Generator.props"
+          Visible="false" />
+  </ItemGroup>
 </Project>

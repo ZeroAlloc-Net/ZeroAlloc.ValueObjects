@@ -6,6 +6,9 @@ internal static class TrackingNames
     public const string TypedIdCandidates = nameof(TypedIdCandidates);
     public const string TypedIdAssemblyDefault = nameof(TypedIdAssemblyDefault);
     public const string TypedIdCaseCollisions = nameof(TypedIdCaseCollisions);
+    public const string TypedIdEfCore = nameof(TypedIdEfCore);
+    public const string TypedIdGeneratedAccessibility = nameof(TypedIdGeneratedAccessibility);
+    public const string TypedIdConventionEntries = nameof(TypedIdConventionEntries);
     public const string ValueObjectTargets = nameof(ValueObjectTargets);
     public const string ValueObjectCaseCollisions = nameof(ValueObjectCaseCollisions);
 }

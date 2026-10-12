@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
+using ZeroAlloc.ValueObjects.Generator.Models;
 using ZeroAlloc.ValueObjects.Generator.Pipeline;
 using ZeroAlloc.ValueObjects.Generator.Writers;
 
@@ -41,11 +43,28 @@ public sealed class TypedIdGenerator : IIncrementalGenerator
             foreach (var diagnostic in found.Diagnostics) ctx.ReportDiagnostic(diagnostic.ToDiagnostic());
         });
 
-        var combined = candidates.Combine(assemblyDefault).Combine(collisions);
+        // The EF Core registration is generated only for a compilation that can compile it: one
+        // that references ZeroAlloc.ValueObjects.EfCore, and through it EF Core.
+        var efCore = context.CompilationProvider
+            .Select(static (comp, _) => ReferencesEfCore(comp))
+            .WithTrackingName(TrackingNames.TypedIdEfCore);
+
+        RegisterTypedIds(context, candidates, assemblyDefault, collisions, efCore);
+        RegisterEfCoreConventions(context, candidates, collisions, efCore);
+    }
+
+    private static void RegisterTypedIds(
+        IncrementalGeneratorInitializationContext context,
+        IncrementalValuesProvider<TypedIdParser.PartialModel> candidates,
+        IncrementalValueProvider<TypedIdParser.AssemblyDefault> assemblyDefault,
+        IncrementalValueProvider<CaseCollisions> collisions,
+        IncrementalValueProvider<bool> efCore)
+    {
+        var combined = candidates.Combine(assemblyDefault).Combine(collisions).Combine(efCore);
 
         context.RegisterSourceOutput(combined, static (ctx, pair) =>
         {
-            var ((partial, asmDefault), found) = pair;
+            var (((partial, asmDefault), found), hasEfCore) = pair;
 
             // Report any diagnostics captured during parsing. A struct without a File is not
             // generated: it has an error, or ZATI006; see TypedIdParser.Parse.
@@ -63,6 +82,68 @@ public sealed class TypedIdGenerator : IIncrementalGenerator
                     $"Unexpected TypedId backing {resolved.Backing} for {resolved.Name}"),
             };
             ctx.AddSource(partial.HintName, source);
+
+            if (hasEfCore)
+                ctx.AddSource(TypedIdEfCoreWriter.MemberHintName(partial.HintName), TypedIdEfCoreWriter.WriteMember(resolved));
         });
     }
+
+    // Add{Assembly}TypedIdConventions, which calls AddTypedIdConvention on every generated struct
+    // that namespace-level code in the assembly can name.
+    private static void RegisterEfCoreConventions(
+        IncrementalGeneratorInitializationContext context,
+        IncrementalValuesProvider<TypedIdParser.PartialModel> candidates,
+        IncrementalValueProvider<CaseCollisions> collisions,
+        IncrementalValueProvider<bool> efCore)
+    {
+
+        // The org-wide ZeroAllocGeneratedAccessibility property sets the accessibility of the EF
+        // Core conventions class, the one entry point generated outside the user's own types.
+        var accessibility = context.AnalyzerConfigOptionsProvider
+            .Select(static (options, _) => GeneratedAccessibility.Resolve(options))
+            .WithTrackingName(TrackingNames.TypedIdGeneratedAccessibility);
+
+        context.RegisterSourceOutput(accessibility, static (ctx, option) =>
+        {
+            if (option.InvalidValue is not null)
+                ctx.ReportDiagnostic(Diagnostic.Create(TypedIdDiagnostics.InvalidGeneratedAccessibility, Location.None, option.InvalidValue));
+        });
+
+        var entries = candidates
+            .Where(static m => m.File is not null)
+            .Select(static (m, _) => new TypedIdConventionEntry(m.HintName, m.FullyQualifiedName, m.ReachableFromAssembly))
+            .Collect()
+            .Select(static (all, _) => new EquatableArray<TypedIdConventionEntry>(all))
+            .WithTrackingName(TrackingNames.TypedIdConventionEntries);
+
+        var assemblyName = context.CompilationProvider
+            .Select(static (comp, _) => comp.AssemblyName ?? "Assembly");
+
+        var conventions = entries.Combine(collisions).Combine(efCore).Combine(assemblyName).Combine(accessibility);
+
+        context.RegisterSourceOutput(conventions, static (ctx, pair) =>
+        {
+            var ((((all, found), hasEfCore), asmName), option) = pair;
+            if (!hasEfCore) return;
+
+            var names = new List<string>();
+            var any = false;
+            foreach (var entry in all)
+            {
+                if (found.Skips(entry.HintName)) continue;
+                any = true;
+                if (entry.ReachableFromAssembly) names.Add(entry.FullyQualifiedName);
+            }
+
+            // A compilation without a generated [TypedId] gets no conventions class.
+            if (!any) return;
+
+            names.Sort(System.StringComparer.Ordinal);
+            ctx.AddSource(TypedIdEfCoreWriter.ConventionsHintName, TypedIdEfCoreWriter.WriteConventions(asmName, option.Keyword, names));
+        });
+    }
+
+    private static bool ReferencesEfCore(Compilation compilation) =>
+        compilation.GetTypeByMetadataName("ZeroAlloc.ValueObjects.EfCore.TypedIdValueConverter`2") is not null &&
+        compilation.GetTypeByMetadataName("Microsoft.EntityFrameworkCore.ModelConfigurationBuilder") is not null;
 }
