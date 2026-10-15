@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.0...v2.2.1) (2026-10-15)
+
+
+### Documentation
+
+* back the equality zero-allocation claim with a test and fix the TypedId text ([#217](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/217)) ([edc0a5d](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/edc0a5d6b6811318d238b39effb6b0783f455389))
+
 ## [2.2.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.1.1...v2.2.0) (2026-10-12)
 
 
