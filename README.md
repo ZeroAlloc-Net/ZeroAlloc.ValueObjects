@@ -2,13 +2,13 @@
 
 [![NuGet](https://img.shields.io/nuget/v/ZeroAlloc.ValueObjects.svg)](https://www.nuget.org/packages/ZeroAlloc.ValueObjects)
 [![Build](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/actions/workflows/ci.yml/badge.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/LICENSE)
 [![AOT](https://img.shields.io/badge/AOT--Compatible-passing-brightgreen)](https://learn.microsoft.com/dotnet/core/deploying/native-aot/)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
 Zero-allocation source-generated ValueObject equality for your existing domain types.
 
-Same performance as `record` — without forcing the `record` keyword on your domain model. Add `[ValueObject]` to any `partial class` or `partial struct` and the generator emits `Equals`, `GetHashCode`, `==`, `!=`, and `ToString` with no heap allocations.
+Same performance as `record` — without forcing the `record` keyword on your domain model. Add `[ValueObject]` to any `partial class` or `partial struct` and the generator emits `Equals`, `GetHashCode`, `==` and `!=` with no heap allocations, plus a `ToString` override. `ToString` returns a new string, so it allocates like any other `ToString`.
 
 ## Install
 
@@ -19,6 +19,8 @@ dotnet add package ZeroAlloc.ValueObjects
 ## Quick start
 
 ```csharp
+using ZeroAlloc.ValueObjects;
+
 // Annotate any existing partial class — no keyword changes, no base class
 [ValueObject]
 public partial class Money
@@ -46,9 +48,17 @@ string s   = a.ToString();      // "Money { Amount = 10, Currency = USD }"
 |---|---:|---:|
 | CFE_Equals | 45.2 ns | 96 B |
 | Record_Equals | 3.1 ns | 0 B |
+| RecordStruct_Equals | 2.8 ns | 0 B |
+| **ZeroAlloc_Equals** | **3.1 ns** | **0 B** |
 | **ZeroAllocStruct_Equals** | **2.8 ns** | **0 B** |
 | CFE_GetHashCode | 38.7 ns | 88 B |
+| Record_GetHashCode | 2.4 ns | 0 B |
+| RecordStruct_GetHashCode | 2.2 ns | 0 B |
+| **ZeroAlloc_GetHashCode** | **2.4 ns** | **0 B** |
 | **ZeroAllocStruct_GetHashCode** | **2.2 ns** | **0 B** |
+
+The 0 B for `Equals`, `GetHashCode`, `==` and `!=` is asserted on a class and a struct by
+[`EqualityAllocationTests`](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/tests/ZeroAlloc.ValueObjects.Tests/FunctionalTests/EqualityAllocationTests.cs).
 
 **Single-int wrapped IDs vs [Vogen](https://github.com/SteveDunn/Vogen)** (the source-gen alternative):
 
@@ -60,13 +70,13 @@ string s   = a.ToString();      // "Money { Amount = 10, Currency = USD }"
 | `GetHashCode` | 0.03 ns | 0.42 ns | parity (both in ZeroMeasurement zone) |
 | `ToString` | 6.40 ns | **3.52 ns** | **ZA 1.8× faster** |
 
-ZA wins or ties every row, with 0 B allocated on all of them. The previous regressions on `GetHashCode` (~30× slower) and `ToString` (~72 B allocation) were closed in v1.7 by aligning the single-property emit to `Value.ToString(InvariantCulture)` / `Value.GetHashCode()` directly. **ZA also supports multi-field types** — `[ValueObject]` on records with any number of fields — which Vogen does not.
+ZA wins or ties every row, with 0 B allocated on all of them. The `ToString` row is 0 B only because the benchmark formats 42, and .NET caches the strings of small integers; formatting a larger value returns a new string. The previous regressions on `GetHashCode` (~30× slower) and `ToString` (~72 B allocation) were closed in v1.7 by aligning the single-property emit to `Value.ToString(InvariantCulture)` / `Value.GetHashCode()` directly. **ZA also supports multi-field types** — `[ValueObject]` on a `partial class` or `partial struct` with any number of fields — which Vogen does not.
 
 Full methodology and analysis: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md)
 
 ## Features
 
-- Zero allocations — no iterator state machine, no boxing
+- Zero-allocation `Equals`, `GetHashCode`, `==` and `!=` — no iterator state machine, no boxing
 - Works on existing `partial class` and `partial struct` — no refactoring required
 - Can inherit from non-record base classes
 - Fine-grained member control with `[EqualityMember]` (opt-in) and `[IgnoreEqualityMember]` (opt-out)
@@ -78,7 +88,7 @@ Full methodology and analysis: [docs/performance.md](https://github.com/ZeroAllo
 
 | | `record` | `ZeroAlloc.ValueObjects` |
 |---|---|---|
-| Zero allocation | ✓ | ✓ |
+| Zero-allocation equality | ✓ | ✓ |
 | Works on existing `class`/`struct` | ✗ — forces `record` keyword | ✓ |
 | Can inherit from non-record base | ✗ | ✓ |
 | Fine-grained member control | ✗ | `[EqualityMember]` / `[IgnoreEqualityMember]` |
@@ -144,7 +154,7 @@ builder.Services.AddSnowflakeWorkerId(sp => sp.GetRequiredService<IMachineIdProv
 
 It lives in a separate package so the core one carries no `Microsoft.Extensions.Hosting.Abstractions` dependency. The namespace is the same, so only the package reference changes.
 
-If no provider is registered, `Snowflake.New()` falls back to `ZA_SNOWFLAKE_WORKER_ID` env var, then throws `TypedIdException`.
+If no provider is registered, the generated `New()` of a Snowflake-strategy ID, such as `MessageId.New()`, falls back to `ZA_SNOWFLAKE_WORKER_ID` env var, then throws `TypedIdException`.
 
 ### EF Core
 
@@ -157,7 +167,7 @@ protected override void ConfigureConventions(ModelConfigurationBuilder builder)
 }
 ```
 
-All `[TypedId]` structs in the assembly are mapped: Guid-backed → `uniqueidentifier`/`uuid`, long-backed → `bigint`. The generated `Add{Assembly}TypedIdConventions()` calls `Properties<TId>().HaveConversion<TypedIdValueConverter<TId, TBacking>>()` for each struct by name, so it needs no reflection or assembly scan and is trim-safe and NativeAOT-safe. Each struct also gets `OrderId.AddTypedIdConvention(builder)` to register one ID. The reflection-based `builder.AddTypedIdConventions()` remains for apps that do not trim. Per-property `HasConversion` still overrides. See [EF Core integration](docs/typed-id/efcore.md).
+All `[TypedId]` structs in the assembly are mapped: Guid-backed → `uniqueidentifier`/`uuid`, long-backed → `bigint`. The generated `Add{Assembly}TypedIdConventions()` calls `Properties<TId>().HaveConversion<TypedIdValueConverter<TId, TBacking>>()` for each struct by name, so it needs no reflection or assembly scan and is trim-safe and NativeAOT-safe. Each struct also gets `OrderId.AddTypedIdConvention(builder)` to register one ID. The reflection-based `builder.AddTypedIdConventions()` remains for apps that do not trim. Per-property `HasConversion` still overrides. See [EF Core integration](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/efcore.md).
 
 ### Minimal API binding
 
@@ -181,7 +191,7 @@ Each TypedId carries `[JsonConverter]` pointing at a nested converter that reads
 | `ZATI009` | Error | Struct name differs only in case from another TypedId |
 | `ZATI010` | Error | Invalid `ZeroAllocGeneratedAccessibility` MSBuild property value |
 
-`[ValueObject]` reports `ZAVO001`–`ZAVO003` for value objects it cannot generate; see [docs/diagnostics.md](docs/diagnostics.md).
+`[ValueObject]` reports `ZAVO001`–`ZAVO003` for value objects it cannot generate; see [docs/diagnostics.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/diagnostics.md).
 
 ### Production checklist
 

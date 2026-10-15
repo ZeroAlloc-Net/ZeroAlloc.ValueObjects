@@ -40,7 +40,7 @@ public static IServiceCollection AddSnowflakeWorkerId(
     this IServiceCollection services, Func<IServiceProvider, int> factory);
 ```
 
-That overload registers an `IHostedService` which invokes the factory on `StartAsync` and publishes the result. The first `Snowflake.New()` call after the host has started sees the provider.
+That overload registers an `IHostedService` which invokes the factory on `StartAsync` and publishes the result. The first `New()` call on a Snowflake-strategy ID, such as `MessageId.New()`, after the host has started sees the provider.
 
 > **Why the split.** `IHostedService` lives in `Microsoft.Extensions.Hosting.Abstractions`, which brings `Configuration.Abstractions`, `Diagnostics.Abstractions`, `FileProviders.Abstractions` and `Options` with it. Because `[ValueObject]` is typically applied in a solution's most foundational assembly, that cost reached every transitive consumer — including the majority who never configure Snowflake at all ([#58](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/58)). Only the `IServiceProvider` overload genuinely needs a host, so only it moved.
 >
@@ -87,7 +87,7 @@ Use when the worker ID comes from another registered service — a central regis
 
 ## Resolution order at runtime
 
-When `Snowflake.New()` runs for the first time in a process:
+When the generated `New()` of a Snowflake-strategy ID, such as `MessageId.New()`, runs for the first time in a process:
 
 1. If `TypedIdRuntime.SnowflakeProvider` is set (i.e. `AddSnowflakeWorkerId` ran — immediately for overloads 1–3, at host start for overload 4) → use it.
 2. Else read env var `ZA_SNOWFLAKE_WORKER_ID`. If present and parseable → use it. The value is read once per id type and cached, so changing the variable later in the process has no effect. A variable that is unset at first use is not cached, so setting it afterwards still works.
