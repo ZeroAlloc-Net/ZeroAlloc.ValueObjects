@@ -47,7 +47,7 @@ _Last refreshed: 2026-05-18_
 | `GetHashCode` | 0.03 ns | 0.42 ns | parity (both in BDN ZeroMeasurement zone) |
 | `ToString` | 6.40 ns | **3.52 ns** | **ZA 1.8× faster** |
 
-Both libraries are 0 B on every row. ZA wins the hot-path operations (`From`, `Equals`) by a wide margin — Vogen's `From` pays validation overhead even when validation succeeds. `GetHashCode` is effectively a tie (both rows sit in BDN's ZeroMeasurement zone — "indistinguishable from empty method"). `ToString` is now ZA's win after the single-property generator emit was aligned: the generator emits `Value.ToString(CultureInfo.InvariantCulture)` directly instead of the previous record-wrapped `$"TypeName {{ Value = {Value} }}"` interpolation.
+Both libraries are 0 B on every row. For `ToString` that holds only because the benchmark formats 42, and .NET caches the strings of small integers; formatting a larger value returns a new string. ZA wins the hot-path operations (`From`, `Equals`) by a wide margin — Vogen's `From` pays validation overhead even when validation succeeds. `GetHashCode` is effectively a tie (both rows sit in BDN's ZeroMeasurement zone — "indistinguishable from empty method"). `ToString` is now ZA's win after the single-property generator emit was aligned: the generator emits `Value.ToString(CultureInfo.InvariantCulture)` directly instead of the previous record-wrapped `$"TypeName {{ Value = {Value} }}"` interpolation.
 
 **The trade-off**: ZA optimises construction, equality, and now `ToString` and hashing alongside Vogen. Vogen's narrower wrapping (single primitive) and ZA's broader surface (multi-field, custom types, EF Core converters) make them complementary choices — pick by feature surface, not raw single-int benchmark numbers.
 
