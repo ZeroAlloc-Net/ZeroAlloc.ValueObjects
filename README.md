@@ -6,9 +6,14 @@
 [![AOT](https://img.shields.io/badge/AOT--Compatible-passing-brightgreen)](https://learn.microsoft.com/dotnet/core/deploying/native-aot/)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/MarcelRoozekrans?style=flat&logo=githubsponsors&color=ea4aaa&label=Sponsor)](https://github.com/sponsors/MarcelRoozekrans)
 
-Zero-allocation source-generated ValueObject equality for your existing domain types.
+**Source-generated value objects and strongly-typed IDs for .NET: `record`-speed equality on the classes and structs you already have, with no allocation and no base class, NativeAOT-ready.**
 
-Same performance as `record` — without forcing the `record` keyword on your domain model. Add `[ValueObject]` to any `partial class` or `partial struct` and the generator emits `Equals`, `GetHashCode`, `==` and `!=` with no heap allocations, plus a `ToString` override. `ToString` returns a new string, so it allocates like any other `ToString`.
+## Why ZeroAlloc.ValueObjects
+
+- **Equality allocates nothing.** `Equals`, `GetHashCode`, `==` and `!=` allocate 0 B on a class and on a struct, asserted by tests. CSharpFunctionalExtensions' `ValueObject` allocates 96 B per `Equals` in the same benchmark.
+- **As fast as `record`, without rewriting your types to records.** Equality on a two-field value object runs in the same time as `record` and 14.6× faster than CSharpFunctionalExtensions. Equality on a single-`int` value object is 13× faster than Vogen's.
+- **Works under NativeAOT and trimming.** No reflection in generated code, including the EF Core converter registration. A NativeAOT smoke app is published and run in CI.
+- **Mistakes fail the build.** An ID strategy that does not fit its backing type, such as Snowflake on a `Guid`, is compile error ZATI001.
 
 ## Install
 
@@ -21,7 +26,14 @@ dotnet add package ZeroAlloc.ValueObjects
 ```csharp
 using ZeroAlloc.ValueObjects;
 
-// Annotate any existing partial class — no keyword changes, no base class
+var price = new Money(10m, "EUR");
+var prices = new HashSet<Money> { price, new Money(10m, "EUR") };
+Console.WriteLine(price == new Money(10m, "EUR"));       // True: compared by value, 0 B
+Console.WriteLine(prices.Count);                         // 1: safe as a set or dictionary key
+
+OrderId id = OrderId.New();                              // sortable ULID
+Console.WriteLine($"{id} {OrderId.Parse(id.ToString()) == id}");
+
 [ValueObject]
 public partial class Money
 {
@@ -30,201 +42,39 @@ public partial class Money
     public Money(decimal amount, string currency) => (Amount, Currency) = (amount, currency);
 }
 
-// Use standard equality — zero allocations
-var a = new Money(10m, "USD");
-var b = new Money(10m, "USD");
-
-bool equal = a == b;            // true
-bool same  = a.Equals(b);       // true  — IEquatable<Money> fast path
-int  hash  = a.GetHashCode();   // same as b.GetHashCode() — safe as dict key
-string s   = a.ToString();      // "Money { Amount = 10, Currency = USD }"
+[TypedId(Strategy = IdStrategy.Ulid)]
+public readonly partial record struct OrderId;
 ```
+
+`Money` keeps its constructor, its base class and its shape. The generator adds the equality members and a `ToString`, without the `with`, `Deconstruct` and `EqualityContract` a `record` brings.
+
+## What you get
+
+- **Value objects on existing types**: `[ValueObject]` on any `partial class` or `partial struct`, including classes that inherit from a non-record base.
+- **Member control**: opt members in with `[EqualityMember]` or out with `[IgnoreEqualityMember]`. Nullable reference properties compare null-safely.
+- **Strongly-typed IDs**: `[TypedId]` with ULID, UUIDv7, Snowflake and Sequential strategies, plus an assembly-wide default.
+- **JSON** through a generated `System.Text.Json` converter that reads and writes with 0 B allocated, asserted by tests.
+- **ASP.NET Core binding**: IDs implement `IParsable<T>` and `ISpanParsable<T>`, so `(OrderId id) => …` route parameters just work.
+- **EF Core**: [ZeroAlloc.ValueObjects.EfCore](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/efcore.md) maps every typed ID in an assembly with one generated, trim-safe call.
+- **Snowflake worker IDs** from a number, an environment variable or a factory. [ZeroAlloc.ValueObjects.Hosting](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/snowflake-config.md) adds a factory that resolves services.
+- **Serialisation**: [ZeroAlloc.Serialisation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Serialisation) writes single-value objects as their underlying value in JSON, MessagePack and MemoryPack.
 
 ## Performance
 
-**Multi-field value objects** (`Money(decimal Amount, string Currency)`): ZA matches `record` / `record struct` exactly. CFE allocates ~90 B per call.
+BenchmarkDotNet. Allocations are exact. The time column is the alternative's time divided by ZeroAlloc.ValueObjects', from the same run.
 
-| Method | Mean | Allocated |
-|---|---:|---:|
-| CFE_Equals | 45.2 ns | 96 B |
-| Record_Equals | 3.1 ns | 0 B |
-| RecordStruct_Equals | 2.8 ns | 0 B |
-| **ZeroAlloc_Equals** | **3.1 ns** | **0 B** |
-| **ZeroAllocStruct_Equals** | **2.8 ns** | **0 B** |
-| CFE_GetHashCode | 38.7 ns | 88 B |
-| Record_GetHashCode | 2.4 ns | 0 B |
-| RecordStruct_GetHashCode | 2.2 ns | 0 B |
-| **ZeroAlloc_GetHashCode** | **2.4 ns** | **0 B** |
-| **ZeroAllocStruct_GetHashCode** | **2.2 ns** | **0 B** |
+| Operation | ZeroAlloc.ValueObjects | Alternative | Alternative's time |
+|---|---:|---:|---:|
+| `Equals`, two-field `Money` | 0 B | CSharpFunctionalExtensions, 96 B | 14.6× |
+| `GetHashCode`, two-field `Money` | 0 B | CSharpFunctionalExtensions, 88 B | 16.1× |
+| `Equals`, single-`int` value object | 0 B | Vogen, 0 B | 13× |
 
-The 0 B for `Equals`, `GetHashCode`, `==` and `!=` is asserted on a class and a struct by
-[`EqualityAllocationTests`](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/tests/ZeroAlloc.ValueObjects.Tests/FunctionalTests/EqualityAllocationTests.cs).
+`record` and `record struct` allocate 0 B and run in the same time as ZeroAlloc.ValueObjects on the two-field rows. The [performance page](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md) has every row, including `GetHashCode`, where Vogen ties, and the [typed-ID benchmarks](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/benchmarks.md) cover generation and parsing per strategy.
 
-**Single-int wrapped IDs vs [Vogen](https://github.com/SteveDunn/Vogen)** (the source-gen alternative):
+## Learn more
 
-| Operation | Vogen | ZA.ValueObjects | Winner |
-|---|---:|---:|---|
-| `From(value)` | 4.66 ns | **0.39 ns** | **ZA 12× faster** |
-| `Equals` (equal) | 1.15 ns | **0.09 ns** | **ZA 13× faster** |
-| `Equals` (not equal) | 0.31 ns | **0.02 ns** | **ZA 15× faster** |
-| `GetHashCode` | 0.03 ns | 0.42 ns | parity (both in ZeroMeasurement zone) |
-| `ToString` | 6.40 ns | **3.52 ns** | **ZA 1.8× faster** |
-
-ZA wins or ties every row, with 0 B allocated on all of them. The `ToString` row is 0 B only because the benchmark formats 42, and .NET caches the strings of small integers; formatting a larger value returns a new string. The previous regressions on `GetHashCode` (~30× slower) and `ToString` (~72 B allocation) were closed in v1.7 by aligning the single-property emit to `Value.ToString(InvariantCulture)` / `Value.GetHashCode()` directly. **ZA also supports multi-field types** — `[ValueObject]` on a `partial class` or `partial struct` with any number of fields — which Vogen does not.
-
-Full methodology and analysis: [docs/performance.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md)
-
-## Features
-
-- Zero-allocation `Equals`, `GetHashCode`, `==` and `!=` — no iterator state machine, no boxing
-- Works on existing `partial class` and `partial struct` — no refactoring required
-- Can inherit from non-record base classes
-- Fine-grained member control with `[EqualityMember]` (opt-in) and `[IgnoreEqualityMember]` (opt-out)
-- No extra generated members — no `with`, no `Deconstruct`, no `EqualityContract`
-- Null-safe comparison for nullable reference type properties
-- `HashCode.Combine` for ≤8 properties, incremental `HashCode.Add` for 9+
-
-## Why not just use `record`?
-
-| | `record` | `ZeroAlloc.ValueObjects` |
-|---|---|---|
-| Zero-allocation equality | ✓ | ✓ |
-| Works on existing `class`/`struct` | ✗ — forces `record` keyword | ✓ |
-| Can inherit from non-record base | ✗ | ✓ |
-| Fine-grained member control | ✗ | `[EqualityMember]` / `[IgnoreEqualityMember]` |
-| No extra generated members | ✗ — adds `EqualityContract`, `with`, deconstruct | ✓ |
-| Struct support | `record struct` | `partial struct` |
-
-## Typed identifiers
-
-`[TypedId]` is the companion attribute for strongly-typed IDs — `OrderId`, `UserId`, `MessageId`. It solves the same problem as the ValueObject attribute, but tailored for single-value identifiers with built-in generation strategies.
-
-### Basic usage
-
-```csharp
-using ZeroAlloc.ValueObjects;
-
-[TypedId(Strategy = IdStrategy.Ulid)]
-public readonly partial record struct OrderId;
-
-// Usage
-OrderId id = OrderId.New();          // monotonic ULID
-string s = id.ToString();            // "01ARZ3NDEKTSV4RRFFQ69G5FAV" — 26-char base32
-OrderId parsed = OrderId.Parse(s);   // round-trip
-```
-
-### Strategies
-
-| Strategy | Backing | Format | Use case |
-|---|---|---|---|
-| `Ulid` (default) | `Guid` | 26-char Crockford base32 | General-purpose, sortable, URL-safe |
-| `Uuid7` | `Guid` | 36-char hyphenated UUID | Time-ordered with standard UUID interop |
-| `Snowflake` | `long` | Decimal string | Distributed systems needing 64-bit IDs |
-| `Sequential` | `long` | Decimal string | Test stability only — not for production |
-
-### Assembly-level default
-
-```csharp
-[assembly: TypedIdDefault(Strategy = IdStrategy.Ulid)]
-
-[TypedId]                                       // resolves to Ulid from the assembly default
-public readonly partial record struct ProductId;
-
-[TypedId(Strategy = IdStrategy.Snowflake)]      // per-struct override
-public readonly partial record struct MessageId;
-```
-
-### Snowflake worker ID configuration
-
-Snowflake IDs encode a 10-bit worker ID so multiple processes can mint IDs concurrently without collision. Configure at startup:
-
-```csharp
-builder.Services.AddSnowflakeWorkerId(workerId: 5);
-builder.Services.AddSnowflakeWorkerId(envVar: "POD_ORDINAL", fallback: 0);
-builder.Services.AddSnowflakeWorkerId(() => ComputeWorkerIdFromHostname());
-```
-
-These publish the worker ID immediately — no host required.
-
-To derive the ID from a registered service, install `ZeroAlloc.ValueObjects.Hosting`, which adds an overload backed by a hosted service:
-
-```csharp
-builder.Services.AddSnowflakeWorkerId(sp => sp.GetRequiredService<IMachineIdProvider>().Id);
-```
-
-It lives in a separate package so the core one carries no `Microsoft.Extensions.Hosting.Abstractions` dependency. The namespace is the same, so only the package reference changes.
-
-If no provider is registered, the generated `New()` of a Snowflake-strategy ID, such as `MessageId.New()`, falls back to `ZA_SNOWFLAKE_WORKER_ID` env var, then throws `TypedIdException`.
-
-### EF Core
-
-Install `ZeroAlloc.ValueObjects.EfCore` and call the registration the generator emits for your assembly, here `MyApp`:
-
-```csharp
-protected override void ConfigureConventions(ModelConfigurationBuilder builder)
-{
-    builder.AddMyAppTypedIdConventions();
-}
-```
-
-All `[TypedId]` structs in the assembly are mapped: Guid-backed → `uniqueidentifier`/`uuid`, long-backed → `bigint`. The generated `Add{Assembly}TypedIdConventions()` calls `Properties<TId>().HaveConversion<TypedIdValueConverter<TId, TBacking>>()` for each struct by name, so it needs no reflection or assembly scan and is trim-safe and NativeAOT-safe. Each struct also gets `OrderId.AddTypedIdConvention(builder)` to register one ID. The reflection-based `builder.AddTypedIdConventions()` remains for apps that do not trim. Per-property `HasConversion` still overrides. See [EF Core integration](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/efcore.md).
-
-### Minimal API binding
-
-No setup needed — the generator emits `IParsable<T>` + `ISpanParsable<T>`, so `app.MapGet("/orders/{id}", (OrderId id) => …)` just works.
-
-### JSON
-
-Each TypedId carries `[JsonConverter]` pointing at a nested converter that reads/writes a string. Fully AOT-safe. No `JsonSerializerContext` wiring required for basic use; if you're source-generating `JsonSerializerContext`, include the TypedId types there too.
-
-### Compile-time diagnostics
-
-| ID | Severity | Meaning |
-|---|---|---|
-| `ZATI001` | Error | Incompatible strategy/backing (e.g. Snowflake + Guid) |
-| `ZATI002` | Error | Type is not `readonly partial record struct` |
-| `ZATI003` | Error | Struct body declares fields — generator owns `Value` |
-| `ZATI005` | Warning | Struct declared partial across multiple files |
-| `ZATI006` | Warning | Nested struct inside a containing type that is not `partial` |
-| `ZATI007` | Error | Struct is generic, or nested in a generic type |
-| `ZATI008` | Error | Struct is file-local |
-| `ZATI009` | Error | Struct name differs only in case from another TypedId |
-| `ZATI010` | Error | Invalid `ZeroAllocGeneratedAccessibility` MSBuild property value |
-
-`[ValueObject]` reports `ZAVO001`–`ZAVO003` for value objects it cannot generate; see [docs/diagnostics.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/diagnostics.md).
-
-### Production checklist
-
-- **Sequential is not for production**. The counter resets on process restart. Use it only in tests where deterministic IDs matter.
-- **Snowflake worker IDs must be unique across all producing processes**. `AddSnowflakeWorkerId` cannot detect duplicates. Coordinate via orchestrator ordinals (Kubernetes pod index, Nomad alloc index) or a central registry. Duplicate worker IDs silently produce colliding IDs.
-- **Clock skew matters**. Snowflake generation handles small rollbacks by pinning to the last observed millisecond, but severe skew (>5s) throws `TypedIdException`. Run NTP-synced or accept the brief unavailability.
-- **Process restart loses Sequential state but not Snowflake or ULID/UUID7 ordering**. ULID/UUID7 are globally safe to restart; Snowflake is safe if worker ID is stable across restarts.
-
-## Documentation
-
-| Page | Description |
-|------|-------------|
-| [Why this library?](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/why.md) | The problem with CFE, why not just use `record` |
-| [Installation](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/installation.md) | NuGet install, .NET version requirements |
-| [Getting Started](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/getting-started.md) | Step-by-step quickstart with core concepts |
-| [Attribute Reference](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/attributes.md) | `[ValueObject]`, `[EqualityMember]`, `[IgnoreEqualityMember]` |
-| [Member Selection](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/member-selection.md) | How properties are chosen for equality |
-| [Generated Output](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/generated-output.md) | Exact code the generator emits |
-| [Struct vs. Class](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/struct-vs-class.md) | When to use each, `ForceClass` |
-| [Nullable Properties](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/nullable-properties.md) | Null-safe comparison generation |
-| [Usage Patterns](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/patterns.md) | Dictionary keys, HashSets, LINQ, EF Core, pattern matching |
-| [Migration Guide](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/migration.md) | From CFE `ValueObject`, from manual equality |
-| [Performance](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md) | Benchmark results and how to run them |
-| [Design Decisions](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/design.md) | Trade-offs, intentional omissions |
-| [Troubleshooting](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/troubleshooting.md) | Common errors and fixes |
-| [Testing](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/testing.md) | Writing unit tests for value object equality |
-| **Examples** | |
-| [E-Commerce](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/ecommerce.md) | `ProductId`, `Money`, `ShippingAddress`, `Discount` |
-| [Finance](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/finance.md) | `Iban`, `CurrencyPair`, `AccountNumber` |
-| [HR / Identity](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/hr-identity.md) | `EmailAddress`, `EmployeeId`, `FullName` |
-| [Geospatial](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/geospatial.md) | `Coordinates`, `GeoRegion` |
-| [Scheduling](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/examples/scheduling.md) | `DateRange`, `TimeSlot` |
-
-## License
-
-MIT
+- Documentation: [valueobjects.zeroalloc.net](https://valueobjects.zeroalloc.net). Good starting points: [why not just use `record`](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/why.md), [typed IDs](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/index.md), the [production checklist for IDs](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/production.md) and the diagnostics reference for [value objects](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/diagnostics.md) and [typed IDs](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/diagnostics.md).
+- Moving from CSharpFunctionalExtensions or hand-written equality: [migration guide](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/migration.md). Release history: [CHANGELOG.md](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/CHANGELOG.md).
+- Related packages: [ZeroAlloc.Mapping](https://github.com/ZeroAlloc-Net/ZeroAlloc.Mapping), [ZeroAlloc.Results](https://github.com/ZeroAlloc-Net/ZeroAlloc.Results), [ZeroAlloc.Serialisation](https://github.com/ZeroAlloc-Net/ZeroAlloc.Serialisation).
+- Issues and pull requests are welcome on [GitHub](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues).
+- MIT licensed. See [LICENSE](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/LICENSE).
