@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.1...v2.2.2) (2026-10-16)
+
+
+### Documentation
+
+* rewrite the readme as a product page ([#222](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/222)) ([dbef2f5](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/dbef2f52f69eceda4efc0af41a3050770522691c))
+
 ## [2.2.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.0...v2.2.1) (2026-10-15)
 
 
