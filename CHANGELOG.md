@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.3...v2.2.4) (2026-10-21)
+
+
+### Documentation
+
+* re-measure benchmarks with three pinned launches and publish same-run ratios ([#240](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/240)) ([2ea9f1a](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/2ea9f1aa0f21cf0989c07a662d2e80898eae0d41))
+
 ## [2.2.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.2...v2.2.3) (2026-10-21)
 
 
