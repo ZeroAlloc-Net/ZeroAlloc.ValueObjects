@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.4...v2.2.5) (2026-10-21)
+
+
+### Bug Fixes
+
+* compile single-member value objects over Guid and TimeSpan ([#242](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/242)) ([7934c80](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/7934c8092a29c56f4fb3f29235a80c5f9294a48b)), closes [#236](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/236)
+
 ## [2.2.4](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.3...v2.2.4) (2026-10-21)
 
 
