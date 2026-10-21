@@ -15,7 +15,8 @@ namespace ZeroAlloc.ValueObjects;
 /// <para>
 /// Generation is lock-free: a packed <c>(lastMs, lastSeq)</c> tuple is updated via
 /// <see cref="Interlocked.CompareExchange(ref long,long,long)"/>. If the per-millisecond
-/// 12-bit sequence is exhausted, the call spin-waits until the next millisecond.
+/// 12-bit sequence is exhausted, the call spins and yields until the next millisecond; it
+/// never sleeps, because a sleep on Windows lasts a whole 15.6 ms timer tick.
 /// </para>
 /// <para>
 /// Clock rollback is handled defensively by continuing to increment the sequence at
@@ -93,20 +94,8 @@ public static class SnowflakeCore
                 //                so ids remain monotonic across transient NTP adjustments.
                 if (lastSeq >= MaxSequence)
                 {
-                    // Sequence exhausted in this ms — busy-wait for next ms, but bounded.
-                    long waitUntil = lastMs;
-                    int startTicks = Environment.TickCount;
-                    int budget = MaxSpinWaitMs;
-                    var spinner = default(SpinWait);
-                    while (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - Epoch <= waitUntil)
-                    {
-                        if (Environment.TickCount - startTicks > budget)
-                            throw new TypedIdException(
-                                $"Snowflake generation stalled for {budget}ms waiting for the " +
-                                "clock to advance past a previous id's millisecond. Check for " +
-                                "severe clock skew.");
-                        spinner.SpinOnce();
-                    }
+                    // Sequence exhausted in this ms — wait for the next ms, but bounded.
+                    WaitForClockPast(lastMs);
                     continue;
                 }
                 newMs = lastMs;
@@ -120,6 +109,31 @@ public static class SnowflakeCore
                 return (newMs << TimestampShift) | ((long)workerId << WorkerShift) | newSeq;
             }
             // CAS failed — another thread advanced the state; retry.
+        }
+    }
+
+    private static void WaitForClockPast(long lastMs)
+    {
+        int startTicks = Environment.TickCount;
+        int budget = MaxSpinWaitMs;
+        var spinner = default(SpinWait);
+        while (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - Epoch <= lastMs)
+        {
+            if (Environment.TickCount - startTicks > budget)
+                throw new TypedIdException(
+                    $"Snowflake generation stalled for {budget}ms waiting for the " +
+                    "clock to advance past a previous id's millisecond. Check for " +
+                    "severe clock skew.");
+
+            // SpinWait.SpinOnce falls back to Thread.Sleep(1) after a few dozen iterations.
+            // On Windows that sleeps a whole timer tick, 15.6 ms by default, so a burst that
+            // exhausts the sequence ran at about 300 ids per ms instead of 4096. Yield
+            // instead of sleeping: after an exhausted sequence the wait is the rest of one
+            // millisecond.
+            if (spinner.NextSpinWillYield)
+                Thread.Yield();
+            else
+                spinner.SpinOnce();
         }
     }
 
