@@ -15,53 +15,78 @@ ZeroAlloc.ValueObjects is benchmarked against two distinct competitor sets:
 1. **Multi-field value objects** — `record`, `record struct`, and `CSharpFunctionalExtensions.ValueObject` on a two-property `Money(decimal Amount, string Currency)` type.
 2. **Single-primitive wrapped IDs** — `Vogen` (the other source-generator value-object library) on a single-int wrapped type — the surface Vogen is designed for.
 
-Benchmarks run with BenchmarkDotNet v0.13.12, .NET 9.0.15, on Windows 11.
+Measured 2026-10-21 on an otherwise idle machine:
+
+```
+BenchmarkDotNet v0.15.8, Windows 11 (10.0.26300.9711)
+12th Gen Intel Core i9-12900HK 2.50GHz, 1 CPU, 20 logical and 14 physical cores
+.NET SDK 10.0.402
+  [Host] : .NET 10.0.13 (10.0.13, 10.0.1326.50504), X64 RyuJIT x86-64-v3
+```
+
+> Allocations are exact. Speed is shown as same-run ratios; absolute timings are not published.
+
+Every benchmark ran out of process in three launches, pinned to two performance cores. Ratios
+come from one run, with the lowest and highest of the three launches in brackets.
+CSharpFunctionalExtensions 3.7.0, Vogen 8.0.7.
 
 ### Multi-field equality (Money(decimal, string))
 
-| Method | Mean | Allocated |
-|---|---:|---:|
-| `CFE_Equals` | 45.2 ns | 96 B |
-| `Record_Equals` | 3.1 ns | 0 B |
-| `RecordStruct_Equals` | 2.8 ns | 0 B |
-| **`ZeroAlloc_Equals`** | **3.1 ns** | **0 B** |
-| **`ZeroAllocStruct_Equals`** | **2.8 ns** | **0 B** |
-| `CFE_GetHashCode` | 38.7 ns | 88 B |
-| `Record_GetHashCode` | 2.4 ns | 0 B |
-| `RecordStruct_GetHashCode` | 2.2 ns | 0 B |
-| **`ZeroAlloc_GetHashCode`** | **2.4 ns** | **0 B** |
-| **`ZeroAllocStruct_GetHashCode`** | **2.2 ns** | **0 B** |
+Each row's time relative to `ZeroAlloc_Equals`, the generated class:
 
-ZA.ValueObjects matches `record` / `record struct` exactly. CFE allocates ~90 B per equality call.
+| Method | Ratio | Launch range | Allocated |
+|---|---:|---:|---:|
+| `CFE_Equals` | 443.75 | 438.40–448.26 | 144 B |
+| `Record_Equals` | 1.10 | 1.05–1.21 | 0 B |
+| `RecordStruct_Equals` | 1.00 | 0.91–1.09 | 0 B |
+| **`ZeroAlloc_Equals`** | **1.00** | | **0 B** |
+| **`ZeroAllocStruct_Equals`** | **0.94** | 0.91–1.01 | **0 B** |
+
+Each row's time relative to `ZeroAlloc_GetHashCode`:
+
+| Method | Ratio | Launch range | Allocated |
+|---|---:|---:|---:|
+| `CFE_GetHashCode` | 0.12 ¹ | 0.11–0.15 | 0 B ¹ |
+| `Record_GetHashCode` | 0.89 | 0.85–0.93 | 0 B |
+| `RecordStruct_GetHashCode` | 0.45 | 0.45–0.45 | 0 B |
+| **`ZeroAlloc_GetHashCode`** | **1.00** | | **0 B** |
+| **`ZeroAllocStruct_GetHashCode`** | **0.86** | 0.85–0.87 | **0 B** |
+
+¹ CSharpFunctionalExtensions caches the hash code in the instance on the first call, and the benchmark calls `GetHashCode` on the same instance every time, so this row measures reading that cache. The first call on each instance computes the hash and allocates 72 B, measured per thread with `GC.GetAllocatedBytesForCurrentThread()` over 100,000 fresh instances.
+
+`Equals` runs at parity with `record` and `record struct` and is 444 times as fast as CSharpFunctionalExtensions', which allocates 144 B per call. `GetHashCode` takes longer than a record's: the generator emits `System.HashCode.Combine`, which mixes the fields more thoroughly than the multiply-add a record emits. On the class that costs 1.12 times a record's hash; on the struct, 1.9 times a record struct's.
 
 ### Single-int wrapped IDs vs Vogen
 
 <!-- BENCH:START -->
-_Last refreshed: 2026-05-18_
+_Last refreshed: 2026-10-21_
 
-| Operation | Vogen | ZA.ValueObjects | Winner |
-|---|---:|---:|---|
-| `From(value)` | 4.66 ns | **0.39 ns** | **ZA 12× faster** |
-| `Equals` (equal) | 1.15 ns | **0.09 ns** | **ZA 13× faster** |
-| `Equals` (not equal) | 0.31 ns | **0.02 ns** | **ZA 15× faster** |
-| `GetHashCode` | 0.03 ns | 0.42 ns | parity (both in BDN ZeroMeasurement zone) |
-| `ToString` | 6.40 ns | **3.52 ns** | **ZA 1.8× faster** |
+| Operation | Vogen | ZA.ValueObjects |
+|---|---:|---:|
+| `From(value)` | below resolution | below resolution |
+| `Equals` (equal) | below resolution | below resolution |
+| `Equals` (not equal) | below resolution | below resolution |
+| `GetHashCode` | below resolution | below resolution |
+| `ToString` | 1.00 | 1.09 (0.90–1.42) |
 
-Both libraries are 0 B on every row. For `ToString` that holds only because the benchmark formats 42, and .NET caches the strings of small integers; formatting a larger value returns a new string. ZA wins the hot-path operations (`From`, `Equals`) by a wide margin — Vogen's `From` pays validation overhead even when validation succeeds. `GetHashCode` is effectively a tie (both rows sit in BDN's ZeroMeasurement zone — "indistinguishable from empty method"). `ToString` is now ZA's win after the single-property generator emit was aligned: the generator emits `Value.ToString(CultureInfo.InvariantCulture)` directly instead of the previous record-wrapped `$"TypeName {{ Value = {Value} }}"` interpolation.
+Both libraries allocate 0 B on every row. For `ToString` that holds only because the benchmark formats 42, and .NET caches the strings of small integers; formatting a larger value returns a new string.
 
-**The trade-off**: ZA optimises construction, equality, and now `ToString` and hashing alongside Vogen. Vogen's narrower wrapping (single primitive) and ZA's broader surface (multi-field, custom types, EF Core converters) make them complementary choices — pick by feature surface, not raw single-int benchmark numbers.
+Every row except `ToString` takes well under a nanosecond for both libraries, below what BenchmarkDotNet resolves: the JIT reduces wrapping, comparing or hashing a single `int` to almost nothing, so no ratio is given. `ToString` is at parity within the launch spread. The May 2026 capture reported ZeroAlloc 12–15 times faster on `From` and `Equals`; those ratios came from sub-nanosecond figures and do not hold up with three pinned launches.
+
+**The trade-off**: on a single wrapped primitive the two libraries perform the same. Vogen's narrower wrapping (single primitive) and ZA's broader surface (multi-field, custom types, EF Core converters) make them complementary choices — pick by feature surface, not raw single-int benchmark numbers.
 
 History: the previous single-property `ToString` allocated ~72 B per call and `GetHashCode` was ~30× slower than Vogen, both fixed in ZeroAlloc.ValueObjects v1.7 by emitting bare `Value.ToString(InvariantCulture)` / `Value.GetHashCode()` for 1-property `[ValueObject]` types. Multi-property types are unchanged.
 <!-- BENCH:END -->
 
 ### Multi-field is a ZA-only feature
 
-The biggest API difference: **Vogen wraps a single primitive**, while ZA.ValueObjects' `[ValueObject]` supports any number of fields of any types. The CFE/record/record-struct row above shows ZA at parity with the language-built-in alternatives for multi-field types; Vogen has no equivalent surface.
+The biggest API difference: **Vogen wraps a single primitive**, while ZA.ValueObjects' `[ValueObject]` supports any number of fields of any types. The CFE/record/record-struct rows above show ZA at parity with the language-built-in alternatives on multi-field equality; Vogen has no equivalent surface.
 
 ## Why CFE allocates
 
 ```csharp
-// Each call allocates: iterator state machine + boxed value types
+// Each Equals enumerates both sides: two iterator objects + two boxed decimals, 144 B.
+// GetHashCode enumerates once and caches the result in the instance, 72 B on first call.
 protected override IEnumerable<IComparable> GetEqualityComponents()
 {
     yield return Amount;    // decimal → boxed object  (heap)
@@ -86,5 +111,5 @@ public override int GetHashCode() =>
 ## Running benchmarks
 
 ```
-dotnet run -c Release --project benchmarks/ZeroAlloc.ValueObjects.Benchmarks
+dotnet run -c Release --project benchmarks/ZeroAlloc.ValueObjects.Benchmarks -- --filter "*" --launchCount 3
 ```

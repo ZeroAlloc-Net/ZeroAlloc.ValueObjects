@@ -11,8 +11,8 @@
 
 ## Why ZeroAlloc.ValueObjects
 
-- **Equality allocates nothing.** `Equals`, `GetHashCode`, `==` and `!=` allocate 0 B on a class and on a struct, asserted by tests. CSharpFunctionalExtensions' `ValueObject` allocates 96 B per `Equals` in the same benchmark.
-- **As fast as `record`, without rewriting your types to records.** Equality on a two-field value object runs in the same time as `record` and 14.6× faster than CSharpFunctionalExtensions. Equality on a single-`int` value object is 13× faster than Vogen's.
+- **Equality allocates nothing.** `Equals`, `GetHashCode`, `==` and `!=` allocate 0 B on a class and on a struct, asserted by tests. CSharpFunctionalExtensions' `ValueObject` allocates 144 B per `Equals` in the same benchmark.
+- **As fast as `record`, without rewriting your types to records.** Equality on a two-field value object runs in the same time as `record` and 444× faster than CSharpFunctionalExtensions. On a single-`int` value object it runs at parity with Vogen.
 - **Works under NativeAOT and trimming.** No reflection in generated code, including the EF Core converter registration. A NativeAOT smoke app is published and run in CI.
 - **Mistakes fail the build.** An ID strategy that does not fit its backing type, such as Snowflake on a `Guid`, is compile error ZATI001.
 
@@ -66,11 +66,11 @@ BenchmarkDotNet. Allocations are exact. The time column is the alternative's tim
 
 | Operation | ZeroAlloc.ValueObjects | Alternative | Alternative's time |
 |---|---:|---:|---:|
-| `Equals`, two-field `Money` | 0 B | CSharpFunctionalExtensions, 96 B | 14.6× |
-| `GetHashCode`, two-field `Money` | 0 B | CSharpFunctionalExtensions, 88 B | 16.1× |
-| `Equals`, single-`int` value object | 0 B | Vogen, 0 B | 13× |
+| `Equals`, two-field `Money` | 0 B | CSharpFunctionalExtensions, 144 B | 444× |
+| `GetHashCode`, two-field `Money` | 0 B | CSharpFunctionalExtensions, 72 B on the first call per instance, then cached | — |
+| `Equals`, single-`int` value object | 0 B | Vogen, 0 B | both below resolution |
 
-`record` and `record struct` allocate 0 B and run in the same time as ZeroAlloc.ValueObjects on the two-field rows. The [performance page](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md) has every row, including `GetHashCode`, where Vogen ties, and the [typed-ID benchmarks](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/benchmarks.md) cover generation and parsing per strategy.
+.NET 10.0.13, CSharpFunctionalExtensions 3.7.0, Vogen 8.0.7, measured 2026-10-21. `record` and `record struct` allocate 0 B and run in the same time as ZeroAlloc.ValueObjects on two-field `Equals`. The [performance page](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/performance.md) has every row, including `GetHashCode`, where `record` is faster, and the [typed-ID benchmarks](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/blob/main/docs/typed-id/benchmarks.md) cover generation and parsing per strategy.
 
 ## Learn more
 
