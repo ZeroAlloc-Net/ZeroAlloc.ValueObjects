@@ -45,6 +45,30 @@ public sealed class SnowflakeCoreTests
     }
 
     [Fact]
+    public void Next_SequenceExhausted_ResumesInTheNextMillisecond()
+    {
+        // 100 ms worth of ids at the full 4096-per-ms rate, so a fast machine exhausts the
+        // sequence in most milliseconds. The wait for the next millisecond used to end in
+        // Thread.Sleep(1), which lasts a whole 15.6 ms timer tick on Windows: ids then
+        // jumped about 15 ms at each exhaustion. The median jump ignores the odd one a
+        // preempted thread causes.
+        const int count = 409_600;
+        var ms = new long[count];
+        for (int i = 0; i < count; i++)
+            ms[i] = SnowflakeCore.Next(1) >> 22;
+
+        var gaps = new List<long>();
+        for (int i = 1; i < count; i++)
+        {
+            if (ms[i] != ms[i - 1])
+                gaps.Add(ms[i] - ms[i - 1]);
+        }
+
+        gaps.Sort();
+        Assert.True(gaps[gaps.Count / 2] <= 2, $"Median millisecond gap {gaps[gaps.Count / 2]}");
+    }
+
+    [Fact]
     public void Next_SpinWaitExceedsBudget_ThrowsTypedIdException()
     {
         // Simulate the sequence-exhaustion branch by seeding _state with a far-future
