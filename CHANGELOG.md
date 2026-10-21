@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.3](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.2...v2.2.3) (2026-10-21)
+
+
+### Bug Fixes
+
+* snowflake generation no longer sleeps a timer tick when the sequence runs out ([#238](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/238)) ([4a7d8f7](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/4a7d8f7cf6621a916027179890a1f721402eb09c))
+
 ## [2.2.2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.1...v2.2.2) (2026-10-16)
 
 
