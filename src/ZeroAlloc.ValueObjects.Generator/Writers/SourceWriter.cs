@@ -16,8 +16,14 @@ internal static class SourceWriter
         "System.UInt32", "System.UInt64", "System.UInt16", "System.SByte",
         "System.Single", "System.Double", "System.Decimal",
         "System.DateTime", "System.DateTimeOffset",
-        "System.DateOnly", "System.TimeOnly", "System.TimeSpan",
-        "System.Guid", "System.Numerics.BigInteger",
+        "System.DateOnly", "System.TimeOnly", "System.Numerics.BigInteger",
+    };
+
+    // Value types whose parameterless ToString is already culture-invariant and which have no
+    // ToString(IFormatProvider) overload, so they must not be treated as formattable.
+    private static readonly System.Collections.Generic.HashSet<string> s_invariantValueTypes = new(System.StringComparer.Ordinal)
+    {
+        "System.Guid", "System.TimeSpan",
     };
 
     private static bool IsFormattable(string typeName) => s_formattable.Contains(typeName);
@@ -28,6 +34,7 @@ internal static class SourceWriter
 
     private static bool IsValueType(string typeName)
         => IsFormattable(typeName)
+           || s_invariantValueTypes.Contains(typeName)
            || string.Equals(typeName, "bool", System.StringComparison.Ordinal)
            || string.Equals(typeName, "char", System.StringComparison.Ordinal)
            || string.Equals(typeName, "System.Boolean", System.StringComparison.Ordinal)
