@@ -21,7 +21,7 @@ Same performance as `record` — without forcing the `record` keyword on your do
 | [Why this library?](why.md) | The problem with CFE, why not just use `record` |
 | [Installation](installation.md) | NuGet install, requirements |
 | [Getting Started](getting-started.md) | Step-by-step quickstart with core concepts |
-| [Attribute Reference](attributes.md) | `[ValueObject]`, `[EqualityMember]`, `[IgnoreEqualityMember]` |
+| [Attribute Reference](attributes.md) | `[ValueObject]`, `[ValueObjectFactory]`, `[EqualityMember]`, `[IgnoreEqualityMember]` |
 | [Member Selection](member-selection.md) | How properties are chosen for equality |
 | [What Gets Generated](generated-output.md) | Exact code the generator emits |
 | [Struct vs. Class](struct-vs-class.md) | When to use each, `ForceClass` |

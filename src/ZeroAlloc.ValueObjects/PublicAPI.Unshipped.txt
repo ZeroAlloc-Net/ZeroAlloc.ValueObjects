@@ -1,1 +1,4 @@
 #nullable enable
+ZeroAlloc.ValueObjects.ValueObjectFactoryAttribute
+ZeroAlloc.ValueObjects.ValueObjectFactoryAttribute.MethodName.get -> string!
+ZeroAlloc.ValueObjects.ValueObjectFactoryAttribute.ValueObjectFactoryAttribute(string! methodName) -> void
