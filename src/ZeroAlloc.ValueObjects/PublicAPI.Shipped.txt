@@ -55,3 +55,6 @@ ZeroAlloc.ValueObjects.ValueObjectAttribute
 ZeroAlloc.ValueObjects.ValueObjectAttribute.ForceClass.get -> bool
 ZeroAlloc.ValueObjects.ValueObjectAttribute.ForceClass.set -> void
 ZeroAlloc.ValueObjects.ValueObjectAttribute.ValueObjectAttribute() -> void
+ZeroAlloc.ValueObjects.ValueObjectFactoryAttribute
+ZeroAlloc.ValueObjects.ValueObjectFactoryAttribute.MethodName.get -> string!
+ZeroAlloc.ValueObjects.ValueObjectFactoryAttribute.ValueObjectFactoryAttribute(string! methodName) -> void
