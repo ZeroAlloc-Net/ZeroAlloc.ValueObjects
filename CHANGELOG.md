@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.5...v2.3.0) (2026-10-28)
+
+
+### Features
+
+* add ValueObjectFactoryAttribute ([#250](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/250)) ([4bcf634](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/4bcf634cce751e7cf53f91ad6946eead73a6336c))
+
 ## [2.2.5](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.4...v2.2.5) (2026-10-21)
 
 
