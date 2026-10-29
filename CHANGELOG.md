@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.3.0...v2.3.1) (2026-10-29)
+
+
+### Tests
+
+* move snapshots to where TestHelpers 1.8 looks for them ([#255](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/255)) ([8388da2](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/8388da26d80a6bf2a876fbc19fb4e9bd7bdb6e02))
+
 ## [2.3.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.2.5...v2.3.0) (2026-10-28)
 
 
