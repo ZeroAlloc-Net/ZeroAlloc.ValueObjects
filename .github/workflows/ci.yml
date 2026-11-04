@@ -64,6 +64,13 @@ jobs:
       - name: Test
         run: dotnet test ZeroAlloc.ValueObjects.slnx --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --settings coverage.runsettings --results-directory TestResults
 
+      # ci-baseline coverage gate: line coverage of production code must stay at or above the
+      # floor, and codecov.yml must keep the project drop check. Runs before the upload.
+      - name: Coverage gate
+        uses: MarcelRoozekrans/ci-baseline/actions/coverage-gate@v1
+        with:
+          reports: TestResults/**/coverage.cobertura.xml
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
