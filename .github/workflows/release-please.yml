@@ -88,3 +88,34 @@ jobs:
       release-assets: true
     secrets:
       NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+
+  # A CycloneDX SBOM of the released solution, attached to the GitHub release that
+  # release-please created in the job above. Built from the release tag, so it
+  # describes exactly the released code.
+  sbom:
+    needs: release-please
+    if: needs.release-please.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+          dotnet-version: '10.0.x'
+
+      - name: Build the release
+        env:
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: dotnet build ZeroAlloc.ValueObjects.slnx -c Release -p:Version="$VERSION"
+
+      - name: Attach the SBOM to the GitHub release
+        uses: MarcelRoozekrans/ci-baseline/actions/sbom@v1
+        with:
+          solution: ZeroAlloc.ValueObjects.slnx
+          tag: ${{ needs.release-please.outputs.tag_name }}
