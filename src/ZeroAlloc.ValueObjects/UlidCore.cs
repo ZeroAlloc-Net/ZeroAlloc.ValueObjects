@@ -41,7 +41,11 @@ public static class UlidCore
     // previous call, we reuse the previous random tail incremented by one so that the
     // output remains lexicographically non-decreasing per the ULID spec's monotonic
     // factory recommendation (https://github.com/ulid/spec#monotonicity).
+#if NET9_0_OR_GREATER
+    private static readonly System.Threading.Lock MonotonicGate = new();
+#else
     private static readonly object MonotonicGate = new object();
+#endif
     private static long s_lastMs;
     private static readonly byte[] s_lastRandom = new byte[10];
 

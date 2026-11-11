@@ -26,6 +26,16 @@ internal sealed record GeneratorRun(
     private static readonly CSharpParseOptions ParseOptions =
         new CSharpParseOptions(LanguageVersion.Latest).WithPreprocessorSymbols("NET");
 
+    // ZeroAlloc.Serialisation has no net11.0 asset yet, so on net11.0 its net10.0 build is referenced and
+    // names System.Memory 10.0.0.0 next to the runtime's 11.0.0.0: the compiler unifies them and says so
+    // with CS1701/CS1702. That says nothing about the generated code this harness checks. Remove this
+    // when ZeroAlloc.Serialisation ships net11.0 (#269).
+    private static readonly KeyValuePair<string, ReportDiagnostic>[] UnificationNotices =
+    [
+        new("CS1701", ReportDiagnostic.Suppress),
+        new("CS1702", ReportDiagnostic.Suppress),
+    ];
+
     public static GeneratorRun Of(IIncrementalGenerator generator, params string[] sources) =>
         Run(generator, efCore: false, globalOptions: null, sources);
 
@@ -51,7 +61,8 @@ internal sealed record GeneratorRun(
             "GenTest",
             trees,
             References(efCore),
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable)
+                .WithSpecificDiagnosticOptions(UnificationNotices));
 
         var driver = CSharpGeneratorDriver.Create(
                 [generator.AsSourceGenerator()],

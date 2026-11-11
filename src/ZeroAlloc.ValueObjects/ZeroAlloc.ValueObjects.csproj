@@ -9,7 +9,7 @@
       ZeroAlloc.Serialisation requires netstandard2.1+, so the package
       reference below is conditional on the modern TFMs.
     -->
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net11.0</TargetFrameworks>
     <PackageId>ZeroAlloc.ValueObjects</PackageId>
     <Description>Zero-allocation source-generated ValueObject equality and strongly-typed IDs (ULID, UUIDv7, Snowflake, Sequential) for hot paths. Eliminates boxing and iterator allocations from CSharpFunctionalExtensions.ValueObject.GetEqualityComponents().</Description>
     <!-- Version is injected by CI via -p:Version=; fallback for local builds -->
