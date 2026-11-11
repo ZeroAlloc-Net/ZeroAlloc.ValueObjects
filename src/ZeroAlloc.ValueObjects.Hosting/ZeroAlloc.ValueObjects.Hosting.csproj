@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- Mirrors ZeroAlloc.ValueObjects so any consumer of the core package can add this one. -->
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net11.0</TargetFrameworks>
     <PackageId>ZeroAlloc.ValueObjects.Hosting</PackageId>
     <Description>Host-integrated Snowflake worker-id registration for ZeroAlloc.ValueObjects. Adds the AddSnowflakeWorkerId overload that resolves the worker id from the built IServiceProvider at startup. Reference this only if you need that overload — the literal, environment-variable and Func&lt;int&gt; overloads ship in ZeroAlloc.ValueObjects itself.</Description>
     <Version>0.0.0-local</Version>

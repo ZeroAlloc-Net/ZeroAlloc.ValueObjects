@@ -84,6 +84,7 @@ jobs:
       dotnet-version: |
         9.0.x
         10.0.x
+        11.0.x
       github-packages: true
       release-assets: true
       # nuget.org checks a trusted publisher against the workflow that runs the job, so the push is the

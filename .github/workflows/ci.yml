@@ -66,7 +66,7 @@ jobs:
       # file alone, hits are written only by ProcessExit handlers, and vstest kills a test
       # host that has not exited 100 ms after the run, so a module can read 0 at random.
       - name: Test
-        run: dotnet test ZeroAlloc.ValueObjects.slnx --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect "XPlat Code Coverage" --settings coverage.runsettings --results-directory TestResults
+        run: dotnet test ZeroAlloc.ValueObjects.slnx --configuration Release --no-build --verbosity normal --logger "trx;LogFilePrefix=test-results" --collect "XPlat Code Coverage" --settings coverage.runsettings --results-directory TestResults
 
       # ci-baseline coverage gate: line coverage of production code must stay at or above the
       # floor, and codecov.yml must keep the project drop check. Runs before the upload.
@@ -145,6 +145,10 @@ jobs:
 
   api-compat:
     uses: ZeroAlloc-Net/.github/.github/workflows/api-compat.yml@main
+    with:
+      dotnet-version: |
+        10.0.x
+        11.0.x
 
   # A release PR must mark everything it releases as shipped: the analyzer rules in
   # AnalyzerReleases.Unshipped.md and the API in every PublicAPI.Unshipped.txt. The

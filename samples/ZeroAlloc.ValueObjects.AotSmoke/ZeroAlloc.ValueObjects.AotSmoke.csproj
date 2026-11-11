@@ -2,11 +2,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <!--
-      Targets net9.0 to match the repo's global.json (9.0.0). .NET 9 has full
-      Native AOT support, so we don't gain anything by forcing a 10.0 SDK bump
-      here — that can happen independently when the main package moves off ns2.0.
+      Targets net11.0, the newest runtime the library and the EfCore companion build for, so the
+      AOT smoke covers the same target a current consumer gets. The Native AOT publish needs the
+      SDK in global.json.
     -->
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <!--
-      Pin the lib reference to net8.0 (the highest non-netstandard TFM in the
+      Pin the lib reference to net11.0 (the highest non-netstandard TFM in the
       multi-target list) and strip PublishAot. Without SetTargetFramework,
       MSBuild walks every TFM leg of the multi-target project — including
       netstandard2.0, which cannot evaluate PublishAot=true (NETSDK1207).
@@ -34,10 +34,10 @@
       and does NOT pass `-p:PublishAot=true` on the CLI for this reason.
     -->
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects\ZeroAlloc.ValueObjects.csproj"
-                      SetTargetFramework="TargetFramework=net8.0"
+                      SetTargetFramework="TargetFramework=net11.0"
                       UndefineProperties="PublishAot" />
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects.EfCore\ZeroAlloc.ValueObjects.EfCore.csproj"
-                      SetTargetFramework="TargetFramework=net9.0"
+                      SetTargetFramework="TargetFramework=net11.0"
                       UndefineProperties="PublishAot" />
     <ProjectReference Include="..\..\src\ZeroAlloc.ValueObjects.Generator\ZeroAlloc.ValueObjects.Generator.csproj"
                       OutputItemType="Analyzer"
