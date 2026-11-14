@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.4.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.3.1...v2.4.0) (2026-11-14)
+
+
+### Features
+
+* add net11.0 target ([#270](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/270)) ([22762fa](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/22762fab7069be7e4ffba9d462dfdd9fe59de855))
+
+
+### Documentation
+
+* add context7.json to claim the library on Context7 ([#266](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/266)) ([f5b0dca](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/f5b0dcae488590e6c151d0b343170ceb40dbb2bf))
+
 ## [2.3.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.3.0...v2.3.1) (2026-10-29)
 
 
