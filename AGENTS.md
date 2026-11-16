@@ -15,8 +15,10 @@ references), `ZeroAlloc.ValueObjects.EfCore` and `ZeroAlloc.ValueObjects.Hosting
   the test project excludes `*.verified.*` and `*.received.*` from compilation. `.gitignore` only covers
   `*.received.txt`, so delete any `*.received.cs` a failing run leaves before committing.
 - `samples/ZeroAlloc.ValueObjects.AotSmoke` is the NativeAOT smoke app, not a shipped package.
-- Tracking files are enforced: new public API goes in `src/ZeroAlloc.ValueObjects/PublicAPI.Unshipped.txt`
-  (RS0016 and RS0017 are errors), new diagnostics in the generator's `AnalyzerReleases.Unshipped.md`.
+- Tracking files are enforced: new public API of the core package goes in
+  `src/ZeroAlloc.ValueObjects/PublicAPI.Unshipped.txt` (RS0016 and RS0017 are errors). Only the core
+  package tracks its API; a companion package symbol, such as one in `Hosting`, does not go there.
+  New diagnostics go in the generator's `AnalyzerReleases.Unshipped.md`.
   Do not move entries to the `Shipped` files by hand: the release PR does that.
 
 ## Build and test
@@ -82,8 +84,10 @@ does not carry it (`ZAVERSION002`). Every command that builds before a `--no-bui
   guarded by `#if NETSTANDARD2_1_OR_GREATER || NET` and absent on `netstandard2.0`. Check both legs.
 - `Microsoft.Extensions.Hosting.Abstractions` must not come back into the core package (it dragged
   five dependencies into every consumer); the one overload that needs it lives in the `Hosting` package.
-- `ZeroAllocGeneratedAccessibility` is a compiler-visible MSBuild property delivered by both
-  `build/` and `buildTransitive/` props files. A change to one needs the same change in the other.
+- `ZeroAllocGeneratedAccessibility` is a compiler-visible MSBuild property declared in three props files:
+  the core package's `build/` and `buildTransitive/` copies and
+  `src/ZeroAlloc.ValueObjects.Generator/build/ZeroAlloc.ValueObjects.Generator.props`, which has no
+  `buildTransitive/` counterpart. A change to one needs the same change in all three.
 - Diagnostic IDs are `ZATI0xx` (typed IDs) and `ZAVO0xx` (value objects), listed in
   `AnalyzerReleases.*.md`; a new one needs a docs entry in `docs/diagnostics.md` or `docs/typed-id/diagnostics.md`.
 - Commit scopes are limited by `.commitlintrc.yml`: `core`, `generator`, `benchmarks`, `ci`, `deps`.
