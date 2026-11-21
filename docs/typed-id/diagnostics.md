@@ -229,7 +229,7 @@ Under `TreatWarningsAsErrors` this warning fails the build.
 
 **Error.** `[TypedId] struct 'App.Key<TEntity>' is not generated because 'App.Key<TEntity>' is generic; a JsonConverterAttribute cannot name a converter for an open generic type`.
 
-Every TypedId carries `[JsonConverter(typeof(Id.TypedIdJsonConverter))]`. For a generic struct, or a struct nested in a generic type, the converter is generic too. An attribute cannot name `Key<TEntity>.TypedIdJsonConverter`, and System.Text.Json cannot create the open form `Key<>.TypedIdJsonConverter`: it throws at runtime on .NET 8, 9 and 10. So the generator reports ZATI007 and generates nothing for the struct. When the struct itself is not generic, the message names the generic containing type.
+Every TypedId carries `[JsonConverter(typeof(Id.TypedIdJsonConverter))]`. For a generic struct, or a struct nested in a generic type, the converter is generic too. An attribute cannot name `Key<TEntity>.TypedIdJsonConverter`, only the open form `Key<>.TypedIdJsonConverter`. System.Text.Json on .NET 10 cannot create that open form and throws at runtime. Reflection-based System.Text.Json on .NET 11 closes it over the type arguments, but the package also supports .NET 10, so the generator reports ZATI007 and generates nothing for the struct. When the struct itself is not generic, the message names the generic containing type.
 
 ### Example — offending code
 
