@@ -13,8 +13,8 @@ internal static class TypedIdParser
     // "Partial" model: values as seen on the struct's [TypedId] attribute (may be 0 = unset).
     // Full resolution happens in Resolve() combining with the assembly-level default.
     // Carries any diagnostics detected while parsing so the source-output stage can report
-    // them. File is null when the struct is not generated, for an error or for a
-    // blocking warning such as ZATI006; only a struct with a File takes part in ZATI009.
+    // them. File is null when the struct is not generated because of an error; only a struct
+    // with a File takes part in ZATI009.
     //
     // FullyQualifiedName and ReachableFromAssembly serve the EF Core conventions method, which
     // names every generated struct that code at namespace level in the assembly can see.
@@ -65,8 +65,7 @@ internal static class TypedIdParser
             DetectIncompatibleBacking(attr, identifier, strategy, backing, diagnostics, ct);
         }
 
-        // An error suppresses emission, and so does ZATI006, a warning: the containing type
-        // cannot be reopened. ZATI005 does not.
+        // An error suppresses emission; the warning ZATI005 does not.
         var generated = blocked is null;
         foreach (var d in diagnostics)
         {

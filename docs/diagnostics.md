@@ -12,7 +12,7 @@ The `[ValueObject]` generator emits three diagnostic IDs, `ZAVO001` through `ZAV
 
 | ID | Severity | Meaning | Fix |
 |---|---|---|---|
-| [ZAVO001](#zavo001) | Warning | Nested value object inside a containing type that is not `partial` | Make every containing type `partial` |
+| [ZAVO001](#zavo001) | Error | Nested value object inside a containing type that is not `partial` | Make every containing type `partial` |
 | [ZAVO002](#zavo002) | Error | File-local value object | Remove the `file` modifier |
 | [ZAVO003](#zavo003) | Error | Value object name differs only in case from another value object | Rename one of them |
 
@@ -22,11 +22,11 @@ A value object can be declared anywhere a class or struct can: at the top of a n
 
 ## ZAVO001
 
-**Warning.** `Value object 'App.Outer.Money' is not generated because its containing type 'App.Outer' is not partial`.
+**Error.** `Value object 'App.Outer.Money' is not generated because its containing type 'App.Outer' is not partial`.
 
 A nested value object is generated inside partial declarations of every containing type, so each of them must be `partial`. When one is not, the generator reports ZAVO001 on the value object and generates nothing for it. The message names the outermost containing type that is not `partial`.
 
-Nothing is generated, so the value object keeps reference equality, and its `==` operator does not exist. Earlier versions generated such a value object into a new top-level type with its simple name, which did not compile.
+Nothing is generated, so the value object would keep reference equality and have no `==` operator. Before 3.0 ZAVO001 was a warning, and a build that ignored it shipped such a value object without its generated equality; it is an error since 3.0. Versions before 2.0.12 generated such a value object into a new top-level type with its simple name, which did not compile.
 
 ### Example — offending code
 

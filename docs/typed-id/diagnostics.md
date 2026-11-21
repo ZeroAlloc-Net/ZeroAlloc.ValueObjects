@@ -21,7 +21,7 @@ A TypedId can be declared at the top of a namespace, in the global namespace, or
 | [ZATI003](#zati003) | Error | Struct body declares fields or properties | The first field or property | Remove the declarations — generator owns `Value` |
 | [ZATI004](#zati004) | — | Reserved (enforced by `AttributeUsage`) | — | N/A |
 | [ZATI005](#zati005) | Warning | Struct declared `partial` across multiple files | The name in the declaration that carries `[TypedId]` | Consolidate into one file |
-| [ZATI006](#zati006) | Warning | Nested struct inside a containing type that is not `partial` | The name in the declaration that carries `[TypedId]` | Make every containing type `partial` |
+| [ZATI006](#zati006) | Error | Nested struct inside a containing type that is not `partial` | The name in the declaration that carries `[TypedId]` | Make every containing type `partial` |
 | [ZATI007](#zati007) | Error | Struct is generic, or nested in a generic type | The name in the declaration that carries `[TypedId]` | Use a non-generic struct outside generic types |
 | [ZATI008](#zati008) | Error | Struct is file-local, or nested in a file-local type | The name in the declaration that carries `[TypedId]` | Remove the `file` modifier |
 | [ZATI009](#zati009) | Error | Struct name differs only in case from another TypedId | The name in the declaration that carries `[TypedId]` | Rename one of them |
@@ -195,9 +195,9 @@ public readonly partial record struct OrderId { /* extras */ }
 
 ## ZATI006
 
-**Warning.** `[TypedId] struct 'App.Orders.Id' is not generated because its containing type 'App.Orders' is not partial`.
+**Error.** `[TypedId] struct 'App.Orders.Id' is not generated because its containing type 'App.Orders' is not partial`.
 
-A nested TypedId is generated inside partial declarations of every containing type, so each of them must be `partial`. When one is not, the generator reports ZATI006 and generates nothing for the struct. The message names the outermost containing type that is not `partial`. Earlier versions generated such a struct into a new top-level type with its simple name.
+A nested TypedId is generated inside partial declarations of every containing type, so each of them must be `partial`. When one is not, the generator reports ZATI006 and generates nothing for the struct. The message names the outermost containing type that is not `partial`. Before 3.0 ZATI006 was a warning, so a build that ignored it compiled without the struct's generated members; it is an error since 3.0. Versions before 2.0.12 generated such a struct into a new top-level type with its simple name.
 
 ### Example — offending code
 
