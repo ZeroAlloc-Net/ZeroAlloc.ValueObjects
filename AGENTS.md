@@ -90,6 +90,12 @@ does not carry it (`ZAVERSION002`). Every command that builds before a `--no-bui
   `buildTransitive/` counterpart. A change to one needs the same change in all three.
 - Diagnostic IDs are `ZATI0xx` (typed IDs) and `ZAVO0xx` (value objects), listed in
   `AnalyzerReleases.*.md`; a new one needs a docs entry in `docs/diagnostics.md` or `docs/typed-id/diagnostics.md`.
+- The generator references `Microsoft.CodeAnalysis.CSharp` 5.0.0, the compiler of SDK band 10.0.1xx,
+  the oldest supported SDK. Raise it only together with the documented minimum SDK: a compiler older
+  than the Roslyn the generator references skips it with `CS9057`, and nothing is generated.
+  `renovate.json` holds it below 5.1, and the CI `sdk10-consumer` job builds a consumer of the packed
+  package with SDK 10.0.1xx (`tests/ZeroAlloc.ValueObjects.Sdk10Smoke`). The test project may use a
+  newer Roslyn.
 - Commit scopes are limited by `.commitlintrc.yml`: `core`, `generator`, `benchmarks`, `ci`, `deps`.
 
 <!-- org-core:start sha256=8faf417fa86f11bd8ad9bc98dfa4683fba44e440291e84c6cb9b0ec3ca0c0e7e (generated from docker-nuc scripts/agents-md/org-core-zeroalloc.md; do not edit here) -->

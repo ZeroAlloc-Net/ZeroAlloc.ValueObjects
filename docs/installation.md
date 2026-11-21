@@ -21,11 +21,11 @@ The package ships both the marker attributes and the Roslyn source generator in 
 | Requirement | Minimum |
 |---|---|
 | Target framework | `net10.0` or `net11.0` |
-| .NET SDK | 10.0 or later |
+| .NET SDK | 10.0.100 or later, or Visual Studio 2026 |
 
 The packages ship `net10.0` and `net11.0` assemblies; `ZeroAlloc.ValueObjects.EfCore` and `ZeroAlloc.ValueObjects.Hosting` target the same two. Version 2.x also ran on `netstandard2.0`, `netstandard2.1`, .NET 8 and .NET 9; a project on one of those stays on 2.x.
 
-The source generator itself targets `netstandard2.0`, as Roslyn requires; that is the compiler's target, not your project's.
+The source generator itself targets `netstandard2.0`, as Roslyn requires; that is the compiler's target, not your project's. It is built against Roslyn 5.0, the compiler of the .NET 10.0.1xx SDK, so every .NET 10 and .NET 11 SDK loads it. Version 2.4.1 referenced Roslyn 5.9, which .NET 10 SDK bands before 10.0.4xx skip with warning CS9057, so nothing was generated there.
 
 ## Verifying the install
 
