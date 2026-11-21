@@ -29,23 +29,11 @@ public static class UlidCore
     // 128 bits at 5 bits per character, rounded up.
     private const int Base32Length = 26;
 
-    // netstandard2.0 has no RandomNumberGenerator.Fill(Span<byte>) overload; we keep a
-    // single shared cryptographic RNG (documented thread-safe) and a per-thread 10-byte
-    // scratch buffer so the random-fill path allocates nothing after the first call.
-    private static readonly RandomNumberGenerator Rng = RandomNumberGenerator.Create();
-
-    [ThreadStatic]
-    private static byte[]? t_randomScratch;
-
     // Monotonicity state: when the wall-clock timestamp has not advanced past the
     // previous call, we reuse the previous random tail incremented by one so that the
     // output remains lexicographically non-decreasing per the ULID spec's monotonic
     // factory recommendation (https://github.com/ulid/spec#monotonicity).
-#if NET9_0_OR_GREATER
     private static readonly System.Threading.Lock MonotonicGate = new();
-#else
-    private static readonly object MonotonicGate = new object();
-#endif
     private static long s_lastMs;
     private static readonly byte[] s_lastRandom = new byte[10];
 
@@ -60,13 +48,12 @@ public static class UlidCore
     {
         Span<byte> buffer = stackalloc byte[16];
         long ms = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        byte[] scratch = t_randomScratch ??= new byte[10];
 
         lock (MonotonicGate)
         {
             if (ms > s_lastMs)
             {
-                Rng.GetBytes(scratch);
+                RandomNumberGenerator.Fill(s_lastRandom);
                 s_lastMs = ms;
             }
             else
@@ -76,10 +63,10 @@ public static class UlidCore
                 // the resulting 128-bit value is strictly greater than the previous one.
                 ms = s_lastMs;
                 IncrementBigEndian(s_lastRandom);
-                Buffer.BlockCopy(s_lastRandom, 0, scratch, 0, 10);
             }
 
-            Buffer.BlockCopy(scratch, 0, s_lastRandom, 0, 10);
+            // 80-bit random (or incremented previous random) in bytes 6-15.
+            s_lastRandom.CopyTo(buffer.Slice(6, 10));
         }
 
         // 48-bit Unix timestamp, big-endian in bytes 0-5.
@@ -89,9 +76,6 @@ public static class UlidCore
         buffer[3] = (byte)(ms >> 16);
         buffer[4] = (byte)(ms >> 8);
         buffer[5] = (byte)ms;
-
-        // 80-bit random (or incremented previous random) in bytes 6-15.
-        scratch.AsSpan().CopyTo(buffer.Slice(6, 10));
 
         return GuidBigEndianHelpers.BigEndianBytesToGuid(buffer);
     }

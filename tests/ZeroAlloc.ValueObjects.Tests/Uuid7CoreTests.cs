@@ -34,6 +34,21 @@ public sealed class Uuid7CoreTests
         }
     }
 
+    [Fact]
+    public void WriteBigEndianBytes_WritesTheCanonicalByteOrder()
+    {
+        Span<byte> bytes = stackalloc byte[16];
+        Uuid7Core.WriteBigEndianBytes(new Guid("01563e3a-b5d3-7676-8c61-efb99302bd5b"), bytes);
+        Assert.Equal(Convert.FromHexString("01563E3AB5D376768C61EFB99302BD5B"), bytes.ToArray());
+    }
+
+    [Fact]
+    public void WriteBigEndianBytes_ThrowsWhenDestinationIsShorterThan16Bytes()
+    {
+        var bytes = new byte[15];
+        Assert.Throws<ArgumentOutOfRangeException>(() => Uuid7Core.WriteBigEndianBytes(Guid.NewGuid(), bytes));
+    }
+
     private static int MemoryCompare(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
     {
         for (int i = 0; i < a.Length && i < b.Length; i++)

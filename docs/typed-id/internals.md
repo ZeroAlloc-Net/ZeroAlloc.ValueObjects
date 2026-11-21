@@ -55,7 +55,7 @@ The generated file for an `OrderId` (Ulid + Guid) contains, in order:
 3. For a nested struct, a partial declaration of each containing type, outermost first. Then the struct's partial declaration, with its declared accessibility, carrying `[JsonConverter(typeof(OrderId.TypedIdJsonConverter))]` and the interface list.
 4. `public Guid Value { get; }` and the constructor.
 5. `New()`, `Parse`/`TryParse` (both `string` and `ReadOnlySpan<char>` overloads), `ToString()`, `CompareTo`.
-6. The nested `public sealed class TypedIdJsonConverter : JsonConverter<OrderId>`, and on modern target frameworks an internal `TypedIdSerializer` for ZeroAlloc.Serialisation.
+6. The nested `public sealed class TypedIdJsonConverter : JsonConverter<OrderId>`, and an internal `TypedIdSerializer` for ZeroAlloc.Serialisation.
 
 For Int64-backed strategies the shape is identical with `long Value` and decimal-string parsing. Neither variant emits `Equals` / `GetHashCode` / `==` / `!=` — `record struct` gives those for free over the single `Value` field.
 
@@ -83,9 +83,9 @@ public static string ToBase32(Guid value)
 
 `TryParse` goes the other direction with no allocations at all — the caller's `ReadOnlySpan<char>` stays on the stack, decoded into the outgoing `Guid`.
 
-### `[ThreadStatic]` scratch for RNG
+### Random bytes straight into the stack buffer
 
-`RandomNumberGenerator.Fill` itself is already alloc-free. ULID / UUIDv7 generation uses a thread-static buffer only when assembling the full 128-bit value before packing into a `Guid`.
+`RandomNumberGenerator.Fill` writes into a span and allocates nothing. UUIDv7 generation fills bytes 6-15 of its `stackalloc` buffer directly, with no lock. ULID generation fills the 10-byte random tail it keeps for monotonicity, under the same lock that guards that tail, and copies it into the stack buffer. Neither keeps a per-thread scratch array.
 
 ### `Interlocked.CompareExchange` for lock-free state
 

@@ -27,15 +27,6 @@ namespace ZeroAlloc.ValueObjects;
 /// </remarks>
 public static class Uuid7Core
 {
-    // netstandard2.0 has no RandomNumberGenerator.Fill(Span<byte>) overload; we keep
-    // a single shared cryptographic RNG (documented thread-safe) and a per-thread
-    // 10-byte scratch buffer so the random-fill path allocates nothing after the
-    // first call per thread.
-    private static readonly RandomNumberGenerator Rng = RandomNumberGenerator.Create();
-
-    [ThreadStatic]
-    private static byte[]? t_randomScratch;
-
     /// <summary>
     /// Generates a new UUIDv7-shaped <see cref="Guid"/>. The first 6 bytes
     /// (big-endian) encode the current Unix-millisecond timestamp; the remaining
@@ -59,15 +50,7 @@ public static class Uuid7Core
 
         // 80 random bits in bytes 6-15; the version and variant nibbles are
         // overwritten below.
-        byte[] scratch = t_randomScratch ??= new byte[10];
-        lock (Rng)
-        {
-            Rng.GetBytes(scratch);
-        }
-        for (int i = 0; i < 10; i++)
-        {
-            buffer[6 + i] = scratch[i];
-        }
+        RandomNumberGenerator.Fill(buffer.Slice(6, 10));
 
         // Version nibble 0x7 in the high nibble of byte 6 (RFC 9562 §4.2).
         buffer[6] = (byte)((buffer[6] & 0x0F) | 0x70);
