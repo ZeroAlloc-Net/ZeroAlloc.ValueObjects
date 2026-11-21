@@ -171,7 +171,6 @@ private readonly partial record struct Secret :
         }
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET
     internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<Secret>
     {
         public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, Secret value)
@@ -189,6 +188,5 @@ private readonly partial record struct Secret :
             return new Secret(new global::System.Guid(buffer.Slice(0, 16)));
         }
     }
-#endif
 }
 }

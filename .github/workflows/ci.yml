@@ -93,7 +93,7 @@ jobs:
 
   aot-smoke:
     runs-on: ubuntu-latest
-    # The repo's global.json pins the .NET 9 SDK, which has full Native AOT
+    # The repo's global.json pins the .NET 11 SDK, which has full Native AOT
     # support. This job publishes the sample with PublishAot=true and runs the
     # binary — it catches IL2026/IL3050 regressions in generator-emitted code
     # that the xUnit suite cannot.

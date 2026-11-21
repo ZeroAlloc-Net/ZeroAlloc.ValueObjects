@@ -23,9 +23,9 @@ references), `ZeroAlloc.ValueObjects.EfCore` and `ZeroAlloc.ValueObjects.Hosting
 
 ## Build and test
 
-SDK: `global.json` pins 11.0.100 with `rollForward: latestFeature`. Tests target `net9.0` and `net11.0`,
-so both the .NET 9 and the .NET 11 runtime must be installed. The `EfCore` project also targets `net8.0`
-and `Hosting` and the core package also target `netstandard2.0`, `netstandard2.1` and `net8.0`.
+SDK: `global.json` pins 11.0.100 with `rollForward: latestFeature`. The core, `EfCore` and `Hosting`
+packages and the tests target `net10.0` and `net11.0`, so both the .NET 10 and the .NET 11 runtime must
+be installed. The generator stays on `netstandard2.0`, as Roslyn requires.
 `TreatWarningsAsErrors` is on for every project.
 
 CI `build` job in `.github/workflows/ci.yml`:
@@ -63,7 +63,7 @@ dotnet run --project benchmarks/ZeroAlloc.ValueObjects.Benchmarks -c Release --n
 Fast inner loop, one test class on one framework (run locally, passes):
 
 ```bash
-dotnet test tests/ZeroAlloc.ValueObjects.Tests -c Release -f net9.0 --filter "FullyQualifiedName~TypedIdAllocationTests"
+dotnet test tests/ZeroAlloc.ValueObjects.Tests -c Release -f net10.0 --filter "FullyQualifiedName~TypedIdAllocationTests"
 ```
 
 Packing: a pack fails unless a version is supplied (`ZAVERSION001`), and fails when the built assembly
@@ -80,8 +80,8 @@ does not carry it (`ZAVERSION002`). Every command that builds before a `--no-bui
 - The generator targets `netstandard2.0` with `EnforceExtendedAnalyzerRules`: no APIs missing from
   that target, and no work in the incremental pipeline that breaks caching. The incrementality tests
   (`*IncrementalityTests`) guard this.
-- `ZeroAlloc.Serialisation` needs `netstandard2.1` or later, so generated `ISerializer<T>` code is
-  guarded by `#if NETSTANDARD2_1_OR_GREATER || NET` and absent on `netstandard2.0`. Check both legs.
+- The core package references `ZeroAlloc.Serialisation` on every target framework, so the generated
+  `ISerializer<T>` code is emitted unconditionally.
 - `Microsoft.Extensions.Hosting.Abstractions` must not come back into the core package (it dragged
   five dependencies into every consumer); the one overload that needs it lives in the `Hosting` package.
 - `ZeroAllocGeneratedAccessibility` is a compiler-visible MSBuild property declared in three props files:

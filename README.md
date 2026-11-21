@@ -22,6 +22,8 @@
 dotnet add package ZeroAlloc.ValueObjects
 ```
 
+Targets `net10.0` and `net11.0`.
+
 ## Quick start
 
 ```csharp

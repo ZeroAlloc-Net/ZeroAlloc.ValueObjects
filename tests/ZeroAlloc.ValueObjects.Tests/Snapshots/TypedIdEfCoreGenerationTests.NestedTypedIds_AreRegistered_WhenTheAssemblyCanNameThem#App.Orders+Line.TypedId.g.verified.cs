@@ -171,7 +171,6 @@ protected internal readonly partial record struct Line :
         }
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET
     internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<Line>
     {
         public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, Line value)
@@ -189,6 +188,5 @@ protected internal readonly partial record struct Line :
             return new Line(new global::System.Guid(buffer.Slice(0, 16)));
         }
     }
-#endif
 }
 }

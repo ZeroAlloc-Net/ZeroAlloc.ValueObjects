@@ -171,7 +171,6 @@ public readonly partial record struct @event :
         }
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET
     internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<@event>
     {
         public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, @event value)
@@ -189,6 +188,5 @@ public readonly partial record struct @event :
             return new @event(new global::System.Guid(buffer.Slice(0, 16)));
         }
     }
-#endif
 }
 }

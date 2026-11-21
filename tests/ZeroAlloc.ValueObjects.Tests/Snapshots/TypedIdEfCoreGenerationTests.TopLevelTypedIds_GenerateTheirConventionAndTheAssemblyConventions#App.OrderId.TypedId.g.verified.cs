@@ -169,7 +169,6 @@ public readonly partial record struct OrderId :
         }
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET
     internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<OrderId>
     {
         public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, OrderId value)
@@ -187,5 +186,4 @@ public readonly partial record struct OrderId :
             return new OrderId(new global::System.Guid(buffer.Slice(0, 16)));
         }
     }
-#endif
 }

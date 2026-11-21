@@ -207,15 +207,13 @@ internal static class TypedIdGuidWriter
 
     // Emits a nested ISerializer<TypedId> implementation alongside the existing
     // JsonConverter<T>. Closes ValueObjects#25 — additive integration with
-    // ZeroAlloc.Serialisation. Guarded by the modern-TFM symbol because the
-    // package reference to ZeroAlloc.Serialisation is conditional on the same
-    // TFM in ZeroAlloc.ValueObjects.csproj. The byte form is the canonical
+    // ZeroAlloc.Serialisation, which ZeroAlloc.ValueObjects references on every
+    // target framework it ships. The byte form is the canonical
     // 16-byte big-endian Guid representation (RFC 9562 layout) — zero-alloc
     // round-trip via Guid.TryWriteBytes / new Guid(ReadOnlySpan<byte>).
     private static void AppendZeroAllocSerializer(StringBuilder sb, string name)
     {
         sb.AppendLine();
-        sb.AppendLine("#if NETSTANDARD2_1_OR_GREATER || NET");
         sb.AppendLine($"    internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<{name}>");
         sb.AppendLine("    {");
         sb.AppendLine($"        public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, {name} value)");
@@ -233,6 +231,5 @@ internal static class TypedIdGuidWriter
         sb.AppendLine($"            return new {name}(new global::System.Guid(buffer.Slice(0, 16)));");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
-        sb.AppendLine("#endif");
     }
 }

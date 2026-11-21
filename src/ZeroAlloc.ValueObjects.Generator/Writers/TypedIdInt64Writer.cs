@@ -244,14 +244,12 @@ internal static class TypedIdInt64Writer
 
     // Emits a nested ISerializer<TypedId> implementation alongside the existing
     // JsonConverter<T>. Closes ValueObjects#25 — additive integration with
-    // ZeroAlloc.Serialisation. Guarded by the modern-TFM symbol because the
-    // package reference to ZeroAlloc.Serialisation is conditional on the same
-    // TFM in ZeroAlloc.ValueObjects.csproj. The byte form is little-endian
+    // ZeroAlloc.Serialisation, which ZeroAlloc.ValueObjects references on every
+    // target framework it ships. The byte form is little-endian
     // Int64 via BinaryPrimitives — zero-alloc round-trip in both directions.
     private static void AppendZeroAllocSerializer(StringBuilder sb, string name)
     {
         sb.AppendLine();
-        sb.AppendLine("#if NETSTANDARD2_1_OR_GREATER || NET");
         sb.AppendLine($"    internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<{name}>");
         sb.AppendLine("    {");
         sb.AppendLine($"        public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, {name} value)");
@@ -268,6 +266,5 @@ internal static class TypedIdInt64Writer
         sb.AppendLine($"            return new {name}(global::System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(buffer.Slice(0, 8)));");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
-        sb.AppendLine("#endif");
     }
 }

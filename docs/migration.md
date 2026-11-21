@@ -2,11 +2,17 @@
 id: migration
 title: Migration Guide
 slug: /docs/migration
-description: Step-by-step guide for migrating from CSharpFunctionalExtensions.ValueObject or from manual equality implementations.
+description: Upgrading from 2.x to 3.0, and migrating from CSharpFunctionalExtensions.ValueObject or from manual equality implementations.
 sidebar_position: 11
 ---
 
 # Migration Guide
+
+## From 2.x to 3.0
+
+- **Target framework.** Every package, `ZeroAlloc.ValueObjects`, `ZeroAlloc.ValueObjects.EfCore` and `ZeroAlloc.ValueObjects.Hosting`, ships `net10.0` and `net11.0` assets only. Version 2.x also ran on `netstandard2.0`, `netstandard2.1`, .NET 8 and .NET 9, which are out of support. Move the project to .NET 10 or later, or stay on 2.x.
+- **ZAVO001 and ZATI006 are errors.** A `[ValueObject]` or `[TypedId]` type nested in a containing type that is not `partial` now fails the build instead of warning; nothing was generated for it before either. Make every containing type `partial`, or move the type to the top level of a namespace. See [ZAVO001](diagnostics.md#zavo001) and [ZATI006](typed-id/diagnostics.md#zati006).
+- **The generated `TypedIdSerializer` is unconditional.** It was wrapped in `#if NETSTANDARD2_1_OR_GREATER || NET`; every target framework 3.0 supports defines `NET`, so the generated code is the same.
 
 ## From `CSharpFunctionalExtensions.ValueObject`
 
