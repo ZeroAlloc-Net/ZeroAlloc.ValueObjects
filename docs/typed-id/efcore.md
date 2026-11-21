@@ -19,7 +19,7 @@ The `ZeroAlloc.ValueObjects.EfCore` package provides a generic `TypedIdValueConv
 dotnet add package ZeroAlloc.ValueObjects.EfCore
 ```
 
-The adapter depends on `Microsoft.EntityFrameworkCore`. Pair it with your provider of choice (`Npgsql.EntityFrameworkCore.PostgreSQL`, `Microsoft.EntityFrameworkCore.SqlServer`, etc.).
+The adapter depends on `Microsoft.EntityFrameworkCore` 10.0 or later. Version 2.x depended on EF Core 9. Pair it with your provider of choice (`Npgsql.EntityFrameworkCore.PostgreSQL`, `Microsoft.EntityFrameworkCore.SqlServer`, etc.).
 
 ## Register the converters
 
