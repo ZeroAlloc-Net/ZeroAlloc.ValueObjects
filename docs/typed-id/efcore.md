@@ -19,7 +19,7 @@ The `ZeroAlloc.ValueObjects.EfCore` package provides a generic `TypedIdValueConv
 dotnet add package ZeroAlloc.ValueObjects.EfCore
 ```
 
-The adapter depends on `Microsoft.EntityFrameworkCore` 10.0.15 or later. Version 2.x depended on EF Core 9. Pair it with your provider of choice (`Npgsql.EntityFrameworkCore.PostgreSQL`, `Microsoft.EntityFrameworkCore.SqlServer`, etc.).
+The adapter depends on `Microsoft.EntityFrameworkCore` 9.0.23 or later and is tested against EF Core 10. Pair it with your provider of choice (`Npgsql.EntityFrameworkCore.PostgreSQL`, `Microsoft.EntityFrameworkCore.SqlServer`, etc.).
 
 ## Register the converters
 
@@ -124,7 +124,7 @@ You can call it multiple times for multiple assemblies. The scan runs **once** p
 
 ## NativeAOT
 
-The generated registration and `TypedIdValueConverter<TId, TBacking>` are trim-safe and NativeAOT-safe. The repo's AOT smoke publishes them with `TreatWarningsAsErrors` and runs the converter both ways. EF Core 9 itself is not fully NativeAOT-compatible: it marks the `DbContext` constructor `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`, and needs a compiled model and precompiled queries under NativeAOT. Those requirements are EF Core's; registering the TypedId converters adds none.
+The generated registration and `TypedIdValueConverter<TId, TBacking>` are trim-safe and NativeAOT-safe. The repo's AOT smoke publishes them with `TreatWarningsAsErrors` and runs the converter both ways. EF Core itself is not fully NativeAOT-compatible: it marks the `DbContext` constructor `[RequiresUnreferencedCode]` and `[RequiresDynamicCode]`, and needs a compiled model and precompiled queries under NativeAOT. Those requirements are EF Core's; registering the TypedId converters adds none.
 
 ## Default column types
 
