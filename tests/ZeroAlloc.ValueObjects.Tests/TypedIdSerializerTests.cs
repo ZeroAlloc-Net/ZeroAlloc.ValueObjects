@@ -51,7 +51,7 @@ public sealed class TypedIdSerializerTests : IDisposable
         var buffer = new ArrayBufferWriter<byte>();
         serializer.Serialize(buffer, original);
 
-        // Guid-backed ids serialize as 16 bytes in Guid.ToByteArray layout.
+        // Guid-backed ids serialize as 16 bytes in RFC 9562 big-endian layout.
         Assert.Equal(16, buffer.WrittenCount);
 
         var roundTripped = serializer.Deserialize(buffer.WrittenSpan);
@@ -59,18 +59,35 @@ public sealed class TypedIdSerializerTests : IDisposable
     }
 
     [Fact]
-    public void GuidBackedId_WritesTheGuidToByteArrayLayout()
+    public void GuidBackedId_WritesTheRfc9562BigEndianLayout()
     {
-        // Pins the wire format: Data1, Data2 and Data3 little-endian, then the last 8 bytes.
-        // Bytes written by earlier releases have this layout, so a change breaks stored data.
+        // Pins the wire format: the 16 bytes in RFC 9562 order, the same order the ULID and
+        // UUIDv7 strategies define their values in. 2.x wrote the Guid.ToByteArray layout,
+        // with Data1, Data2 and Data3 little-endian; 3.0 changed it on purpose.
         ISerializer<SerUuid7Id> serializer = new SerUuid7Id.TypedIdSerializer();
         var id = new SerUuid7Id(new Guid("00112233-4455-6677-8899-aabbccddeeff"));
 
         var buffer = new ArrayBufferWriter<byte>();
         serializer.Serialize(buffer, id);
 
-        Assert.Equal(Convert.FromHexString("33221100554477668899AABBCCDDEEFF"), buffer.WrittenSpan.ToArray());
+        Assert.Equal(Convert.FromHexString("00112233445566778899AABBCCDDEEFF"), buffer.WrittenSpan.ToArray());
         Assert.Equal(id, serializer.Deserialize(buffer.WrittenSpan));
+    }
+
+    [Fact]
+    public void Uuid7_SerializedBytes_SortInCreationOrder()
+    {
+        // Big-endian bytes put the UUIDv7 timestamp first, so byte order is creation order.
+        ISerializer<SerUuid7Id> serializer = new SerUuid7Id.TypedIdSerializer();
+        var earlier = new SerUuid7Id(new Guid("019000ff-0000-7000-8000-000000000000"));
+        var later = new SerUuid7Id(new Guid("01910000-0000-7000-8000-000000000000"));
+
+        var first = new ArrayBufferWriter<byte>();
+        var second = new ArrayBufferWriter<byte>();
+        serializer.Serialize(first, earlier);
+        serializer.Serialize(second, later);
+
+        Assert.True(first.WrittenSpan.SequenceCompareTo(second.WrittenSpan) < 0);
     }
 
     [Fact]
@@ -123,8 +140,8 @@ public sealed class TypedIdSerializerTests : IDisposable
     [Fact]
     public void Guid_Serializer_ProducesCanonicalGuidBytes()
     {
-        // Sanity check: the byte form must match Guid.TryWriteBytes so
-        // adapter packages and external serializers can interoperate.
+        // The byte form must match Guid.TryWriteBytes with bigEndian: true, so adapter
+        // packages and readers on other platforms that expect RFC 9562 bytes interoperate.
         ISerializer<SerUuid7Id> serializer = new SerUuid7Id.TypedIdSerializer();
         var id = SerUuid7Id.New();
 
@@ -132,7 +149,8 @@ public sealed class TypedIdSerializerTests : IDisposable
         serializer.Serialize(buffer, id);
 
         Span<byte> expected = stackalloc byte[16];
-        Assert.True(id.Value.TryWriteBytes(expected));
+        Assert.True(id.Value.TryWriteBytes(expected, bigEndian: true, out var written));
+        Assert.Equal(16, written);
 
         Assert.Equal(expected.ToArray(), buffer.WrittenSpan.ToArray());
     }
