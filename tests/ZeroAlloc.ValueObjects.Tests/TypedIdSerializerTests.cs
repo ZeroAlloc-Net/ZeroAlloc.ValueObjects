@@ -51,11 +51,26 @@ public sealed class TypedIdSerializerTests : IDisposable
         var buffer = new ArrayBufferWriter<byte>();
         serializer.Serialize(buffer, original);
 
-        // Guid-backed ids serialize as the canonical 16-byte big-endian Guid form.
+        // Guid-backed ids serialize as 16 bytes in Guid.ToByteArray layout.
         Assert.Equal(16, buffer.WrittenCount);
 
         var roundTripped = serializer.Deserialize(buffer.WrittenSpan);
         Assert.Equal(original, roundTripped);
+    }
+
+    [Fact]
+    public void GuidBackedId_WritesTheGuidToByteArrayLayout()
+    {
+        // Pins the wire format: Data1, Data2 and Data3 little-endian, then the last 8 bytes.
+        // Bytes written by earlier releases have this layout, so a change breaks stored data.
+        ISerializer<SerUuid7Id> serializer = new SerUuid7Id.TypedIdSerializer();
+        var id = new SerUuid7Id(new Guid("00112233-4455-6677-8899-aabbccddeeff"));
+
+        var buffer = new ArrayBufferWriter<byte>();
+        serializer.Serialize(buffer, id);
+
+        Assert.Equal(Convert.FromHexString("33221100554477668899AABBCCDDEEFF"), buffer.WrittenSpan.ToArray());
+        Assert.Equal(id, serializer.Deserialize(buffer.WrittenSpan));
     }
 
     [Fact]

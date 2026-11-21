@@ -208,8 +208,10 @@ internal static class TypedIdGuidWriter
     // Emits a nested ISerializer<TypedId> implementation alongside the existing
     // JsonConverter<T>. Closes ValueObjects#25 — additive integration with
     // ZeroAlloc.Serialisation, which ZeroAlloc.ValueObjects references on every
-    // target framework it ships. The byte form is the canonical
-    // 16-byte big-endian Guid representation (RFC 9562 layout) — zero-alloc
+    // target framework it ships. The byte form is Guid.ToByteArray's 16-byte
+    // layout: Data1, Data2 and Data3 little-endian, the last 8 bytes as stored.
+    // That is not the RFC 9562 big-endian layout the ULID and UUIDv7 strings use;
+    // bytes written by earlier releases depend on it, so it is kept. Zero-alloc
     // round-trip via Guid.TryWriteBytes / new Guid(ReadOnlySpan<byte>).
     private static void AppendZeroAllocSerializer(StringBuilder sb, string name)
     {
