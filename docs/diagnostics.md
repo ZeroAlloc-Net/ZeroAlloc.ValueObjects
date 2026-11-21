@@ -56,8 +56,6 @@ public partial class Outer
 }
 ```
 
-Under `TreatWarningsAsErrors` this warning fails the build.
-
 ---
 
 ## ZAVO002

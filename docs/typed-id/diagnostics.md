@@ -221,8 +221,6 @@ public partial class Orders
 }
 ```
 
-Under `TreatWarningsAsErrors` this warning fails the build.
-
 ---
 
 ## ZATI007
