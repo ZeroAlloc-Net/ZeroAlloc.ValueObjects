@@ -210,7 +210,7 @@ internal static class TypedIdGuidWriter
     // ZeroAlloc.Serialisation, which ZeroAlloc.ValueObjects references on every
     // target framework it ships. The byte form is the RFC 9562 big-endian
     // layout, the order the ULID and UUIDv7 strategies define their values in, so
-    // the bytes sort in creation order and match other platforms' UUID bytes.
+    // the bytes sort by timestamp and match other platforms' UUID bytes.
     // 2.x wrote Guid.ToByteArray's layout instead (ValueObjects#294). Zero-alloc
     // round-trip via Guid.TryWriteBytes and new Guid(ReadOnlySpan<byte>, bool).
     private static void AppendZeroAllocSerializer(StringBuilder sb, string name)

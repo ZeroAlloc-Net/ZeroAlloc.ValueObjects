@@ -77,7 +77,8 @@ public sealed class TypedIdSerializerTests : IDisposable
     [Fact]
     public void Uuid7_SerializedBytes_SortInCreationOrder()
     {
-        // Big-endian bytes put the UUIDv7 timestamp first, so byte order is creation order.
+        // Big-endian bytes put the UUIDv7 timestamp first, so IDs from different milliseconds
+        // sort by timestamp. Within one millisecond the random bits decide the order.
         ISerializer<SerUuid7Id> serializer = new SerUuid7Id.TypedIdSerializer();
         var earlier = new SerUuid7Id(new Guid("019000ff-0000-7000-8000-000000000000"));
         var later = new SerUuid7Id(new Guid("01910000-0000-7000-8000-000000000000"));
