@@ -71,7 +71,7 @@ CI job `sdk10-consumer` needs a 10.0.1xx SDK; `tests/ZeroAlloc.ValueObjects.Sdk1
 consumer of the packed package with Roslyn 5.0:
 
 ```bash
-v=9.9.9-local.sha$(git rev-parse --short HEAD).$(date +%s).$$
+v=9.9.9-local.sha$(git rev-parse --short HEAD).$(date +%s).r$(od -An -N4 -tx4 /dev/urandom | tr -d " ")
 dotnet pack src/ZeroAlloc.ValueObjects -c Release -o artifacts -p:Version="$v"
 cd tests/ZeroAlloc.ValueObjects.Sdk10Smoke/Consumer
 dotnet run -c Release -p:ZeroAllocValueObjectsVersion="$v"
