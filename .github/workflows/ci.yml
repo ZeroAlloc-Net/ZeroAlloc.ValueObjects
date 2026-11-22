@@ -163,7 +163,7 @@ jobs:
 
       - name: Pack
         run: |
-          version="9.9.9-local.${GITHUB_SHA::7}"
+          version="9.9.9-local.sha${GITHUB_SHA::7}"
           echo "VO_VERSION=$version" >> "$GITHUB_ENV"
           dotnet pack src/ZeroAlloc.ValueObjects/ZeroAlloc.ValueObjects.csproj -c Release -o artifacts -p:Version="$version"
 
@@ -172,6 +172,10 @@ jobs:
         run: |
           dotnet --version
           dotnet run -c Release -p:ZeroAllocValueObjectsVersion="$VO_VERSION"
+
+  # Fails when a packed DLL references Roslyn above 5.0.0, the compiler of SDK 10.0.1xx.
+  roslyn-floor:
+    uses: ZeroAlloc-Net/.github/.github/workflows/roslyn-floor.yml@main
 
   api-compat:
     uses: ZeroAlloc-Net/.github/.github/workflows/api-compat.yml@main
