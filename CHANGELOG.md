@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.0.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.4.1...v3.0.0) (2026-11-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* netstandard2.0, netstandard2.1, net8.0 and net9.0 assets are no longer shipped by ZeroAlloc.ValueObjects, ZeroAlloc.ValueObjects.EfCore and ZeroAlloc.ValueObjects.Hosting; ZAVO001 and ZATI006 are now errors; the generated TypedIdSerializer writes Guid-backed IDs in RFC 9562 big-endian byte order, so bytes stored by 2.x decode to different IDs. See the Behaviour change section of the pull request for the migration steps.
+
+### Features
+
+* target net10.0 and net11.0, drop netstandard2.0, netstandard2.1, net8.0 and net9.0 ([4761858](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/47618584ddd14679bb793f70afc5749182851e07))
+
+
+### Bug Fixes
+
+* build the generator against Roslyn 5.0 so .NET 10 SDK bands before 10.0.4xx load it ([4761858](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/47618584ddd14679bb793f70afc5749182851e07))
+* report ZATI006 as an error when a TypedId struct's containing type is not partial ([4761858](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/47618584ddd14679bb793f70afc5749182851e07))
+* report ZAVO001 as an error when a value object's containing type is not partial ([4761858](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/47618584ddd14679bb793f70afc5749182851e07))
+* write Guid-backed TypedIds in RFC 9562 big-endian byte order ([4761858](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/47618584ddd14679bb793f70afc5749182851e07))
+
+
+### Performance Improvements
+
+* fill ULID and UUIDv7 randomness without a per-thread scratch array, and without a lock for UUIDv7 ([4761858](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/47618584ddd14679bb793f70afc5749182851e07))
+
 ## [2.4.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.4.0...v2.4.1) (2026-11-16)
 
 
