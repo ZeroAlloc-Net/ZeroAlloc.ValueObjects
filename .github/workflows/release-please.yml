@@ -2,7 +2,9 @@ name: Release Please
 
 on:
   push:
-    branches: [main]
+    # release/N.x holds maintenance patches of an earlier major. Each such branch has its own
+    # manifest, and target-branch below makes release-please open its release PR there.
+    branches: [main, 'release/**']
   workflow_dispatch:
 
 permissions:
@@ -14,7 +16,7 @@ permissions:
 # ship-release-tracking concurrently against the same release PR branch. Queued, not
 # cancelled: a cancelled run could drop a release or its publish.
 concurrency:
-  group: release-please
+  group: release-please-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -47,6 +49,7 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          target-branch: ${{ github.ref_name }}
           token: ${{ steps.app-token.outputs.token }}
 
   # Marks the analyzer rules and public API that the pending release adds as shipped,
