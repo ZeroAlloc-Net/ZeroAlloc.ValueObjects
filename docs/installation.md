@@ -20,11 +20,13 @@ The package ships both the marker attributes and the Roslyn source generator in 
 
 | Requirement | Minimum |
 |---|---|
-| .NET SDK | 6.0 or later |
+| .NET SDK | 10.0.100 or later, or Visual Studio 2026 or later |
 | C# language version | 9.0 or later |
-| Roslyn | 4.x (included in VS 2022 / .NET SDK 6+) |
+| Roslyn | 5.0 or later (included in the .NET 10 SDK) |
 
-The generator itself targets `netstandard2.0` for broad compatibility, so it works in any modern project regardless of your target framework.
+The generator itself targets `netstandard2.0` for broad compatibility, so it works in any modern project regardless of your target framework. It is built against Roslyn 5.0, and an older compiler skips it with warning CS9057, after which the generated members are missing. Version 2.4.1 was built against Roslyn 5.9 and loads only in SDK 10.0.4xx or later; on an older .NET 10 SDK, use 2.4.2 or later.
+
+The `ZeroAlloc.Serialisation` package this package depends on ships its own generator, built against Roslyn 5.9. SDK bands before 10.0.4xx skip that generator with warning CS9057, so a build with `TreatWarningsAsErrors` fails there until Serialisation ships a generator built against Roslyn 5.0. This is tracked in [ZeroAlloc-Net/.github#77](https://github.com/ZeroAlloc-Net/.github/issues/77).
 
 ## Verifying the install
 
