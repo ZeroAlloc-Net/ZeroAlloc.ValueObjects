@@ -163,7 +163,7 @@ jobs:
 
       - name: Pack
         run: |
-          version="9.9.9-local.${GITHUB_SHA::7}"
+          version="9.9.9-local.sha${GITHUB_SHA::7}"
           echo "VO_VERSION=$version" >> "$GITHUB_ENV"
           dotnet pack src/ZeroAlloc.ValueObjects/ZeroAlloc.ValueObjects.csproj -c Release -o artifacts -p:Version="$version"
 
