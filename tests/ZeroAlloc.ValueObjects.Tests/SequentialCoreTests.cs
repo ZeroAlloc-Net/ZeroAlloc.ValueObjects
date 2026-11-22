@@ -1,5 +1,9 @@
 namespace ZeroAlloc.ValueObjects.Tests;
 
+// SequentialCore's counter is process-wide, and TypedIdJsonTests, TypedIdSerializerTests and
+// TypedIdFunctionalTests reset it too. In the same collection as them, no Reset lands while
+// the concurrent test is counting.
+[Collection("SnowflakeStatics")]
 public sealed class SequentialCoreTests
 {
     [Fact]
