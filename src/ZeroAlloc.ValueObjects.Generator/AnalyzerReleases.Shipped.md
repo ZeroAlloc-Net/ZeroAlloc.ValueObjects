@@ -33,3 +33,12 @@ ZAVO003 | ZeroAlloc.ValueObjects         | Error    | Value object name differs 
 Rule ID | Category                       | Severity | Notes
 --------|--------------------------------|----------|-----------------------------------------------
 ZATI010 | ZeroAlloc.ValueObjects.TypedId | Error    | Invalid ZeroAllocGeneratedAccessibility value
+
+## Release 3.0.0
+
+### Changed Rules
+
+Rule ID | New Category                   | New Severity | Old Category                   | Old Severity | Notes
+--------|--------------------------------|--------------|--------------------------------|--------------|---------------------------------------------------------------------
+ZATI006 | ZeroAlloc.ValueObjects.TypedId | Error        | ZeroAlloc.ValueObjects.TypedId | Warning      | Nested [TypedId] struct inside a containing type that is not partial
+ZAVO001 | ZeroAlloc.ValueObjects         | Error        | ZeroAlloc.ValueObjects         | Warning      | Nested value object inside a containing type that is not partial
