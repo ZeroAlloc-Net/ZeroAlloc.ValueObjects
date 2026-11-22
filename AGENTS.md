@@ -71,10 +71,14 @@ CI job `sdk10-consumer` needs a 10.0.1xx SDK; `tests/ZeroAlloc.ValueObjects.Sdk1
 consumer of the packed package with Roslyn 5.0:
 
 ```bash
-dotnet pack src/ZeroAlloc.ValueObjects -c Release -o artifacts -p:Version=9.9.9-local.sha$(git rev-parse --short HEAD)
+unset v; r=$(od -An -N4 -tx4 /dev/urandom | tr -d " ") && [ -n "$r" ] && v=9.9.9-local.sha$(git rev-parse --short HEAD).$(date +%s).r$r
+dotnet pack src/ZeroAlloc.ValueObjects -c Release -o artifacts -p:Version="${v:?no random suffix}"
 cd tests/ZeroAlloc.ValueObjects.Sdk10Smoke/Consumer
-dotnet run -c Release -p:ZeroAllocValueObjectsVersion=9.9.9-local.sha$(git rev-parse --short HEAD)
+dotnet run -c Release -p:ZeroAllocValueObjectsVersion="${v:?no random suffix}"
 ```
+
+Each step stops when the random suffix cannot be generated. Runs in one checkout share its `obj/` and
+`bin/` folders, so they must not overlap: give each concurrent run its own worktree.
 
 CI job `roslyn-floor` calls the shared `roslyn-floor.yml` from ZeroAlloc-Net/.github: it packs the
 solution and fails when a packed DLL references Roslyn above 5.0.0.
