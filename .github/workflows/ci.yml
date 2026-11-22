@@ -173,6 +173,10 @@ jobs:
           dotnet --version
           dotnet run -c Release -p:ZeroAllocValueObjectsVersion="$VO_VERSION"
 
+  # Fails when a packed DLL references Roslyn above 5.0.0, the compiler of SDK 10.0.1xx.
+  roslyn-floor:
+    uses: ZeroAlloc-Net/.github/.github/workflows/roslyn-floor.yml@main
+
   api-compat:
     uses: ZeroAlloc-Net/.github/.github/workflows/api-compat.yml@main
     with:
