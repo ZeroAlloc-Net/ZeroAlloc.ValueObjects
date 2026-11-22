@@ -129,6 +129,8 @@ public sealed class GeneratedCodeDocumentationTests
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(TypedIdAttribute).Assembly.Location),
+            // The generated TypedIdSerializer implements ZeroAlloc.Serialisation.ISerializer<T>.
+            MetadataReference.CreateFromFile(typeof(ZeroAlloc.Serialisation.ISerializer<>).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(Attribute).Assembly.Location),
             MetadataReference.CreateFromFile(System.IO.Path.Combine(runtimeDir, "System.Runtime.dll")),
             MetadataReference.CreateFromFile(System.IO.Path.Combine(runtimeDir, "netstandard.dll")),

@@ -237,7 +237,7 @@ public class NestedValueObjectTests
 
         var zavo001 = AssertEx.One(run.GeneratorDiagnostics);
         Assert.Equal("ZAVO001", zavo001.Id);
-        Assert.Equal(DiagnosticSeverity.Warning, zavo001.Severity);
+        Assert.Equal(DiagnosticSeverity.Error, zavo001.Severity);
         Assert.Equal(
             "Value object 'App.Outer.Money' is not generated because its containing type 'App.Outer' is not partial",
             zavo001.GetMessage(CultureInfo.InvariantCulture));

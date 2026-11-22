@@ -21,7 +21,7 @@ A TypedId can be declared at the top of a namespace, in the global namespace, or
 | [ZATI003](#zati003) | Error | Struct body declares fields or properties | The first field or property | Remove the declarations — generator owns `Value` |
 | [ZATI004](#zati004) | — | Reserved (enforced by `AttributeUsage`) | — | N/A |
 | [ZATI005](#zati005) | Warning | Struct declared `partial` across multiple files | The name in the declaration that carries `[TypedId]` | Consolidate into one file |
-| [ZATI006](#zati006) | Warning | Nested struct inside a containing type that is not `partial` | The name in the declaration that carries `[TypedId]` | Make every containing type `partial` |
+| [ZATI006](#zati006) | Error | Nested struct inside a containing type that is not `partial` | The name in the declaration that carries `[TypedId]` | Make every containing type `partial` |
 | [ZATI007](#zati007) | Error | Struct is generic, or nested in a generic type | The name in the declaration that carries `[TypedId]` | Use a non-generic struct outside generic types |
 | [ZATI008](#zati008) | Error | Struct is file-local, or nested in a file-local type | The name in the declaration that carries `[TypedId]` | Remove the `file` modifier |
 | [ZATI009](#zati009) | Error | Struct name differs only in case from another TypedId | The name in the declaration that carries `[TypedId]` | Rename one of them |
@@ -195,9 +195,9 @@ public readonly partial record struct OrderId { /* extras */ }
 
 ## ZATI006
 
-**Warning.** `[TypedId] struct 'App.Orders.Id' is not generated because its containing type 'App.Orders' is not partial`.
+**Error.** `[TypedId] struct 'App.Orders.Id' is not generated because its containing type 'App.Orders' is not partial`.
 
-A nested TypedId is generated inside partial declarations of every containing type, so each of them must be `partial`. When one is not, the generator reports ZATI006 and generates nothing for the struct. The message names the outermost containing type that is not `partial`. Earlier versions generated such a struct into a new top-level type with its simple name.
+A nested TypedId is generated inside partial declarations of every containing type, so each of them must be `partial`. When one is not, the generator reports ZATI006 and generates nothing for the struct. The message names the outermost containing type that is not `partial`. Before 3.0 ZATI006 was a warning, so a build that ignored it compiled without the struct's generated members; it is an error since 3.0. Versions before 2.0.12 generated such a struct into a new top-level type with its simple name.
 
 ### Example — offending code
 
@@ -221,15 +221,13 @@ public partial class Orders
 }
 ```
 
-Under `TreatWarningsAsErrors` this warning fails the build.
-
 ---
 
 ## ZATI007
 
 **Error.** `[TypedId] struct 'App.Key<TEntity>' is not generated because 'App.Key<TEntity>' is generic; a JsonConverterAttribute cannot name a converter for an open generic type`.
 
-Every TypedId carries `[JsonConverter(typeof(Id.TypedIdJsonConverter))]`. For a generic struct, or a struct nested in a generic type, the converter is generic too. An attribute cannot name `Key<TEntity>.TypedIdJsonConverter`, and System.Text.Json cannot create the open form `Key<>.TypedIdJsonConverter`: it throws at runtime on .NET 8, 9 and 10. So the generator reports ZATI007 and generates nothing for the struct. When the struct itself is not generic, the message names the generic containing type.
+Every TypedId carries `[JsonConverter(typeof(Id.TypedIdJsonConverter))]`. For a generic struct, or a struct nested in a generic type, the converter is generic too. An attribute cannot name `Key<TEntity>.TypedIdJsonConverter`, only the open form `Key<>.TypedIdJsonConverter`. System.Text.Json on .NET 10 cannot create that open form and throws at runtime. Reflection-based System.Text.Json on .NET 11 closes it over the type arguments, but the package also supports .NET 10, so the generator reports ZATI007 and generates nothing for the struct. When the struct itself is not generic, the message names the generic containing type.
 
 ### Example — offending code
 

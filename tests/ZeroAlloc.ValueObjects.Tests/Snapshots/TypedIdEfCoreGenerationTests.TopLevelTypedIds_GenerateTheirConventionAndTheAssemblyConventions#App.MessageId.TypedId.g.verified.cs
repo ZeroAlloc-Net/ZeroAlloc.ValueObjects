@@ -208,7 +208,6 @@ internal readonly partial record struct MessageId :
         }
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET
     internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<MessageId>
     {
         public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, MessageId value)
@@ -225,5 +224,4 @@ internal readonly partial record struct MessageId :
             return new MessageId(global::System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(buffer.Slice(0, 8)));
         }
     }
-#endif
 }

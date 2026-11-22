@@ -20,12 +20,11 @@
 
   <ItemGroup>
     <!--
-      Pin the lib reference to net11.0 (the highest non-netstandard TFM in the
-      multi-target list) and strip PublishAot. Without SetTargetFramework,
-      MSBuild walks every TFM leg of the multi-target project — including
-      netstandard2.0, which cannot evaluate PublishAot=true (NETSDK1207).
-      Same for the generator: it is ns2.0-only and is consumed purely as an
-      analyzer; its assembly never appears in the AOT-published output.
+      Pin the lib references to net11.0 and strip PublishAot. Without SetTargetFramework,
+      MSBuild walks every TFM leg of the multi-target projects, and PublishAot reaches each of
+      them. The generator is netstandard2.0-only, which cannot evaluate PublishAot=true
+      (NETSDK1207); it is consumed purely as an analyzer, and its assembly never appears in
+      the AOT-published output.
 
       Note: when running `dotnet publish` with `-p:PublishAot=true` on the CLI,
       the property propagates as a global MSBuild property to every transitive

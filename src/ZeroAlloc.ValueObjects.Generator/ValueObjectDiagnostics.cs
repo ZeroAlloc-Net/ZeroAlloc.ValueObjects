@@ -11,7 +11,7 @@ internal static class ValueObjectDiagnostics
         title: "Nested value object inside a containing type that is not partial",
         messageFormat: "Value object '{0}' is not generated because its containing type '{1}' is not partial",
         category: Category,
-        defaultSeverity: DiagnosticSeverity.Warning,
+        defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor FileLocal = new(

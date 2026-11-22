@@ -207,21 +207,21 @@ internal static class TypedIdGuidWriter
 
     // Emits a nested ISerializer<TypedId> implementation alongside the existing
     // JsonConverter<T>. Closes ValueObjects#25 — additive integration with
-    // ZeroAlloc.Serialisation. Guarded by the modern-TFM symbol because the
-    // package reference to ZeroAlloc.Serialisation is conditional on the same
-    // TFM in ZeroAlloc.ValueObjects.csproj. The byte form is the canonical
-    // 16-byte big-endian Guid representation (RFC 9562 layout) — zero-alloc
-    // round-trip via Guid.TryWriteBytes / new Guid(ReadOnlySpan<byte>).
+    // ZeroAlloc.Serialisation, which ZeroAlloc.ValueObjects references on every
+    // target framework it ships. The byte form is the RFC 9562 big-endian
+    // layout, the order the ULID and UUIDv7 strategies define their values in, so
+    // the bytes sort by timestamp and match other platforms' UUID bytes.
+    // 2.x wrote Guid.ToByteArray's layout instead (ValueObjects#294). Zero-alloc
+    // round-trip via Guid.TryWriteBytes and new Guid(ReadOnlySpan<byte>, bool).
     private static void AppendZeroAllocSerializer(StringBuilder sb, string name)
     {
         sb.AppendLine();
-        sb.AppendLine("#if NETSTANDARD2_1_OR_GREATER || NET");
         sb.AppendLine($"    internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<{name}>");
         sb.AppendLine("    {");
         sb.AppendLine($"        public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, {name} value)");
         sb.AppendLine("        {");
         sb.AppendLine("            var span = writer.GetSpan(16);");
-        sb.AppendLine("            if (!value.Value.TryWriteBytes(span))");
+        sb.AppendLine("            if (!value.Value.TryWriteBytes(span, bigEndian: true, out _))");
         sb.AppendLine($"                throw new global::System.InvalidOperationException(\"Failed to write Guid bytes for {name}.\");");
         sb.AppendLine("            writer.Advance(16);");
         sb.AppendLine("        }");
@@ -230,9 +230,8 @@ internal static class TypedIdGuidWriter
         sb.AppendLine("        {");
         sb.AppendLine("            if (buffer.Length < 16)");
         sb.AppendLine($"                throw new global::System.ArgumentException($\"Buffer too small to deserialize {name}; need 16 bytes, got {{buffer.Length}}.\", nameof(buffer));");
-        sb.AppendLine($"            return new {name}(new global::System.Guid(buffer.Slice(0, 16)));");
+        sb.AppendLine($"            return new {name}(new global::System.Guid(buffer.Slice(0, 16), bigEndian: true));");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
-        sb.AppendLine("#endif");
     }
 }

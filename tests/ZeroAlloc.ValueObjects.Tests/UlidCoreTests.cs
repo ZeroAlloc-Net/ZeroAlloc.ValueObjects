@@ -40,6 +40,30 @@ public sealed class UlidCoreTests
     }
 
     [Fact]
+    public void TryFromBase32_SpecExample_DecodesToTheBigEndianGuid()
+    {
+        // The ulid/spec example. Its 128 bits, read big-endian, are the canonical Guid string
+        // below; pins the byte layout of the Guid the decoder returns.
+        Assert.True(UlidCore.TryFromBase32("01ARZ3NDEKTSV4RRFFQ69G5FAV".AsSpan(), out var value));
+        Assert.Equal(new Guid("01563e3a-b5d3-d676-4c61-efb99302bd5b"), value);
+        Assert.Equal("01ARZ3NDEKTSV4RRFFQ69G5FAV", UlidCore.ToBase32(value));
+    }
+
+    [Fact]
+    public void NewGuid_Burst_IsStrictlyIncreasing()
+    {
+        // The monotonic factory increments the random tail within one millisecond, so each
+        // value sorts strictly after the previous one.
+        var prev = UlidCore.ToBase32(UlidCore.NewGuid());
+        for (int i = 0; i < 999; i++)
+        {
+            var next = UlidCore.ToBase32(UlidCore.NewGuid());
+            Assert.True(string.CompareOrdinal(prev, next) < 0, $"{next} does not sort after {prev}");
+            prev = next;
+        }
+    }
+
+    [Fact]
     public void TryFromBase32_RejectsInvalidLength() =>
         Assert.False(UlidCore.TryFromBase32("01ARZ3NDEKTSV4RRFFQ69G5FA".AsSpan(), out _));
 

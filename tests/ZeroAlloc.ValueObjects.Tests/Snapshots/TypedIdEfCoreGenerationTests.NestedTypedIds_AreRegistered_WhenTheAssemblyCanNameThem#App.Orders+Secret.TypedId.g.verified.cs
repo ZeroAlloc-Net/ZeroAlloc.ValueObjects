@@ -171,13 +171,12 @@ private readonly partial record struct Secret :
         }
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET
     internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<Secret>
     {
         public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, Secret value)
         {
             var span = writer.GetSpan(16);
-            if (!value.Value.TryWriteBytes(span))
+            if (!value.Value.TryWriteBytes(span, bigEndian: true, out _))
                 throw new global::System.InvalidOperationException("Failed to write Guid bytes for Secret.");
             writer.Advance(16);
         }
@@ -186,9 +185,8 @@ private readonly partial record struct Secret :
         {
             if (buffer.Length < 16)
                 throw new global::System.ArgumentException($"Buffer too small to deserialize Secret; need 16 bytes, got {buffer.Length}.", nameof(buffer));
-            return new Secret(new global::System.Guid(buffer.Slice(0, 16)));
+            return new Secret(new global::System.Guid(buffer.Slice(0, 16), bigEndian: true));
         }
     }
-#endif
 }
 }

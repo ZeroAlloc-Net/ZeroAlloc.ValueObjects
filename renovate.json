@@ -35,6 +35,12 @@
       "groupName": "Microsoft.CodeAnalysis"
     },
     {
+      "description": "The generator runs in the consumer's compiler, which must be at least the Roslyn it references. Hold it at 5.0, what the oldest supported SDK band 10.0.1xx ships; raise it only with the supported SDK floor. The sdk10-consumer CI job checks this.",
+      "matchFileNames": ["src/ZeroAlloc.ValueObjects.Generator/ZeroAlloc.ValueObjects.Generator.csproj"],
+      "matchPackageNames": ["Microsoft.CodeAnalysis.CSharp", "Microsoft.CodeAnalysis.Common"],
+      "allowedVersions": "<5.1"
+    },
+    {
       "description": "Group GitHub Actions",
       "matchManagers": ["github-actions"],
       "groupName": "GitHub Actions"

@@ -67,7 +67,7 @@ public sealed class TypedIdGenerator : IIncrementalGenerator
             var (((partial, asmDefault), found), hasEfCore) = pair;
 
             // Report any diagnostics captured during parsing. A struct without a File is not
-            // generated: it has an error, or ZATI006; see TypedIdParser.Parse.
+            // generated because it has an error; see TypedIdParser.Parse.
             foreach (var info in partial.Diagnostics)
                 ctx.ReportDiagnostic(info.ToDiagnostic());
 

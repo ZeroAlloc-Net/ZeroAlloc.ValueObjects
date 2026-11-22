@@ -178,7 +178,6 @@ public readonly partial record struct Id :
         }
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NET
     internal sealed class TypedIdSerializer : global::ZeroAlloc.Serialisation.ISerializer<Id>
     {
         public void Serialize(global::System.Buffers.IBufferWriter<byte> writer, Id value)
@@ -195,6 +194,5 @@ public readonly partial record struct Id :
             return new Id(global::System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(buffer.Slice(0, 8)));
         }
     }
-#endif
 }
 }

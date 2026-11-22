@@ -175,7 +175,7 @@ public class NestedTypedIdTests
 
         var zati006 = AssertEx.One(run.GeneratorDiagnostics);
         Assert.Equal("ZATI006", zati006.Id);
-        Assert.Equal(DiagnosticSeverity.Warning, zati006.Severity);
+        Assert.Equal(DiagnosticSeverity.Error, zati006.Severity);
         Assert.Equal(
             "[TypedId] struct 'App.Outer.Middle.Id' is not generated because its containing type 'App.Outer' is not partial",
             zati006.GetMessage(CultureInfo.InvariantCulture));

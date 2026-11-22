@@ -82,7 +82,6 @@ jobs:
       solution: ZeroAlloc.ValueObjects.slnx
       # Runtimes the tests target, besides the SDK that global.json pins.
       dotnet-version: |
-        9.0.x
         10.0.x
         11.0.x
       github-packages: true
