@@ -21,13 +21,13 @@ The package ships both the marker attributes and the Roslyn source generator in 
 | Requirement | Minimum |
 |---|---|
 | Target framework | `net10.0` or `net11.0` |
-| .NET SDK | `net10.0`: 10.0.100 or later, or Visual Studio 2026; 10.0.400 or later with `TreatWarningsAsErrors`, see below. `net11.0`: 11.0.100 or later |
+| .NET SDK | `net10.0`: 10.0.100 or later, or Visual Studio 2026. `net11.0`: 11.0.100 or later |
 
 The packages ship `net10.0` and `net11.0` assemblies; `ZeroAlloc.ValueObjects.EfCore` and `ZeroAlloc.ValueObjects.Hosting` target the same two. Version 2.x also ran on `netstandard2.0`, `netstandard2.1`, .NET 8 and .NET 9; a project on one of those stays on 2.x.
 
 The source generator itself targets `netstandard2.0`, as Roslyn requires; that is the compiler's target, not your project's. It is built against Roslyn 5.0, the compiler of the .NET 10.0.1xx SDK, so every .NET 10 and .NET 11 SDK loads it. Version 2.4.1 referenced Roslyn 5.9, which .NET 10 SDK bands before 10.0.4xx skip with warning CS9057, so nothing was generated there.
 
-**`TreatWarningsAsErrors` on SDK bands before 10.0.4xx.** The `ZeroAlloc.Serialisation` package this package depends on ships its own generator, built against Roslyn 5.9. On .NET 10 SDK bands before 10.0.4xx the compiler skips that generator and reports warning CS9057. The ValueObjects generator still runs, but a build with `TreatWarningsAsErrors` fails on the warning. Use SDK 10.0.4xx or later for such builds until ZeroAlloc.Serialisation ships a generator built against Roslyn 5.0, tracked in [ZeroAlloc-Net/.github#77](https://github.com/ZeroAlloc-Net/.github/issues/77).
+The `ZeroAlloc.Serialisation` package this package depends on ships its own generator. From ValueObjects 3.0.1 the dependency is Serialisation 2.4.8, whose generator is also built against Roslyn 5.0. A project that references a newer ZeroAlloc.Serialisation itself gets that version's generator instead, so check the Roslyn version it was built against. Earlier versions depended on Serialisation 2.4.2, built against Roslyn 5.9: SDK bands before 10.0.4xx skipped it with warning CS9057, which failed a build with `TreatWarningsAsErrors`.
 
 ## Verifying the install
 
