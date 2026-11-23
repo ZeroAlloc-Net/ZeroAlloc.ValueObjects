@@ -109,7 +109,8 @@ does not carry it (`ZAVERSION002`). Every command that builds before a `--no-bui
   than the Roslyn the generator references skips it with `CS9057`, and nothing is generated.
   `renovate.json` holds it below 5.1, and the CI `sdk10-consumer` job builds a consumer of the packed
   package with SDK 10.0.1xx (`tests/ZeroAlloc.ValueObjects.Sdk10Smoke`). The test project may use a
-  newer Roslyn.
+  newer Roslyn. `CS9057` is an error in that consumer, so a generator from any package in its graph
+  that this SDK skips fails it, including the one `ZeroAlloc.Serialisation` ships.
 - `tests/ZeroAlloc.ValueObjects.Sdk10Smoke/global.json` stays on 10.0.100 with `rollForward: latestPatch`.
   Moving it to a newer patch makes the smoke build with a newer compiler and check nothing; the shared
   Renovate preset ignores that file.
