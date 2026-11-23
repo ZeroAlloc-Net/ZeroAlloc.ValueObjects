@@ -27,7 +27,7 @@ The packages ship `net10.0` and `net11.0` assemblies; `ZeroAlloc.ValueObjects.Ef
 
 The source generator itself targets `netstandard2.0`, as Roslyn requires; that is the compiler's target, not your project's. It is built against Roslyn 5.0, the compiler of the .NET 10.0.1xx SDK, so every .NET 10 and .NET 11 SDK loads it. Version 2.4.1 referenced Roslyn 5.9, which .NET 10 SDK bands before 10.0.4xx skip with warning CS9057, so nothing was generated there.
 
-The `ZeroAlloc.Serialisation` package this package depends on ships its own generator. From ValueObjects 3.0.1 the dependency is Serialisation 2.4.8 or later, whose generator is also built against Roslyn 5.0. Earlier versions depended on Serialisation 2.4.2, built against Roslyn 5.9: SDK bands before 10.0.4xx skipped it with warning CS9057, which failed a build with `TreatWarningsAsErrors`.
+The `ZeroAlloc.Serialisation` package this package depends on ships its own generator. From ValueObjects 3.0.1 the dependency is Serialisation 2.4.8, whose generator is also built against Roslyn 5.0. A project that references a newer ZeroAlloc.Serialisation itself gets that version's generator instead, so check the Roslyn version it was built against. Earlier versions depended on Serialisation 2.4.2, built against Roslyn 5.9: SDK bands before 10.0.4xx skipped it with warning CS9057, which failed a build with `TreatWarningsAsErrors`.
 
 ## Verifying the install
 
