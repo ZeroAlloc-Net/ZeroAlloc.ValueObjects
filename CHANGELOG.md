@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v3.0.0...v3.0.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* depend on ZeroAlloc.Serialisation 2.4.8, whose generator loads on every .NET 10 SDK ([#307](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/issues/307)) ([507d81d](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/commit/507d81d668bc6e8d5815e7ffd6fae6d38c306e05))
+
 ## [3.0.0](https://github.com/ZeroAlloc-Net/ZeroAlloc.ValueObjects/compare/v2.4.1...v3.0.0) (2026-11-22)
 
 
