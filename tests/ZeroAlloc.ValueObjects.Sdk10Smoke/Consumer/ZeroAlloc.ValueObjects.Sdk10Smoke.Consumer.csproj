@@ -6,9 +6,8 @@
     is skipped with CS9057, and then OrderId.New and OrderId.Parse do not exist, so the build
     fails with CS0117.
 
-    CS9057 itself is not an error here: ZeroAlloc.Serialisation 2.4.2, a dependency of the
-    package, ships a generator built against Roslyn 5.9, which this SDK skips with that warning.
-    It stays visible in the build log and is tracked in ZeroAlloc-Net/.github#77.
+    CS9057 is an error here as well. ZeroAlloc.Serialisation 2.4.8, a dependency of the package,
+    also ships a generator built against Roslyn 5.0, so no package in this build may be skipped.
 
     The parent folder's global.json pins the 10.0.1xx band with rollForward latestPatch, so a
     newer band cannot stand in for it. Run locally with a 10.0.1xx SDK installed:
@@ -26,7 +25,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
-    <WarningsAsErrors>$(WarningsAsErrors);CS8032</WarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);CS8032;CS9057</WarningsAsErrors>
   </PropertyGroup>
 
   <Target Name="RequireZeroAllocValueObjectsVersion" BeforeTargets="CollectPackageReferences">
